@@ -398,7 +398,7 @@
   const motion=()=>settings.fluid&&!reduced.matches&&os.dataset.quiet!=='true';
   function save(){state.pins.forEach(p=>{const f=state.desk.files['local-'+p.localId];if(f)p.space=f.space;});state.session=[...windows.values()].filter(r=>!r.closing).map(r=>({name:r.app.name,space:r.space,minimized:!!r.minimized}));storeViews();window.openai?.setWidgetState?.({modelContent:{concept:'Hole fluid workspace',layout:state.layout,space:state.desk.view},privateContent:state})?.catch(()=>{});}
   function icons(){globalThis.lucide?.createIcons({attrs:{width:20,height:20}});}
-  let width=1,height=1,fit=1,frame=0,steps=0,zCounter=10,pan=null,lastDragEnd=0,hover=null,windowDrag=null,searchReturnFocus=null,suppressFocusPan=false,drawerOpen=false,drawerAnimation=null,drawerEpoch=0,drawerReturnFocus=null;
+  let width=1,height=1,fit=1,frame=0,steps=0,zCounter=10,pan=null,lastDragEnd=0,hover=null,searchReturnFocus=null,suppressFocusPan=false,drawerOpen=false,drawerAnimation=null,drawerEpoch=0,drawerReturnFocus=null;
   const camera={x:0,y:0,z:1,tx:0,ty:0,tz:1};
   const positions=[];
   for(let r=-4;r<=4;r++)for(let q=-4;q<=4;q++)if(Math.abs(q+r)<=4)positions.push({q,r,d:Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))});
@@ -660,16 +660,7 @@
     windowLayer.append(el);const count=windows.size,rec={app,el,x:Math.max(16,width*.18+(count%3)*72),y:24+(count%3)*38,w:390,h:350,max:false,animation:null};rec.space=state.desk.view==='overview'?'desk':state.desk.view;windows.set(app.name,rec);
     if(app.name==='Notes'){el.querySelector('textarea').value=state.note;el.querySelector('textarea').addEventListener('input',e=>{state.note=e.target.value;updateNotePreview();save();});}
     el.addEventListener('pointerdown',()=>focusWindow(rec));
-    el.querySelector('.hf-window-header').addEventListener('pointerdown',e=>{
-      if(e.target.closest('button')||state.layout==='pocket'||width<560||rec.max)return;
-      windowDrag={rec,pointerId:e.pointerId,x:e.clientX,y:e.clientY,startX:rec.el.offsetLeft,startY:rec.el.offsetTop};e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault();
-    });
-    el.querySelector('.hf-window-header').addEventListener('pointermove',e=>{
-      if(!windowDrag||windowDrag.rec!==rec)return;
-      rec.x=Math.max(4,Math.min(width-rec.w-4,windowDrag.startX+e.clientX-windowDrag.x));rec.y=Math.max(4,Math.min(height-rec.h-4,windowDrag.startY+e.clientY-windowDrag.y));rec.el.style.left=rec.x+'px';rec.el.style.top=rec.y+'px';
-    });
-    el.querySelector('.hf-window-header').addEventListener('pointerup',()=>{windowDrag=null;});
-    el.querySelector('.hf-window-header').addEventListener('pointercancel',()=>{windowDrag=null;});
+    // window-system.js owns title-bar movement and resize cancellation at every size.
     icons();emitWindow('create',rec);return rec;
   }
   function openApp(name,origin){

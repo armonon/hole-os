@@ -8,7 +8,7 @@
   const clamp = (value, low, high) => Math.max(low, Math.min(Math.max(low, high), value));
   const storageKey = 'hole.window-geometry.v1';
   const easing = 'cubic-bezier(.18,.86,.24,1)';
-  let saved = {}, fullRecord = null, resizeDrag = null, swipe = null;
+  let saved = {}, fullRecord = null, geometryDrag = null, swipe = null;
   let fullscreenInert = null;
   let dockTimer = 0, hoverTimer = 0, ignoreHandleClickUntil = 0;
   let lastSpace = api.state.desk.view === 'overview' ? 'desk' : api.state.desk.view;
@@ -123,6 +123,7 @@
   }
   function setFullscreen(rec, enabled, animate = true) {
     if (!rec || !rec.el.isConnected || (!!rec.holeFullscreen === enabled && (enabled ? fullRecord === rec : true))) return;
+    finishGeometry(false);
     const before = rec.el.getBoundingClientRect();
     rec.holeLayoutAnimation?.cancel();
     rec.el.querySelector('.hf-window-size-menu')?.setAttribute('hidden', '');
@@ -175,6 +176,19 @@
     sizeWindow(rec);
     if (persist) remember(rec);
   }
+  // Movement and resizing are previews until the initiating pointer is released.
+  // Clear ownership before releasing capture: lostpointercapture can fire here.
+  function finishGeometry(commit, event) {
+    if (!geometryDrag || (event && event.pointerId !== geometryDrag.id)) return false;
+    const finished = geometryDrag;
+    geometryDrag = null;
+    finished.rec.el.classList.remove('is-resizing');
+    finished.onFinish?.(finished.moved);
+    if (commit) remember(finished.rec);
+    else applyGeometry(finished.rec, finished.original);
+    if (finished.target.hasPointerCapture(finished.id)) finished.target.releasePointerCapture(finished.id);
+    return true;
+  }
   function presetSize(rec, preset) {
     const before = rec.el.getBoundingClientRect();
     const { width, height, margin } = limits();
@@ -205,35 +219,30 @@
     rec.el.append(resizer, menu);
     let suppressClick = false;
     resizer.addEventListener('pointerdown', event => {
-      if (event.button !== 0 || rec.holeFullscreen) return;
+      if (event.button !== 0 || rec.holeFullscreen || geometryDrag || swipe) return;
       closeSizeMenus();
       rec.holeLayoutAnimation?.cancel();
-      resizeDrag = { rec, id: event.pointerId, x: event.clientX, y: event.clientY, w: rec.w, h: rec.h, moved: false, original: { x: rec.x, y: rec.y, w: rec.w, h: rec.h } };
+      geometryDrag = { kind: 'resize', rec, target: resizer, id: event.pointerId, x: event.clientX, y: event.clientY, moved: false, original: { x: rec.x, y: rec.y, w: rec.w, h: rec.h }, onFinish: moved => { suppressClick = moved; } };
       suppressClick = false;
       resizer.setPointerCapture(event.pointerId);
       rec.el.classList.add('is-resizing');
       event.preventDefault();
     });
     resizer.addEventListener('pointermove', event => {
-      if (!resizeDrag || resizeDrag.rec !== rec || resizeDrag.id !== event.pointerId) return;
-      const dx = event.clientX - resizeDrag.x, dy = event.clientY - resizeDrag.y;
-      resizeDrag.moved ||= Math.hypot(dx, dy) > 4;
+      const drag = geometryDrag;
+      if (!drag || drag.kind !== 'resize' || drag.rec !== rec || drag.id !== event.pointerId) return;
+      const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      drag.moved ||= Math.hypot(dx, dy) > 4;
       const { width, height, margin, minWidth, minHeight } = limits();
       applyGeometry(rec, {
-        x: resizeDrag.original.x, y: resizeDrag.original.y,
-        w: clamp(resizeDrag.w + dx, minWidth, width - resizeDrag.original.x - margin),
-        h: clamp(resizeDrag.h + dy, minHeight, height - resizeDrag.original.y - margin)
+        x: drag.original.x, y: drag.original.y,
+        w: clamp(drag.original.w + dx, minWidth, width - drag.original.x - margin),
+        h: clamp(drag.original.h + dy, minHeight, height - drag.original.y - margin)
       });
       event.preventDefault();
     });
     function finishResize(event) {
-      if (!resizeDrag || resizeDrag.rec !== rec || (event && resizeDrag.id !== event.pointerId)) return;
-      const canceled = event?.type === 'pointercancel';
-      suppressClick = resizeDrag.moved;
-      if (canceled) applyGeometry(rec, resizeDrag.original);
-      else remember(rec);
-      resizeDrag = null;
-      rec.el.classList.remove('is-resizing');
+      if (geometryDrag?.kind === 'resize' && geometryDrag.rec === rec) finishGeometry(event.type === 'pointerup', event);
     }
     resizer.addEventListener('pointerup', finishResize);
     resizer.addEventListener('pointercancel', finishResize);
@@ -250,6 +259,7 @@
       if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
       event.preventDefault();
       event.stopPropagation();
+      finishGeometry(false);
       const step = event.shiftKey ? 48 : 16;
       const { width, height, margin, minWidth, minHeight } = limits();
       const dw = event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0;
@@ -268,21 +278,23 @@
       resizer.focus({ preventScroll: true });
     });
     const header = rec.el.querySelector('.hf-window-header');
-    let smallMove = null;
     header.addEventListener('pointerdown', event => {
-      if (event.button !== 0 || event.target.closest('button') || rec.holeFullscreen) return;
+      if (event.button !== 0 || event.target.closest('button') || rec.holeFullscreen || geometryDrag || swipe) return;
       closeSizeMenus();
-      if (api.state.layout === 'pocket' || field.clientWidth < 560) {
-        smallMove = { id: event.pointerId, x: event.clientX, y: event.clientY, left: rec.x, top: rec.y };
-        header.setPointerCapture(event.pointerId);
-      }
+      rec.holeLayoutAnimation?.cancel();
+      rec.animation?.cancel();
+      geometryDrag = { kind: 'move', rec, target: header, id: event.pointerId, x: event.clientX, y: event.clientY, original: { x: rec.x, y: rec.y, w: rec.w, h: rec.h } };
+      header.setPointerCapture(event.pointerId);
+      event.preventDefault();
     });
     header.addEventListener('pointermove', event => {
-      if (!smallMove || smallMove.id !== event.pointerId) return;
+      const drag = geometryDrag;
+      if (!drag || drag.kind !== 'move' || drag.rec !== rec || drag.id !== event.pointerId) return;
       const { width, height, margin } = limits();
-      applyGeometry(rec, { x: clamp(smallMove.left + event.clientX - smallMove.x, margin, width - rec.w - margin), y: clamp(smallMove.top + event.clientY - smallMove.y, margin, height - rec.h - margin), w: rec.w, h: rec.h });
+      applyGeometry(rec, { x: clamp(drag.original.x + event.clientX - drag.x, margin, width - rec.w - margin), y: clamp(drag.original.y + event.clientY - drag.y, margin, height - rec.h - margin), w: rec.w, h: rec.h });
+      event.preventDefault();
     });
-    const finishMove = () => { smallMove = null; if (!rec.holeFullscreen) remember(rec); };
+    const finishMove = event => { if (geometryDrag?.kind === 'move' && geometryDrag.rec === rec) finishGeometry(event.type === 'pointerup', event); };
     header.addEventListener('pointerup', finishMove);
     header.addEventListener('pointercancel', finishMove);
     header.addEventListener('lostpointercapture', finishMove);
@@ -339,6 +351,7 @@
     if (!swipe) return;
     const finished = swipe;
     swipe = null;
+    if (handle.hasPointerCapture(finished.id)) handle.releasePointerCapture(finished.id);
     const rec = finished.rec;
     if (rec) {
       const transform = rec.el.style.transform, opacity = rec.el.style.opacity;
@@ -352,7 +365,9 @@
     preview.hidden = true;
     if (finished.fraction > .015) ignoreHandleClickUntil = performance.now() + 400;
     if (!commit || finished.stage === 0) {
-      if (!finished.wasDockVisible && finished.wasFullscreen) scheduleHideDock();
+      os.dataset.dockRevealed = String(finished.wasDockVisible);
+      dock.inert = !finished.wasDockVisible;
+      handle.setAttribute('aria-expanded', String(finished.wasDockVisible));
       return;
     }
     if (finished.stage === 3) minimizeToDesktop('overview');
@@ -360,7 +375,7 @@
     else { revealDock(); scheduleHideDock(); }
   }
   handle.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || swipe) return;
+    if (event.button !== 0 || swipe || geometryDrag) return;
     const rec = api.isDrawerOpen ? null : visibleRecords()[0];
     rec?.holeLayoutAnimation?.cancel();
     rec?.animation?.cancel();
@@ -377,7 +392,7 @@
   });
   handle.addEventListener('pointerup', event => { if (swipe?.id === event.pointerId) finishSwipe(true); });
   handle.addEventListener('pointercancel', event => { if (swipe?.id === event.pointerId) finishSwipe(false); });
-  handle.addEventListener('lostpointercapture', () => finishSwipe(false));
+  handle.addEventListener('lostpointercapture', event => { if (swipe?.id === event.pointerId) finishSwipe(false); });
   handle.addEventListener('click', event => {
     if (performance.now() < ignoreHandleClickUntil) { event.preventDefault(); return; }
     revealDock(true);
@@ -406,6 +421,7 @@
   }, true);
   root.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
+    if (finishGeometry(false)) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (event.target.closest('[role="dialog"],dialog')) return;
     if (swipe) { event.preventDefault(); event.stopImmediatePropagation(); finishSwipe(false); return; }
     if (fullRecord && !api.isDrawerOpen) {
@@ -420,6 +436,7 @@
     if (!rec) return;
     enhance(rec);
     if (type === 'minimize' || type === 'close') {
+      if (geometryDrag?.rec === rec) finishGeometry(false);
       if (swipe?.rec === rec) finishSwipe(false);
       if (rec.holeFullscreen) setFullscreen(rec, false, false);
       remember(rec);
@@ -429,19 +446,20 @@
     }
   });
   root.addEventListener('hole:space-change', event => {
+    finishGeometry(false);
+    finishSwipe(false);
     const space = event.detail?.space;
     if (space && space !== 'overview') lastSpace = space;
     exitFullscreen(false);
   });
   new MutationObserver(syncFullscreen).observe(os, { attributes: true, attributeFilter: ['data-drawer-open'] });
-  window.addEventListener('blur', () => {
+  function cancelGestures() {
     finishSwipe(false);
-    if (resizeDrag) {
-      applyGeometry(resizeDrag.rec, resizeDrag.original);
-      resizeDrag.rec.el.classList.remove('is-resizing');
-      resizeDrag = null;
-    }
-  });
+    finishGeometry(false);
+  }
+  window.addEventListener('blur', cancelGestures);
+  window.addEventListener('resize', cancelGestures);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelGestures(); });
   window.HoleWindows = { sizeWindow, revealDock, exitFullscreen, toggleFullscreen: rec => setFullscreen(rec, !rec.holeFullscreen), minimizeToDesktop };
   windows.forEach(sizeWindow);
   syncFullscreen();
