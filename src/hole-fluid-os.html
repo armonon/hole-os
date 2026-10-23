@@ -386,6 +386,7 @@
     const p=positions[i],ax=(p.q+p.r/2)*110,ay=p.r*83;
     const radius=p.d===0?53:p.d===1?45:p.d===2?39:33;
     const button=document.createElement('button');button.type='button';button.className='hf-app-orb hf-bubble cursor-interaction'+(p.d===3?' hf-small':'');button.dataset.launch=app.name;button.setAttribute('aria-label',app.name);button.style.setProperty('--bubble-color',app.color);button.style.setProperty('--bubble-ink',app.ink);button.innerHTML='<i data-lucide="'+app.icon+'" aria-hidden="true"></i><span>'+app.name+'</span>';bubbleLayer.append(button);
+    const capability=window.HoleCapabilities?.get(app.name);if(capability){button.title=app.name+' · '+capability.label;button.setAttribute('aria-description',capability.description);}
     return{...app,ax,ay,x:ax,y:ay,vx:0,vy:0,baseR:radius,r:radius,button};
   });
   const windows=new Map();

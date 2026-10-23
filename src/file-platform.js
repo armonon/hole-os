@@ -22,7 +22,7 @@
     initialized = true;
     const { root, os } = api;
     let db, dbError = '', files = [], jobs = [], selectedId = null, mount = null, previewEpoch = 0;
-    let quick = null, overlay = null, overlayReturn = null, quickReturn = null, inertRecords = [], busy = false;
+    let quick = null, overlay = null, overlayReturn = null, quickReturn = null, inertRecords = [], busy = false, overlayCloseRequest = null;
     let processing = false, pending = [], previewURLs = [], toastTimer = 0;
     const downloadURLs = new Map();
     const sessionId = uid();
@@ -120,6 +120,86 @@
       jobs = jobs.filter(j => !old.some(o => o.id === j.id)); notifyJobs();
     }
     function history(type, detail) { return { id: uid(), type, detail, at: Date.now() }; }
+    async function saveTextResult(options) {
+      const result = await window.HoleTextFiles.save(options, { id: uid, now: Date.now, persist: async ({ file, blob, job }) => {
+        if (files.length >= MAX_FILES) throw new Error('This library holds up to 500 files. Download files you want to keep before removing any.');
+        // A completed activity entry cannot exist without its saved file and bytes.
+        await transaction(['files', 'contents', 'jobs'], 'readwrite', tx => {
+          tx.objectStore('files').add(file); tx.objectStore('contents').add(blob, file.id); tx.objectStore('jobs').add(job);
+        });
+      } });
+      files.push(result.file); jobs.push(result.job); selectedId = result.file.id;
+      notifyFiles(); notifyJobs(); renderFiles(); return result.file;
+    }
+    function textEditor(source = null, initialText = '', app = 'Text editor') {
+      const content = openOverlay(source ? 'Edit a new version' : app === 'Notes' ? 'Save Notes to Files' : 'New text file', 'text-editor');
+      const form = node('form', 'hfiles-form'), nameLabel = node('label', '', 'File name'), name = node('input', 'hfiles-input');
+      name.id = `hfiles-text-name-${uid()}`; nameLabel.htmlFor = name.id; name.required = true; name.maxLength = 190;
+      name.value = source ? source.name.replace(/\.(txt|md)$/i, '') + ' edited.' + (source.type === 'text/markdown' ? 'md' : 'txt') : app === 'Notes' ? 'Notes.txt' : 'Untitled.txt';
+      const label = node('label', '', app === 'Notes' ? 'Snapshot of Notes' : 'Text'), editor = node('textarea', 'hfiles-input hfiles-editor');
+      editor.id = `hfiles-text-${uid()}`; label.htmlFor = editor.id; editor.value = initialText; editor.readOnly = app === 'Notes'; editor.spellcheck = true;
+      const status = node('p', 'hfiles-muted'); status.setAttribute('role', 'status');
+      const submit = button(source ? 'Save new version' : 'Save to Files', 'save', () => {}, 'hfiles-primary'); submit.type = 'submit';
+      form.append(nameLabel, name, label, editor, status, submit);
+      content.append(node('p', 'hfiles-muted', source ? 'Edit UTF-8 text up to 256 KB. Save returns a separate version to Files; your original stays unchanged.' : app === 'Notes' ? 'Save this snapshot as a real text file. Your scratchpad stays unchanged.' : 'Create a UTF-8 text file up to 256 KB. Use .md for Markdown; other names save as plain text.'), form);
+      const update = () => { const size = new Blob([editor.value]).size; status.textContent = `${formatBytes(size)} / 256 KB`; submit.disabled = size > window.HoleTextFiles.MAX_TEXT_BYTES; };
+      editor.addEventListener('input', update); update();
+      let saving = false, discardPrompt = null; const initialName = name.value;
+      overlayCloseRequest = () => {
+        if (saving) { announce('Finishing the save. Keep this tab open.'); return; }
+        if (name.value === initialName && editor.value === initialText) { closeOverlay(); return; }
+        if (!discardPrompt) {
+          discardPrompt = node('div', 'hfiles-route'); discardPrompt.setAttribute('role', 'group'); discardPrompt.setAttribute('aria-label', 'Unsaved text');
+          const keep = button('Keep editing', 'pencil', () => { discardPrompt.remove(); discardPrompt = null; editor.focus(); });
+          discardPrompt.append(node('p', 'hfiles-muted', 'This version has unsaved changes.'), keep, button('Discard edits', 'x', () => closeOverlay())); content.append(discardPrompt); paintIcons(); keep.focus();
+        } else discardPrompt.querySelector('button')?.focus();
+      };
+      form.addEventListener('submit', async event => {
+        event.preventDefault(); if (saving || submit.disabled) return; saving = true; submit.disabled = true;
+        name.disabled = true; editor.disabled = true;
+        try {
+          const file = await saveTextResult({ text: editor.value, name: name.value, source, app, space: api.state.desk.view === 'overview' ? 'desk' : api.state.desk.view });
+          // A closed editor must not dismiss a newer dialog or steal its focus.
+          if (content.isConnected) { closeOverlay(false); openFiles(file.id); }
+          announce(`${file.name} saved in Files. ${source ? 'Your original is unchanged.' : 'A separate file is ready.'}`);
+        } catch (error) { status.textContent = storageError(error); saving = false; submit.disabled = false; name.disabled = false; editor.disabled = false; }
+      }); paintIcons(); name.focus(); name.select();
+    }
+    async function editTextFile(file) {
+      const content = openOverlay('Opening text', 'text-loading'); content.append(node('p', 'hfiles-muted', 'Reading your local file…'));
+      try {
+        const blob = await blobFor(file.id), text = await window.HoleTextFiles.decode(new Blob([blob], { type: file.type }));
+        if (content.isConnected) textEditor(file, text);
+      } catch (error) { if (content.isConnected) { closeOverlay(); announce(storageError(error)); } }
+    }
+    function openWith(file) {
+      const content = openOverlay('Open with', 'open-with'), routes = window.HoleCapabilities?.forFile(file) || [];
+      content.append(node('p', 'hfiles-muted', file.name));
+      if (!routes.length) content.append(node('p', 'hfiles-muted', 'No connected editing route is declared for this format. Keep a download to open in a compatible app.'));
+      for (const route of routes) {
+        const item = node('div', 'hfiles-route');
+        item.append(node('h3', '', route.name), node('p', 'hfiles-muted', route.description));
+        if (route.mode === 'local') item.append(button('Edit a new version', 'pencil', () => editTextFile(file)));
+        else item.append(button(`Continue to ${route.name}`, 'arrow-up-right', () => handoff(file, route)));
+        content.append(item);
+      }
+      content.append(downloadLink(file)); paintIcons();
+    }
+    function handoff(file, route) {
+      const content = openOverlay(`Continue in ${route.name}`, 'handoff');
+      content.append(node('p', 'hfiles-muted', `${route.name} opens separately. Hole does not upload ${file.name}, monitor processing, or receive results automatically.`));
+      const steps = node('ol', 'hfiles-handoff-steps');
+      steps.append(node('li', '', 'Download a copy. Check your browser’s downloads before continuing.'), node('li', '', `Open ${route.name}, then choose the downloaded copy there yourself.`), node('li', '', 'If the app exports a result, return to Files and import it manually. This external round trip is not linked to history yet.'));
+      const link = node('a', 'hfiles-button cursor-interaction', `Open ${route.name} ↗`); link.href = route.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      const actions = node('div', 'hfiles-action-row'); actions.append(downloadLink(file), link); content.append(steps, actions); paintIcons();
+    }
+    function showCapabilities() {
+      const content = openOverlay('App capabilities', 'capabilities');
+      content.append(node('p', 'hfiles-muted', 'What each tile currently does in Hole. External destinations keep their own capabilities and storage.'));
+      for (const app of window.HoleCapabilities?.list() || []) {
+        const item = node('div', 'hfiles-route'); item.append(node('strong', '', `${app.name} · ${app.label}`), node('p', 'hfiles-muted', app.description)); content.append(item);
+      }
+    }
     async function importFiles(list) {
       if (!list?.length || busy) return;
       busy = true; renderFiles(); let imported = 0, failed = 0;
@@ -288,10 +368,13 @@
       const input = node('input', 'hfiles-input-file'); input.type = 'file'; input.multiple = true; input.tabIndex = -1; input.setAttribute('aria-label', 'Import files from your device');
       const add = button('Import', 'plus', () => input.click(), 'hfiles-primary'); input.addEventListener('change', () => { importFiles([...input.files]); input.value = ''; });
       head.append(title, add, input);
+      const toolbar = node('div', 'hfiles-action-row');
+      const create = button('New text', 'file-plus', () => textEditor(), 'hfiles-primary');
+      toolbar.append(create, button('App capabilities', 'info', showCapabilities));
       const note = node('p', 'hfiles-local-note', 'Stored in this browser · download important originals to keep a backup.');
       const work = node('div', 'hfiles-work'), list = node('div', 'hfiles-list'), preview = node('section', 'hfiles-preview'); list.setAttribute('aria-label', 'Your imported files'); preview.setAttribute('aria-label', 'File preview');
-      work.append(list, preview); shell.append(head, note, work); body.append(shell);
-      mount = { body, shell, list, preview, add, input };
+      work.append(list, preview); shell.append(head, toolbar, note, work); body.append(shell);
+      mount = { body, shell, list, preview, add, input, create };
       let dragDepth = 0;
       shell.addEventListener('dragenter', event => { if ([...event.dataTransfer?.types || []].includes('Files')) { event.preventDefault(); dragDepth++; shell.classList.add('is-dropping'); } });
       shell.addEventListener('dragover', event => { if ([...event.dataTransfer?.types || []].includes('Files')) { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; } });
@@ -302,6 +385,7 @@
     function renderFiles() {
       if (!mount?.body.isConnected) return;
       mount.add.disabled = busy || !db; mount.add.querySelector('span').textContent = busy ? 'Importing…' : 'Import';
+      mount.create.disabled = !db;
       mount.list.replaceChildren();
       if (!files.length) {
         const empty = node('div', 'hfiles-empty'); empty.append(icon('folder-plus'), node('h3', '', dbError ? 'Your library needs attention' : 'Your first idea belongs here.'), node('p', 'hfiles-muted', dbError || 'Import images, audio, text, and other files. Drop them here or use Import.'));
@@ -325,8 +409,10 @@
       panel.append(node('p', 'hfiles-eyebrow', file.parentId ? 'A NEW VERSION' : 'ORIGINAL'), node('h3', 'hfiles-preview-name', file.name));
       const media = node('div', 'hfiles-media'); media.append(node('p', 'hfiles-muted', 'Opening preview…')); panel.append(media);
       const details = node('p', 'hfiles-muted', `${formatBytes(file.size)} · ${file.type} · ${dateLabel(file.modifiedAt)}`); panel.append(details);
+      if (file.provenance) panel.append(node('p', 'hfiles-muted', `${file.provenance.app} · ${file.provenance.sourceName ? 'From ' + file.provenance.sourceName : 'Saved locally'} · ${file.operation}`));
       const contents = blobFor(file.id);
       const actions = node('div', 'hfiles-action-row'); actions.append(downloadLink(file, contents), button('History', 'history', () => showHistory(file)));
+      if (window.HoleCapabilities?.forFile(file).length) actions.append(button('Open with', 'app-window', () => openWith(file)));
       if (RASTER_TYPES.has(file.type)) actions.append(button('Convert', 'wand-sparkles', () => conversionDialog(file)));
       if (file.type.startsWith('audio/')) actions.append(button('Audio tools', 'sliders-horizontal', () => audioTools(file)));
       panel.append(actions); paintIcons();
@@ -369,12 +455,13 @@
       quick = node('section', 'hfiles-quick'); quick.setAttribute('role', 'dialog'); quick.setAttribute('aria-label', `Quick tools for ${current.name}`);
       const title = node('div', 'hfiles-quick-title'); title.append(node('strong', '', current.name), node('small', '', local ? 'QUICK TOOLS' : 'WORKSPACE SHORTCUT'));
       const tools = node('div', 'hfiles-quick-row');
-      const action = (label, glyph, fn) => tools.append(button(label, glyph, () => { closeQuick(false); fn(); }));
+      const action = (label, glyph, fn) => tools.append(button(label, glyph, () => { closeQuick(); fn(); }));
       action('Open', 'arrow-up-right', () => local ? openFiles(local.id) : api.openApp(file.app, element));
       action('Copy name', 'copy', () => copyName(current.name));
       if (local) {
         if (typeof api.pinFile === 'function') action('Place on desktop', 'monitor', () => { try { api.pinFile(local); announce(`${local.name} has a shortcut on your desktop.`); } catch (error) { announce(storageError(error)); } });
         action('Duplicate', 'copy-plus', () => duplicateFile(local)); action('Rename', 'pencil', () => renameFile(local));
+        if (window.HoleCapabilities?.forFile(local).length) action('Open with', 'app-window', () => openWith(local));
         tools.append(downloadLink(local));
         if (RASTER_TYPES.has(local.type)) action('Convert', 'wand-sparkles', () => conversionDialog(local));
         if (local.type.startsWith('audio/')) action('Audio tools', 'sliders-horizontal', () => audioTools(local));
@@ -387,23 +474,27 @@
       animate(quick); quick.querySelector('button')?.focus({ preventScroll: true });
     }
     function openOverlay(title, kind) {
-      closeQuick(false); closeOverlay(false); overlayReturn = document.activeElement;
+      const returnTarget = overlay && overlayReturn?.isConnected ? overlayReturn : document.activeElement;
+      closeQuick(false); closeOverlay(false); overlayReturn = returnTarget;
       overlay = node('div', 'hfiles-overlay'); overlay.dataset.kind = kind;
       const card = node('section', 'hfiles-dialog'); card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-label', title);
-      const head = node('header', 'hfiles-dialog-head'), close = button(`Close ${title}`, 'x', () => closeOverlay(), 'hfiles-close'); head.append(node('h2', '', title), close);
+      const head = node('header', 'hfiles-dialog-head'), close = button(`Close ${title}`, 'x', requestCloseOverlay, 'hfiles-close'); head.append(node('h2', '', title), close);
       const content = node('div', 'hfiles-dialog-content'); card.append(head, content); overlay.append(card); layer.append(overlay);
       inertRecords = [...os.children].filter(el => el !== layer).map(el => [el, el.inert]); inertRecords.forEach(([el]) => { el.inert = true; });
-      overlay.addEventListener('pointerdown', event => { if (event.target === overlay) closeOverlay(); }); animate(card); paintIcons(); head.querySelector('button').focus({ preventScroll: true }); return content;
+      overlay.addEventListener('pointerdown', event => { if (event.target === overlay) requestCloseOverlay(); });
+      overlay.addEventListener('keydown', event => event.stopPropagation());
+      animate(card); paintIcons(); head.querySelector('button').focus({ preventScroll: true }); return content;
     }
+    function requestCloseOverlay() { if (overlayCloseRequest) overlayCloseRequest(); else closeOverlay(); }
     function closeOverlay(restore = true) {
-      if (!overlay) return; overlay.remove(); overlay = null; inertRecords.forEach(([el, wasInert]) => { el.inert = wasInert; }); inertRecords = [];
+      if (!overlay) return; overlay.remove(); overlay = null; overlayCloseRequest = null; inertRecords.forEach(([el, wasInert]) => { el.inert = wasInert; }); inertRecords = [];
       if (restore && overlayReturn?.isConnected) overlayReturn.focus({ preventScroll: true }); overlayReturn = null;
     }
     function showActivity() { openOverlay('Activity', 'activity'); renderActivity(); }
     function renderActivity() {
       const content = overlay?.querySelector('.hfiles-dialog-content'); if (!content || overlay.dataset.kind !== 'activity') return;
       const focusedAction = document.activeElement?.dataset.jobAction, focusedJob = document.activeElement?.dataset.jobId;
-      content.replaceChildren(node('p', 'hfiles-muted', 'Real work, happening in this browser. You can leave this panel while a job finishes; keep this tab open.'));
+      content.replaceChildren(node('p', 'hfiles-muted', 'Local file results and conversion work. External app links do not start a processing job. Keep this tab open while a conversion runs.'));
       if (!jobs.length) { const empty = node('div', 'hfiles-empty'); empty.append(icon('sparkles'), node('h3', '', 'A little room for possibility.'), node('p', 'hfiles-muted', 'Import an image in Files, then choose Convert. Its progress and finished version will appear here.'), button('Open Files', 'folder-open', () => { closeOverlay(); openFiles(); })); content.append(empty); }
       getJobs(60).forEach(job => {
         const card = node('article', 'hfiles-job'); card.dataset.status = job.status;
@@ -424,23 +515,31 @@
     const activityButton = button('Activity', 'sparkles', showActivity, 'hfiles-activity-button'); activityButton.setAttribute('aria-label', 'Open activity');
     const topbar = root.querySelector('.hf-topbar'); if (topbar) topbar.append(activityButton);
     function updateActivityButton() { const count = jobs.filter(j => ['running', 'queued'].includes(j.status)).length; activityButton.dataset.active = String(count > 0); activityButton.setAttribute('aria-label', count ? `Open activity, ${count} jobs in progress` : 'Open activity'); }
+    function mountNotes(rec) {
+      const body = rec?.el?.querySelector('.hf-window-body'), note = body?.querySelector('.hf-note');
+      if (!note || body.querySelector('[data-save-note]')) return;
+      const save = button('Save a copy to Files', 'file-plus', () => textEditor(null, note.value, 'Notes'));
+      save.dataset.saveNote = ''; body.insertBefore(save, note);
+    }
     root.addEventListener('hole:window-change', event => {
-      const { rec, type } = event.detail || {}; if (rec?.app?.name !== 'Files') return;
+      const { rec, type } = event.detail || {};
+      if (rec?.app?.name === 'Notes' && type !== 'close') mountNotes(rec);
+      if (rec?.app?.name !== 'Files') return;
       if (type === 'close') { ++previewEpoch; revokePreview(); mount = null; } else mountFiles(rec);
     });
     root.addEventListener('pointerdown', event => { if (quick && !quick.contains(event.target)) closeQuick(false); }, true);
     root.addEventListener('keydown', event => {
       if (!overlay && !quick) return;
-      if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); overlay ? closeOverlay() : closeQuick(); return; }
-      const region = overlay || quick, focusable = [...region.querySelectorAll('button:not(:disabled), input:not(:disabled), select, a[href]')].filter(el => !el.hidden);
+      if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); overlay ? requestCloseOverlay() : closeQuick(); return; }
+      const region = overlay || quick, focusable = [...region.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select, a[href]')].filter(el => !el.hidden);
       if (event.key === 'Tab' && focusable.length) { const first = focusable[0], last = focusable.at(-1); if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }
       if (quick && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const current = focusable.indexOf(document.activeElement), next = event.key === 'Home' ? 0 : event.key === 'End' ? focusable.length - 1 : (current + (event.key === 'ArrowLeft' ? -1 : 1) + focusable.length) % focusable.length; focusable[next]?.focus(); }
     }, true);
     window.addEventListener('resize', () => closeQuick(false));
     root.addEventListener('hole:space-change', () => closeQuick(false));
-    window.HoleFiles = { openTools, closeTools: closeQuick, openFiles, showActivity, getRecent, getJobs, importFiles, model, ready: null };
+    window.HoleFiles = { openTools, closeTools: closeQuick, openFiles, showActivity, showCapabilities, getRecent, getJobs, importFiles, model, ready: null };
     window.HoleFiles.ready = loadStorage();
-    api.windows?.forEach(rec => { if (rec.app?.name === 'Files') mountFiles(rec); });
+    api.windows?.forEach(rec => { if (rec.app?.name === 'Files') mountFiles(rec); if (rec.app?.name === 'Notes') mountNotes(rec); });
     paintIcons();
   }
   initialize();

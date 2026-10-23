@@ -64,6 +64,13 @@
 #hole-fluid-os .hfiles-form{display:flex;flex-direction:column;gap:12px;margin-top:10px;font-size:12px}
 #hole-fluid-os .hfiles-form>.hfiles-button{align-self:flex-end}
 #hole-fluid-os .hfiles-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--hf-line);border-radius:12px;font:inherit;font-size:13px;background:var(--hf-soft);color:var(--hf-ink)}
+#hole-fluid-os .hfiles-editor{min-height:170px;resize:vertical;font:13px/1.6 ui-monospace,SFMono-Regular,monospace;user-select:text;touch-action:pan-y}
+#hole-fluid-os .hfiles-route{padding:12px 0;border-top:1px solid var(--hf-line);font-size:12px}
+#hole-fluid-os .hfiles-route h3{margin:0}
+#hole-fluid-os .hfiles-handoff-steps{padding-left:20px;font-size:12px;line-height:1.7}
+#hole-fluid-os .hfiles-handoff-steps li{margin:10px 0}
+#hole-fluid-os [data-save-note]{margin:8px 0}
+#hole-fluid-os .hf-window-body:has([data-save-note]) .hf-note{height:calc(100% - 80px);min-height:120px}
 #hole-fluid-os .hfiles-format-options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:20px 0}
 #hole-fluid-os .hfiles-format{height:82px;flex-direction:column;background:light-dark(#ece5fb,#3d324e);font-weight:600}
 #hole-fluid-os .hfiles-format svg{width:24px;height:24px}

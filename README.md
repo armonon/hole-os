@@ -34,7 +34,7 @@ npm run dev
 
 ## Edit and build
 
-The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `welcome.js` handles Welcome, About, and Control Center; `browser.js` connects the Browser window to the existing Hole search workspace. Each module has a matching stylesheet. `ecosystem.js` lists the verified Creating Co destinations. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
+The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `text-files.js` validates and prepares immutable text results; `welcome.js` handles Welcome, About, and Control Center; `browser.js` connects the Browser window to the existing Hole search workspace. UI modules have matching stylesheets. `ecosystem.js` lists Creating Co destinations, and `capabilities.js` classifies every launcher and its eligible file routes. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
 
 ```sh
 npm run build
@@ -61,8 +61,9 @@ Use the GitHub web editor's **Commit & Push** action for browser-only edits. Che
 - Resize windows with the corner handle or its arrow-key controls. Fullscreen reduces the dock to a handle; hover or press Enter to reveal it. Start an upward swipe on that handle: 10% reveals the dock, 30% returns to the desktop, and 50% opens all spaces. Release commits the selected stage; reversing the gesture changes it before release.
 - Window movement and resizing are saved on release. Escape, lost pointer capture, leaving the tab, or changing the workspace cancels the preview and restores its previous geometry. Cancelling an edge gesture restores the previous dock visibility immediately.
 - Import files, preview supported media/text, rename, duplicate, download, place on a desktop, and inspect version history. PNG/JPEG/WebP conversion creates a new real file while preserving its original. Activity shows actual conversion work and outcomes. Files stay in this browser.
+- Save a copy of Notes to Files, or create a plain text/Markdown file there. Open with → Text editor edits UTF-8 files up to 256 KB and saves a separate version with source/app provenance and real completed activity. Original files and the Notes scratchpad remain unchanged. Dirty editors ask before discarding edits.
 - Welcome offers an expanding full-app launcher, Circle and NOW messaging shortcuts, and a Hole Browser search launcher. Discover Creating Co and its product stories live in the in-Hole About page, reachable from Welcome and Control Center. Files and actual job activity remain accessible through Control Center. Control Center also provides appearance, quiet motion, focus, layout, and portable setup JSON. Setup files contain layout metadata, not private files or notes; they are not account sync.
-- The drawer includes fifteen verified Creating Co destinations alongside the existing utility and concept apps. External apps open in another tab and require manual file handoff. The Hole Browser card opens the existing searchable Hole workspace; it does not submit a query from the OS because the upstream app currently has no supported query handoff. Audio stem separation is an explicit external workflow, not a built-in processing service.
+- Files → App capabilities classifies all 52 launcher entries: 3 local utilities, 16 external launchers, 2 partial previews, 28 concepts and 3 future capabilities. See the [catalog audit](CATALOG.md) for evidence and limitations. External apps open in another tab and require manual file handoff. Open with offers explicit download/open instructions for PNG/JPEG/WebP in Luma, MP3/WAV in Bounce and PDFs in Librarian; it does not upload files, track external processing or link manually imported results to a source. The Hole Browser card opens the existing searchable Hole workspace without query handoff. Audio stem separation stays external.
 
 There is no account authentication, live phone pairing, cross-device file sync, cloud computer, or native Windows/macOS/Linux application execution yet. Welcome is a public start screen, not a security lock. Some existing app tiles remain concept screens. Remote code editing is available through GitHub and Codespaces above.
 
@@ -70,7 +71,7 @@ There is no account authentication, live phone pairing, cross-device file sync, 
 
 Run `npm test` for production-code checks of gesture thresholds and reversibility, file names/formats/limits, and saved-state validation. The overhaul was also checked in the browser at desktop and 320-pixel widths: circular navigation, zoom-out return, keyboard resizing, fullscreen dock gestures, recent apps, real image import/conversion/history, previews, pinned-file reload, quiet motion, and appearance controls. Physical touch-device testing remains outstanding.
 
-The window recovery phase adds 55 lifecycle regressions (69 total tests). See [verification evidence and remaining checks](VERIFICATION.md) for the current phase's browser results, actual setup-download evidence, access blocker and roadmap.
+The window recovery phase adds 55 lifecycle regressions; its [verification record](VERIFICATION.md) preserves the setup-download evidence and remaining device/access checks. The subsequent [shared file workflow record](FILE-WORKFLOW-VERIFICATION.md) covers the catalog, atomic text results, keyboard focus, reload persistence and byte-verified native downloads. Historical 320px checks above were not repeated successfully in these phases.
 
 ## References
 
