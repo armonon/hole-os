@@ -40,6 +40,18 @@ npm run build
 
 Netlify publishes `public/`. The original interface source is retained separately from the browser runtime so it can also remain usable in the conversation preview.
 
+## Publish remote changes
+
+Push a commit to `main` and Netlify automatically runs `npm run build` and updates the live site. The connection uses a read-only deploy key scoped to this repository and a push webhook; no hosting credentials are stored in the source.
+
+```sh
+git add src scripts public
+git commit -m "Refine Hole workspace"
+git push
+```
+
+Use the GitHub web editor's **Commit & Push** action for browser-only edits. Check build status in the [Netlify dashboard](https://app.netlify.com/projects/hole-os-armonon/deploys). The live site changes only after a successful deployment.
+
 ## Current scope
 
 This is an interactive interface prototype. Notes, workspace arrangement, navigation, window controls, and view persistence work locally. App tiles include representative utilities and concept screens. There is no account system, cross-device file sync, cloud computer, or Windows/macOS/Linux application execution yet. Publishing the UI does not add those backend services.
@@ -52,4 +64,3 @@ The shared gesture implementation passed 27 simulated touch/wheel assertions cov
 
 - [GitHub browser editing](https://docs.github.com/en/codespaces/the-githubdev-web-based-editor)
 - [Creating a Codespace](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository)
-
