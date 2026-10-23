@@ -1,0 +1,21 @@
+{
+  "name": "Hole OS",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Hole OS preview",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm run build",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 2,
+        "files.trimTrailingWhitespace": true
+      }
+    }
+  }
+}
+

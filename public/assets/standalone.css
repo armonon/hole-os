@@ -1,0 +1,93 @@
+/* Export-only presentation. The authored fragment and gesture handlers stay intact. */
+:root {
+  color-scheme: light dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: light-dark(#f2f3f5, #151820);
+  color: light-dark(#252b38, #f0f1f5);
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body { box-sizing: border-box; }
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+svg { display: block; }
+body #hole-fluid-os {
+  width: 100%;
+  height: 100vh;
+  height: var(--hole-viewport-height, 100dvh);
+  padding: 0;
+  align-items: center;
+  overflow: hidden;
+}
+body #hole-fluid-os .hf-os[data-layout] {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+body #hole-fluid-os .hf-os .hf-concept { display: none; }
+body #hole-fluid-os .hf-os .hf-field { min-height: 0; }
+body #hole-fluid-os .hf-os .hf-bottom {
+  flex-shrink: 0;
+  padding-bottom: max(13px, env(safe-area-inset-bottom));
+}
+body #hole-fluid-os .hf-os .hf-topbar {
+  padding-left: max(26px, env(safe-area-inset-left));
+  padding-right: max(26px, env(safe-area-inset-right));
+}
+body #hole-fluid-os .hf-os .hf-controls {
+  min-width: 0;
+  flex-shrink: 0;
+}
+@media (min-width: 641px) {
+  body #hole-fluid-os .hf-os[data-layout=pocket] {
+    width: 390px;
+    max-width: calc(100% - 32px);
+    height: min(844px, calc(var(--hole-viewport-height, 100dvh) - 32px));
+    border: 1px solid var(--hf-line);
+    border-radius: 42px;
+    box-shadow: 0 20px 50px var(--hf-shadow);
+  }
+}
+@media (max-width: 640px) {
+  body #hole-fluid-os .hf-os[data-layout] { width: 100%; height: 100%; }
+  body #hole-fluid-os .hf-os .hf-topbar { padding-left: 18px; padding-right: 18px; }
+  body #hole-fluid-os .hf-os .hf-controls {
+    padding-left: 12px;
+    padding-right: 12px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 46px;
+    gap: 4px;
+  }
+  body #hole-fluid-os .hf-os .hf-drawer-controls { margin-left: auto; }
+  body #hole-fluid-os .hf-os[data-workspace=true] .hf-field {
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+  }
+  body #hole-fluid-os .hf-os[data-workspace=true] .hf-bottom {
+    margin: 0;
+    border-radius: 0;
+  }
+  body #hole-fluid-os .hf-os .hf-dock { max-width: calc(100vw - 24px); }
+  body #hole-fluid-os .hf-os .hf-pocket-overview { gap: 12px; inset: 12px 20px; }
+  body #hole-fluid-os .hf-os .hf-pocket-overview button { min-height: 70px; padding: 16px 20px; }
+}
+@media (max-height: 600px) {
+  body #hole-fluid-os .hf-os .hf-topbar { height: 48px; }
+  body #hole-fluid-os .hf-os .hf-bottom { gap: 6px; padding-top: 4px; padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+  body #hole-fluid-os .hf-os .hf-hint { display: none; }
+  body #hole-fluid-os .hf-os .hf-home-indicator { display: none; }
+  body #hole-fluid-os .hf-os .hf-dock { padding-top: 4px; padding-bottom: 4px; }
+  body #hole-fluid-os .hf-os .hf-pocket-overview { gap: 6px; inset: 8px 20px; }
+  body #hole-fluid-os .hf-os .hf-pocket-overview button { min-height: 0; padding: 10px 16px; }
+}
