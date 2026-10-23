@@ -61,13 +61,11 @@
     </div>
     <footer class="hf-bottom">
       <p class="hf-hint" aria-live="polite">Your workspace. Your pace.</p>
-      <nav class="hf-dock" aria-label="Home and running apps">
+      <nav class="hf-dock" aria-label="Home, pinned and recent apps">
         <button class="hf-dock-button cursor-interaction" data-home aria-label="Home"><i data-lucide="orbit" aria-hidden="true"></i><span>Home</span></button>
         <button class="hf-dock-button hf-drawer-toggle cursor-interaction" data-drawer-toggle aria-label="App Drawer" aria-controls="hole-app-drawer" aria-expanded="false"><i data-lucide="layout-grid" aria-hidden="true"></i><span>App Drawer</span></button>
         <span class="hf-dock-divider" aria-hidden="true"></span>
-        <button class="hf-dock-button cursor-interaction" data-launch="Notes"><i data-lucide="notebook-pen" aria-hidden="true"></i><span>Notes</span><b class="hf-running-dot" hidden></b></button>
-        <button class="hf-dock-button cursor-interaction" data-launch="Music"><i data-lucide="music-2" aria-hidden="true"></i><span>Music</span><b class="hf-running-dot" hidden></b></button>
-        <button class="hf-dock-button cursor-interaction" data-launch="Files"><i data-lucide="folder-open" aria-hidden="true"></i><span>Files</span><b class="hf-running-dot" hidden></b></button>
+        <div class="hf-dock-apps" role="group" aria-label="Pinned and recent apps"></div>
       </nav>
       <div class="hf-home-indicator" aria-hidden="true"></div>
     </footer>
@@ -260,8 +258,9 @@
 #hole-fluid-os .hf-drawer-toggle[aria-expanded=true] span{color:var(--hf-paper)}
 #hole-fluid-os .hf-aura{position:absolute;inset:8% 13%;border-radius:50%;background:radial-gradient(ellipse at 35% 35%,light-dark(#d5d8fd88,#434e8940),transparent 62%),radial-gradient(ellipse at 65% 65%,light-dark(#f0cbbf66,#784f5d25),transparent 65%);filter:blur(24px);pointer-events:none}
 #hole-fluid-os .hf-bubbles{position:absolute;inset:0;touch-action:none}
-#hole-fluid-os .hf-bubble{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border-radius:50%;padding:0;box-shadow:inset 0 1px 2px #ffffff99,inset 0 -5px 10px #00000012,0 8px 18px #37385218;background:linear-gradient(150deg,color-mix(in srgb,var(--bubble-color),#fff 26%),var(--bubble-color) 60%,color-mix(in srgb,var(--bubble-color),#222 12%));color:var(--bubble-ink,#fff);will-change:transform,width,height;touch-action:none;outline-offset:3px;transform-origin:center;overflow:hidden}
-#hole-fluid-os .hf-bubble::before{content:'';position:absolute;inset:3px;border-radius:50%;border:1px solid #ffffff1f;pointer-events:none}
+#hole-fluid-os .hf-app-orb{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;box-shadow:inset 0 1px 2px #ffffff99,inset 0 -5px 10px #00000012,0 8px 18px #37385218;background:linear-gradient(150deg,color-mix(in srgb,var(--bubble-color),#fff 26%),var(--bubble-color) 60%,color-mix(in srgb,var(--bubble-color),#222 12%));color:var(--bubble-ink,#fff);overflow:hidden}
+#hole-fluid-os .hf-app-orb::before{content:'';position:absolute;inset:3px;border-radius:50%;border:1px solid #ffffff1f;pointer-events:none}
+#hole-fluid-os .hf-bubble{position:absolute;left:0;top:0;flex-direction:column;gap:4px;padding:0;will-change:transform,width,height;touch-action:none;outline-offset:3px;transform-origin:center}
 #hole-fluid-os .hf-bubble svg{width:28px;height:28px;stroke-width:1.65;flex-shrink:0;pointer-events:none}
 #hole-fluid-os .hf-bubble span{font-size:10px;font-weight:500;letter-spacing:-.1px;white-space:nowrap;pointer-events:none;line-height:1.1}
 #hole-fluid-os .hf-bubble.hf-small svg{width:24px;height:24px}
@@ -269,14 +268,20 @@
 #hole-fluid-os .hf-bubble.is-running::after{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;position:absolute;bottom:9px}
 #hole-fluid-os .hf-bottom{flex-shrink:0;position:relative;z-index:4;display:flex;flex-direction:column;align-items:center;gap:13px;padding:2px 12px 13px}
 #hole-fluid-os .hf-hint{font-size:11px;color:var(--hf-muted);margin:0;text-align:center;min-height:16px;letter-spacing:.1px}
-#hole-fluid-os .hf-dock{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:27px;background:var(--hf-paper);box-shadow:0 7px 28px var(--hf-shadow);border:1px solid var(--hf-line)}
-#hole-fluid-os .hf-dock-button{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;justify-content:center;min-width:49px;height:49px;background:transparent;border-radius:17px;transition:background .2s,transform .3s cubic-bezier(.2,1.6,.5,1)}
-#hole-fluid-os .hf-dock-button:hover{transform:translateY(-5px);background:var(--hf-soft)}
+#hole-fluid-os .hf-dock{display:flex;align-items:center;gap:5px;max-width:min(100%,860px);min-width:0;padding:0 10px;border-radius:27px;background:var(--hf-paper);box-shadow:0 7px 28px var(--hf-shadow);border:1px solid var(--hf-line)}
+#hole-fluid-os .hf-dock-apps{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x;padding:10px 6px 9px;scrollbar-width:none;user-select:none}
+#hole-fluid-os .hf-dock-apps::-webkit-scrollbar{display:none}
+#hole-fluid-os .hf-dock-apps.is-dragging,#hole-fluid-os .hf-dock-apps.is-dragging button{cursor:grabbing}
+#hole-fluid-os .hf-dock-button{position:relative;display:flex;flex:none;flex-direction:column;align-items:center;gap:4px;justify-content:center;min-width:49px;height:52px;padding:2px 3px;background:transparent;border-radius:17px;transition:background .2s,transform .3s cubic-bezier(.2,1.6,.5,1)}
+#hole-fluid-os .hf-dock-button:hover{transform:translateY(-3px);background:var(--hf-soft)}
 #hole-fluid-os .hf-dock .hf-drawer-toggle[aria-expanded=true]{background:var(--hf-ink);color:var(--hf-paper)}
 #hole-fluid-os .hf-dock-button svg{width:22px;height:22px;stroke-width:1.5}
 #hole-fluid-os .hf-dock-button span{font-size:9px;color:var(--hf-muted)}
-#hole-fluid-os .hf-dock-divider{width:1px;height:28px;background:var(--hf-line);margin:0 3px}
-#hole-fluid-os .hf-running-dot{position:absolute;bottom:-3px;width:4px;height:4px;border-radius:50%;background:var(--hf-accent)}
+#hole-fluid-os .hf-dock-button .hf-dock-orb{width:32px;height:32px;color:var(--bubble-ink,#fff);pointer-events:none}
+#hole-fluid-os .hf-dock-orb svg{width:18px;height:18px;stroke-width:1.7}
+#hole-fluid-os .hf-dock-label{max-width:57px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:11px}
+#hole-fluid-os .hf-dock-divider{flex:none;width:1px;height:28px;background:var(--hf-line);margin:0 2px}
+#hole-fluid-os .hf-running-dot{position:absolute;bottom:-4px;width:4px;height:4px;border-radius:50%;background:var(--hf-accent)}
 #hole-fluid-os .hf-home-indicator{width:92px;height:4px;border-radius:5px;background:var(--hf-ink);opacity:.55}
 #hole-fluid-os .hf-windows{position:absolute;inset:0;pointer-events:none;z-index:5}
 #hole-fluid-os .hf-window{position:absolute;display:flex;flex-direction:column;background:var(--hf-paper);color:var(--hf-ink);border-radius:26px;box-shadow:0 20px 70px var(--hf-shadow),0 0 0 1px var(--hf-line);pointer-events:auto;overflow:hidden;transform-origin:top left;user-select:text;cursor:default;will-change:transform;min-width:0}
@@ -332,10 +337,10 @@
 #hole-fluid-os .hf-os[data-layout=pocket] .hf-wallpaper span:first-child{right:-220px}
 #hole-fluid-os .hf-os[data-layout=pocket] .hf-wallpaper span:nth-child(2){right:110px;bottom:-160px}
 #hole-fluid-os .hf-os[data-layout=pocket] .hf-wallpaper span:nth-child(3){right:-45px;top:20px}
-#hole-fluid-os .hf-os[data-layout=pocket] .hf-dock{gap:3px;padding:7px 9px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hf-dock{gap:3px;padding:0 9px}
 #hole-fluid-os .hf-os[data-layout=pocket] .hf-dock-button{min-width:45px}
 @media(max-width:690px){#hole-fluid-os .hf-space-name,#hole-fluid-os .hf-concept{display:none}#hole-fluid-os .hf-topbar{padding:0 21px}#hole-fluid-os .hf-activity{left:auto;right:21px;transform:none}#hole-fluid-os .hf-controls{padding:0 16px}}
-@media(max-width:390px){#hole-fluid-os .hf-os{height:710px;border-radius:30px}#hole-fluid-os .hf-dock{gap:2px;padding:7px}#hole-fluid-os .hf-dock-button{min-width:43px}#hole-fluid-os .hf-dock-divider{margin:0 1px}#hole-fluid-os .hf-layout button{padding:7px 9px}#hole-fluid-os .hf-zoom{gap:0}#hole-fluid-os .hf-zoom button{min-width:29px}#hole-fluid-os .hf-activity{font-size:10px;padding:10px 12px}}
+@media(max-width:390px){#hole-fluid-os .hf-os{height:710px;border-radius:30px}#hole-fluid-os .hf-dock{gap:2px;padding:0 7px}#hole-fluid-os .hf-dock-button{min-width:43px}#hole-fluid-os .hf-dock-divider{margin:0 1px}#hole-fluid-os .hf-layout button{padding:7px 9px}#hole-fluid-os .hf-zoom{gap:0}#hole-fluid-os .hf-zoom button{min-width:29px}#hole-fluid-os .hf-activity{font-size:10px;padding:10px 12px}}
 @media(max-width:560px){#hole-fluid-os .hf-drawer-controls{gap:2px}#hole-fluid-os .hf-drawer-search span{display:none}#hole-fluid-os .hf-layout button span{display:none}#hole-fluid-os .hf-layout button{min-width:35px;min-height:35px}#hole-fluid-os .hf-desktop-content{padding:32px 24px 0;width:100%;max-width:390px}#hole-fluid-os .hf-desktop-content h1{font-size:37px}#hole-fluid-os .hf-wallpaper span:first-child{right:-220px}#hole-fluid-os .hf-wallpaper span:nth-child(3){right:-45px;top:20px}}
 #hole-fluid-os .hf-os[data-layout=pocket] .hf-layout button span{display:none}
 @media(prefers-reduced-motion:reduce){#hole-fluid-os .hf-os,#hole-fluid-os .hf-dock-button,#hole-fluid-os .hf-desktop{transition:none!important}}
@@ -350,7 +355,9 @@
     ['Studio','shapes','#8d83d7'],['Clock','clock-3','#525d78'],['Camera','camera','#8b92a3'],['Maps','map','#68af9f'],['Mail','mail','#70a0d3'],['Tasks','check-check','#6fb7bc'],['Phone','phone','#63aa82'],['Weather','cloud-sun','#79b6d2'],['Recorder','audio-lines','#d57785'],['Canvas','paintbrush','#b08bc8'],['Calculator','calculator','#be9867'],['Contacts','contact-round','#b58d75'],
     ['Books','book-open','#c79d70'],['Terminal','terminal','#626b80'],['Windows','panels-top-left','#658bc9'],['Linux','square-terminal','#959066'],['Mac','laptop','#9598a8'],['Store','blocks','#8f93d1'],['Settings','sliders-horizontal','#9299a7'],['Compass','navigation','#bc8c82'],['Translate','languages','#8fa9bb'],['Drive','hard-drive','#8caaa6'],['Meet','video','#92a17b'],['Code','code-2','#9585b6'],['Docs','file-text','#8cabc4'],['Wallet','wallet','#9c8b91'],['Shortcuts','workflow','#a58dc6'],['Health','heart','#c98c9f'],['Play','gamepad-2','#9b9fc5'],['Home','house','#aaa18c']
   ].map((a,i)=>({name:a[0],icon:a[1],color:a[2],ink:a[3]||'#fff',index:i}));
-  const byName=new Map(apps.map(a=>[a.name,a]));
+  const byName=new Map(apps.map(a=>[a.name,a])),pinnedApps=['Notes','Music','Files'];
+  const dock=root.querySelector('.hf-dock'),dockApps=dock.querySelector('.hf-dock-apps'),dockButtons=new Map();
+  const recentDivider=document.createElement('span');recentDivider.className='hf-dock-divider';recentDivider.setAttribute('aria-hidden','true');
   const settings={magnification:.24,fluid:true,labels:true};
   const spaces={desk:{x:0,y:0,name:'My desk'},studio:{x:560,y:0,name:'Studio'},life:{x:-560,y:0,name:'Life'}};
   const deskFiles=[
@@ -366,9 +373,10 @@
     {id:'books',name:'Books',app:'Books',kind:'app',space:'life',x:-656,y:139,turn:3}
   ];
   const defaultPlacement=f=>({x:.93,y:.12+deskFiles.filter(other=>other.space===f.space).indexOf(f)*.24});
-  let state={layout:'desktop',note:'A computer that moves with you.\n\nAn idea becomes a note.\nA note becomes a project.\nYour whole world stays close.',playing:false,views:{},desk:{view:'desk',panX:0,panY:0,files:Object.fromEntries(deskFiles.map(f=>[f.id,{x:f.x,y:f.y,space:f.space}])),placements:Object.fromEntries(deskFiles.map(f=>[f.id,defaultPlacement(f)]))}};
+  let state={layout:'desktop',note:'A computer that moves with you.\n\nAn idea becomes a note.\nA note becomes a project.\nYour whole world stays close.',playing:false,recentApps:[],views:{},desk:{view:'desk',panX:0,panY:0,files:Object.fromEntries(deskFiles.map(f=>[f.id,{x:f.x,y:f.y,space:f.space}])),placements:Object.fromEntries(deskFiles.map(f=>[f.id,defaultPlacement(f)]))}};
   function restore(s){
     if(!s||typeof s!=='object')return;if(['desktop','pocket'].includes(s.layout))state.layout=s.layout;if(typeof s.note==='string')state.note=s.note;if(typeof s.playing==='boolean')state.playing=s.playing;
+    if(Array.isArray(s.recentApps))state.recentApps=[...new Set(s.recentApps.filter(name=>byName.has(name)&&!pinnedApps.includes(name)))];
     if(s.views&&typeof s.views==='object')for(const key of ['desk','studio','life','overview','drawer']){const v=s.views[key];if(v&&[v.x,v.y,v.z].every(Number.isFinite))state.views[key]={x:Math.max(-1.8,Math.min(1.8,v.x)),y:Math.max(-1.8,Math.min(1.8,v.y)),z:Math.max(.65,Math.min(2.2,v.z))};}
     if(s.desk&&typeof s.desk==='object'){const d=s.desk;if([...Object.keys(spaces),'overview'].includes(d.view))state.desk.view=d.view;
       deskFiles.forEach(f=>{const p=d.files?.[f.id];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&spaces[p.space])state.desk.files[f.id]={x:Math.max(-1050,Math.min(1050,p.x)),y:Math.max(-450,Math.min(450,p.y)),space:p.space};});
@@ -388,7 +396,7 @@
   const nodes=apps.map((app,i)=>{
     const p=positions[i],ax=(p.q+p.r/2)*110,ay=p.r*83;
     const radius=p.d===0?53:p.d===1?45:p.d===2?39:33;
-    const button=document.createElement('button');button.type='button';button.className='hf-bubble cursor-interaction'+(p.d===3?' hf-small':'');button.dataset.launch=app.name;button.setAttribute('aria-label',app.name);button.style.setProperty('--bubble-color',app.color);button.style.setProperty('--bubble-ink',app.ink);button.innerHTML='<i data-lucide="'+app.icon+'" aria-hidden="true"></i><span>'+app.name+'</span>';bubbleLayer.append(button);
+    const button=document.createElement('button');button.type='button';button.className='hf-app-orb hf-bubble cursor-interaction'+(p.d===3?' hf-small':'');button.dataset.launch=app.name;button.setAttribute('aria-label',app.name);button.style.setProperty('--bubble-color',app.color);button.style.setProperty('--bubble-ink',app.ink);button.innerHTML='<i data-lucide="'+app.icon+'" aria-hidden="true"></i><span>'+app.name+'</span>';bubbleLayer.append(button);
     return{...app,ax,ay,x:ax,y:ay,vx:0,vy:0,baseR:radius,r:radius,button};
   });
   const windows=new Map();
@@ -538,7 +546,16 @@
   }
   function resize(){width=field.clientWidth;height=field.clientHeight;const nextFit=state.layout==='pocket'||width<520?.94:Math.min(1.03,(width-65)/770,(height-30)/570);const ratio=camera.tz/fit;fit=nextFit;camera.tz=fit*Math.min(1.8,Math.max(.65,ratio));clampCamera();windows.forEach(sizeWindow);paintDesk();kick();}
   function focusWindow(rec){rec.el.style.zIndex=String(++zCounter);}
-  function sourceRect(app,preferred){if(preferred?.isConnected&&!preferred.closest('[hidden],[inert]')){const rect=preferred.getBoundingClientRect(),area=field.getBoundingClientRect();if(rect.left>=area.left&&rect.right<=area.right&&rect.top>=area.top&&rect.bottom<=area.bottom)return rect;}const source=drawerOpen?nodes.find(n=>n.name===app.name).button:[...root.querySelectorAll('.hf-dock [data-launch]')].find(b=>b.dataset.launch===app.name)||drawerToggle;return source.getBoundingClientRect();}
+  function sourceRect(app,preferred){
+    const candidates=[preferred,drawerOpen?nodes.find(n=>n.name===app.name).button:null,dockButtons.get(app.name),drawerToggle];
+    for(const button of candidates){
+      if(!button?.isConnected||button.closest('[hidden],[inert]'))continue;
+      const face=button.querySelector('.hf-dock-orb')||button,rect=face.getBoundingClientRect();
+      const area=(button.closest('.hf-dock-apps')|| (button.closest('.hf-dock')?os:field)).getBoundingClientRect();
+      if(rect.width&&rect.height&&rect.left>=area.left&&rect.right<=area.right&&rect.top>=area.top&&rect.bottom<=area.bottom)return rect;
+    }
+    return drawerToggle.getBoundingClientRect();
+  }
   function morph(rec,opening,launchOrigin){
     rec.animation?.cancel();const target=rec.el.getBoundingClientRect(),source=launchOrigin||sourceRect(rec.app,rec.origin),dx=source.left-target.left,dy=source.top-target.top,sx=source.width/target.width,sy=source.height/target.height;
     const circle={transform:'translate('+dx+'px,'+dy+'px) scale('+sx+','+sy+')',borderRadius:'50%',opacity:0,background:rec.app.color};
@@ -547,7 +564,66 @@
     rec.animation=rec.el.animate(opening?[circle,{...surface,offset:.8},surface]:[surface,circle],{duration,easing:opening?'cubic-bezier(.2,.9,.25,1)':'cubic-bezier(.45,0,.4,1)',fill:'none'});
     if(!opening)rec.animation.onfinish=()=>{rec.el.hidden=true;};
   }
-  function updateRunning(){nodes.forEach(n=>n.button.classList.toggle('is-running',windows.has(n.name)));root.querySelectorAll('.hf-dock [data-launch]').forEach(b=>{const dot=b.querySelector('.hf-running-dot');if(dot)dot.hidden=!windows.has(b.dataset.launch);});}
+  function revealDockButton(button){
+    if(!button||!dockApps.contains(button))return;
+    const rect=button.getBoundingClientRect(),area=dockApps.getBoundingClientRect();
+    if(rect.left<area.left+6)dockApps.scrollLeft+=rect.left-area.left-6;
+    else if(rect.right>area.right-6)dockApps.scrollLeft+=rect.right-area.right+6;
+  }
+  function updateRunning(arriving){
+    nodes.forEach(n=>n.button.classList.toggle('is-running',windows.has(n.name)));
+    // Keep every live window accessible, plus three shortcuts after apps close.
+    let closed=0;
+    state.recentApps=[...new Set([...state.recentApps,...windows.keys()])].filter(name=>byName.has(name)&&!pinnedApps.includes(name)).filter(name=>windows.has(name)||closed++<3);
+    const names=[...pinnedApps,...state.recentApps],focused=document.activeElement,hadFocus=dockApps.contains(focused),scroll=dockApps.scrollLeft;
+    const children=[];
+    for(const name of names){
+      if(name===state.recentApps[0])children.push(recentDivider);
+      let button=dockButtons.get(name);
+      if(!button){
+        const app=byName.get(name);button=document.createElement('button');button.type='button';button.className='hf-dock-button cursor-interaction';button.dataset.launch=name;button.setAttribute('aria-label',name);
+        button.style.setProperty('--bubble-color',app.color);button.style.setProperty('--bubble-ink',app.ink);
+        button.innerHTML='<span class="hf-app-orb hf-dock-orb"><i data-lucide="'+app.icon+'" aria-hidden="true"></i></span><span class="hf-dock-label">'+name+'</span><b class="hf-running-dot" aria-hidden="true" hidden></b>';
+        dockButtons.set(name,button);
+        if(name===arriving&&motion())button.animate([{opacity:0,transform:'translateY(12px) scale(.55)'},{opacity:1,transform:'translateY(-2px) scale(1.05)',offset:.75},{opacity:1,transform:'none'}],{duration:460,easing:'cubic-bezier(.2,.85,.25,1)'});
+      }
+      button.querySelector('.hf-running-dot').hidden=!windows.has(name);
+      button.title=name+' · '+(pinnedApps.includes(name)?'Pinned':windows.has(name)?'Open':'Recent');
+      children.push(button);
+    }
+    for(const [name,button] of dockButtons)if(!names.includes(name)){button.remove();dockButtons.delete(name);}
+    if(!state.recentApps.length)recentDivider.remove();
+    children.forEach((child,index)=>{if(dockApps.children[index]!==child)dockApps.insertBefore(child,dockApps.children[index]||null);});
+    icons();dockApps.scrollLeft=scroll;
+    if(hadFocus){const target=focused.isConnected?focused:dockButtons.get(state.recentApps[0])||drawerToggle;target.focus({preventScroll:true});revealDockButton(target);}
+    if(arriving)revealDockButton(dockButtons.get(arriving));
+  }
+  let dockDrag=null,suppressDockClickUntil=0;
+  dockApps.addEventListener('pointerdown',e=>{if(e.button!==0)return;suppressDockClickUntil=0;dockDrag={id:e.pointerId,x:e.clientX,y:e.clientY,scroll:dockApps.scrollLeft,moved:false};});
+  dockApps.addEventListener('pointermove',e=>{
+    if(!dockDrag||e.pointerId!==dockDrag.id)return;
+    const dx=e.clientX-dockDrag.x,dy=e.clientY-dockDrag.y;
+    if(Math.hypot(dx,dy)>7)dockDrag.moved=true;
+    if(dockDrag.moved&&e.pointerType==='mouse'){
+      dockApps.setPointerCapture(e.pointerId);dockApps.classList.add('is-dragging');dockApps.scrollLeft=dockDrag.scroll-dx;e.preventDefault();
+    }
+  });
+  function endDockDrag(){if(dockDrag?.moved)suppressDockClickUntil=performance.now()+350;dockDrag=null;dockApps.classList.remove('is-dragging');}
+  dockApps.addEventListener('pointerup',endDockDrag);dockApps.addEventListener('pointercancel',endDockDrag);dockApps.addEventListener('lostpointercapture',endDockDrag);
+  dockApps.addEventListener('click',e=>{if(e.detail&&performance.now()<suppressDockClickUntil){e.preventDefault();e.stopPropagation();}},true);
+  dockApps.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey||dockApps.scrollWidth<=dockApps.clientWidth)return;
+    const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+    e.preventDefault();e.stopPropagation();dockApps.scrollLeft+=delta*(e.deltaMode===1?16:e.deltaMode===2?dockApps.clientWidth:1);
+  },{passive:false});
+  dock.addEventListener('focusin',e=>revealDockButton(e.target.closest('button')));
+  dock.addEventListener('keydown',e=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+    const buttons=[...dock.querySelectorAll('button')],index=buttons.indexOf(e.target.closest('button'));if(index<0)return;
+    e.preventDefault();e.stopPropagation();
+    const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:Math.max(0,Math.min(buttons.length-1,index+(e.key==='ArrowLeft'?-1:1)));
+    buttons[next].focus({preventScroll:true});revealDockButton(buttons[next]);
+  });
   function bodyContent(app){
     if(app.name==='Notes')return'<p class="hf-eyebrow">PERSONAL / SCRATCHPAD</p><textarea class="hf-note" aria-label="Your note" spellcheck="false"></textarea>';
     if(app.name==='Music')return'<div class="hf-cover" role="img" aria-label="Peach and lavender abstract album artwork"></div><strong class="hf-track-title">A little headspace</strong><div class="hf-player"><button class="cursor-interaction hf-play" data-play aria-label="'+(state.playing?'Pause':'Play')+' soundless preview"><i data-lucide="'+(state.playing?'pause':'play')+'" aria-hidden="true"></i></button></div><p class="hf-caption" style="text-align:center">Ambient · Soundless preview</p>';
@@ -573,20 +649,21 @@
     });
     el.querySelector('.hf-window-header').addEventListener('pointerup',()=>{windowDrag=null;});
     el.querySelector('.hf-window-header').addEventListener('pointercancel',()=>{windowDrag=null;});
-    icons();updateRunning();return rec;
+    icons();return rec;
   }
   function openApp(name,origin){
     const app=byName.get(name);if(!app)return;const launchOrigin=sourceRect(app,origin);dismissSearch(false);if(drawerOpen)closeDrawer({restoreFocus:false,animate:false});hover=null;
     let rec=windows.get(name);const opening=!rec||rec.el.hidden||rec.minimized||rec.closing;rec=rec||createWindow(app);rec.minimized=false;rec.closing=false;
+    if(!pinnedApps.includes(name))state.recentApps=[name,...state.recentApps.filter(recent=>recent!==name)];updateRunning(name);save();
     if(state.layout==='pocket'||width<560)windows.forEach(other=>{if(other!==rec)other.el.hidden=true;});
     if(origin?.dataset.file)rec.origin=origin;rec.el.hidden=false;sizeWindow(rec);focusWindow(rec);if(opening)morph(rec,true,launchOrigin);kick();
     hint.textContent=state.layout==='pocket'||width<560?'Your apps stay with you.':'Open another app. Move your windows. Make room.';
     rec.el.querySelector('[data-minimize]').focus({preventScroll:true});
   }
-  function appFocus(app){const target=[...root.querySelectorAll('.hf-dock [data-launch]')].find(b=>b.dataset.launch===app.name)||drawerToggle;suppressFocusPan=true;target.focus({preventScroll:true});suppressFocusPan=false;}
-  function minimize(rec){rec.minimized=true;morph(rec,false);hint.textContent=rec.app.name+' is still here. Open it again to return.';appFocus(rec.app);}
+  function appFocus(app){const target=dockButtons.get(app.name)||drawerToggle;revealDockButton(target);suppressFocusPan=true;target.focus({preventScroll:true});suppressFocusPan=false;}
+  function minimize(rec){revealDockButton(dockButtons.get(rec.app.name));rec.minimized=true;morph(rec,false);hint.textContent=rec.app.name+' is still here. Open it again to return.';appFocus(rec.app);}
   function closeWindow(rec){
-    rec.closing=true;morph(rec,false);const animation=rec.animation;animation.onfinish=()=>{rec.el.remove();windows.delete(rec.app.name);updateRunning();};
+    revealDockButton(dockButtons.get(rec.app.name));rec.closing=true;morph(rec,false);const animation=rec.animation;animation.onfinish=()=>{if(!rec.closing||rec.animation!==animation||windows.get(rec.app.name)!==rec)return;rec.el.remove();windows.delete(rec.app.name);updateRunning();save();};
     appFocus(rec.app);hint.textContent='Your workspace. Your pace.';
   }
   function musicUI(){root.querySelector('.hf-activity-text').textContent=state.playing?'Headspace · playing':'A little headspace';root.querySelectorAll('[data-play]').forEach(b=>{b.setAttribute('aria-label',(state.playing?'Pause':'Play')+' soundless preview');b.innerHTML='<i data-lucide="'+(state.playing?'pause':'play')+'" aria-hidden="true"></i>';});icons();}
@@ -607,7 +684,7 @@
     if(button.dataset.space){visitSpace(button.dataset.space);return;}
     if(button.hasAttribute('data-arrange')){arranging=!arranging;if(arranging&&state.desk.view==='overview')visitSpace('desk',false);paintDesk();deskHint();return;}
     if(button.classList.contains('hf-bubble')&&performance.now()-lastDragEnd<280)return;
-    if(button.dataset.launch){openApp(button.dataset.launch);return;}
+    if(button.dataset.launch){openApp(button.dataset.launch,button);return;}
     if(button.hasAttribute('data-drawer-toggle')){if(drawerOpen)closeDrawer();else openDrawer();return;}
     if(button.hasAttribute('data-close-drawer')){closeDrawer();return;}
     if(button.hasAttribute('data-reset-universe')){home();return;}
@@ -641,7 +718,7 @@
   root.addEventListener('keydown',e=>{
     if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search();return;}
     if(e.key==='Escape'){e.preventDefault();if(desktopGestures.active||drawerGestures.active){desktopGestures.cancel();drawerGestures.cancel();return;}if(!searchPanel.hidden){dismissSearch();return;}if(drawerOpen){closeDrawer();return;}if(arranging){arranging=false;paintDesk();deskHint();root.querySelector('[data-arrange]').focus();return;}const top=[...windows.values()].filter(r=>!r.el.hidden).sort((a,b)=>Number(b.el.style.zIndex)-Number(a.el.style.zIndex))[0];if(top)minimize(top);else desktopGestures.reset();return;}
-    if(e.target.closest('input,textarea,select,[contenteditable],.hf-window,.hf-search-panel'))return;
+    if(e.target.closest('input,textarea,select,[contenteditable],.hf-window,.hf-search-panel,.hf-dock'))return;
     if(e.code==='Space'){if(!spaceHeld)spacePanUsed=false;spaceHeld=true;os.classList.add('is-space-pan');if(!e.target.closest('button'))e.preventDefault();}
     const active=drawerOpen?drawerGestures:desktopGestures;
     if(['+','=','-','0'].includes(e.key)){e.preventDefault();if(e.key==='0')active.reset();else active.zoom(e.key==='-'?1/1.2:1.2);return;}
@@ -650,8 +727,8 @@
   root.addEventListener('keyup',e=>{if(e.code==='Space'&&spacePanUsed){e.preventDefault();e.stopPropagation();spaceHeld=false;spacePanUsed=false;os.classList.remove('is-space-pan');}},true);
   window.addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;spacePanUsed=false;os.classList.remove('is-space-pan');}});
   window.addEventListener('blur',()=>{spaceHeld=false;os.classList.remove('is-space-pan');desktopGestures.cancel();drawerGestures.cancel();});
-  window.addEventListener('openai:set_globals',e=>{const saved=e.detail?.globals?.widgetState?.privateContent;if(saved&&!desktopGestures.active&&!drawerGestures.active){if(JSON.stringify(saved)===JSON.stringify(state))return;const priorLayout=state.layout;restore(saved);if(priorLayout!==state.layout)setLayout(state.layout,false);restoreViews();paintDesk();musicUI();updateNotePreview();const notes=windows.get('Notes');if(notes&&notes.el.querySelector('textarea')!==document.activeElement)notes.el.querySelector('textarea').value=state.note;}});
-  new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();deskHint();
+  window.addEventListener('openai:set_globals',e=>{const saved=e.detail?.globals?.widgetState?.privateContent;if(saved&&!desktopGestures.active&&!drawerGestures.active){if(JSON.stringify(saved)===JSON.stringify(state))return;const priorLayout=state.layout;restore(saved);if(priorLayout!==state.layout)setLayout(state.layout,false);restoreViews();paintDesk();musicUI();updateNotePreview();updateRunning();const notes=windows.get('Notes');if(notes&&notes.el.querySelector('textarea')!==document.activeElement)notes.el.querySelector('textarea').value=state.note;}});
+  new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();
   if(globalThis.Tweak){const tweak=new Tweak({container:os,onChange:()=>{paintDesk();kick();}});tweak.addSlider(settings,'magnification',{label:'Bubble magnetism',min:0,max:.45,step:.05});tweak.addToggle(settings,'fluid',{label:'Elastic transitions'});tweak.addToggle(settings,'labels',{label:'App names'});}
 })();
 </script>

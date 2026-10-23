@@ -2,6 +2,8 @@
 
 A fluid browser desktop with a spatial workspace overview, small upright desktop icons, and a bubble App Drawer. The same gestures work across the desktop and App Drawer: drag or swipe to pan, pinch or Ctrl-scroll to zoom, and hold a file on touch to move it.
 
+The drawer and dock share colored circular app icons. Home and App Drawer stay fixed beside a scrollable app row: Notes, Music, and Files are pinned, every running app stays available, and the three most recently used closed apps remain as shortcuts. Drag, swipe, or scroll the row; arrow keys move between dock buttons. Running dots belong to the current tab, while recent shortcuts are saved in this browser.
+
 ## Open Hole
 
 - Live app: https://hole-os-armonon.netlify.app
@@ -59,6 +61,8 @@ This is an interactive interface prototype. Notes, workspace arrangement, naviga
 ## Interaction verification
 
 The shared gesture implementation passed 27 simulated touch/wheel assertions covering swipe, hold-and-drag, pinch anchors, second-pointer transitions, cancellation, and app-body wheel isolation. Mouse dragging, native scrolling inside Notes, state restoration, and 320-pixel layouts were also checked. Physical touch-device testing remains outstanding.
+
+The recent-app dock was checked at desktop, Pocket, and 320-pixel widths: six running apps, three closed recents, pinned-app deduplication, minimize/restore, immediate close/reopen, keyboard reveal, wheel/drag isolation, reload, and cross-tab persistence. The updated app produced no browser console errors during these checks.
 
 ## References
 
