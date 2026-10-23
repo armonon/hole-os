@@ -1,0 +1,62 @@
+/* Fluid window controls remain available with mouse, touch, or keyboard. */
+#hole-fluid-os .hf-window { isolation: isolate; }
+#hole-fluid-os .hf-window-header { padding-right: 12px; }
+#hole-fluid-os .hf-window-header button { transition: background .18s, transform .24s cubic-bezier(.2,.85,.2,1); }
+#hole-fluid-os .hf-window-header button:hover { transform: scale(1.09); background: var(--hf-line); }
+#hole-fluid-os .hf-window-header button:active { transform: scale(.94); }
+#hole-fluid-os .hf-window-resizer { position:absolute; right:0; bottom:0; z-index:8; display:grid; place-items:center; width:34px; height:34px; background:transparent; cursor:nwse-resize; touch-action:none; border-radius:16px 0 26px 0; color:var(--hf-muted); }
+#hole-fluid-os .hf-window-resizer span { width:12px; height:12px; opacity:.65; background:repeating-linear-gradient(135deg,transparent 0 3px,currentColor 3px 4.5px,transparent 4.5px 6.5px); clip-path:polygon(100% 0,100% 100%,0 100%); transform:translate(-1px,-1px); transition:opacity .2s,transform .25s; }
+#hole-fluid-os .hf-window-resizer:hover span,#hole-fluid-os .hf-window-resizer:focus-visible span { opacity:1; transform:translate(-1px,-1px) scale(1.2); }
+#hole-fluid-os .hf-window-resizer:focus-visible { outline-offset:-6px; }
+#hole-fluid-os .hf-window.is-resizing { user-select:none; }
+#hole-fluid-os .hf-window.is-resizing .hf-window-body { pointer-events:none; }
+#hole-fluid-os .hf-window-size-menu { position:absolute; z-index:10; bottom:34px; right:12px; display:grid; gap:4px; width:168px; padding:10px; border:1px solid var(--hf-line); border-radius:20px; background:var(--hf-paper); box-shadow:0 12px 35px var(--hf-shadow); animation:hf-window-menu-in .22s cubic-bezier(.18,.86,.24,1); }
+#hole-fluid-os .hf-window-size-menu>span { padding:3px 8px 6px; font-size:10px; letter-spacing:.05em; color:var(--hf-muted); }
+#hole-fluid-os .hf-window-size-menu button { padding:10px 9px; text-align:left; border-radius:12px; background:transparent; font-size:12px; min-height:38px; }
+#hole-fluid-os .hf-window-size-menu button:hover { background:var(--hf-soft); }
+#hole-fluid-os .hf-window.is-edge-gesturing { transform-origin:50% 100%; border-radius:28px!important; will-change:transform,opacity; }
+#hole-fluid-os .hf-window[data-fullscreen=true] { border-radius:12px; box-shadow:none; }
+#hole-fluid-os .hf-window[data-fullscreen=true] .hf-window-header { cursor:default; }
+#hole-fluid-os .hf-window[data-fullscreen=true] .hf-window-body { padding-bottom:28px; }
+#hole-fluid-os .hf-home-indicator { display:none; }
+#hole-fluid-os .hf-system-handle { position:relative; display:grid; place-items:center; flex:none; width:130px; height:24px; min-height:24px; padding:0; border-radius:14px; background:transparent; touch-action:none; user-select:none; cursor:ns-resize; z-index:8; }
+#hole-fluid-os .hf-system-handle span { display:block; width:76px; height:4px; border-radius:4px; background:var(--hf-ink); opacity:.45; transition:width .32s cubic-bezier(.18,.86,.24,1),opacity .2s,transform .25s; }
+#hole-fluid-os .hf-system-handle:hover span,#hole-fluid-os .hf-system-handle:focus-visible span { width:94px; opacity:.8; }
+#hole-fluid-os .hf-system-handle:active span { transform:scaleX(.88); }
+#hole-fluid-os .hf-system-handle:focus-visible { outline-offset:-2px; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true]>.hf-topbar,#hole-fluid-os .hf-os[data-app-fullscreen=true]>.hf-controls { display:none!important; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true]>.hf-field { border-radius:0!important; margin:0!important; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true]>.hf-bottom { height:calc(40px + env(safe-area-inset-bottom,0px)); min-height:calc(40px + env(safe-area-inset-bottom,0px)); padding:0 12px env(safe-area-inset-bottom,0px)!important; margin:0!important; gap:0; border-radius:0!important; background:var(--hf-paper)!important; justify-content:center; z-index:20; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-hint { display:none; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-dock { position:absolute; bottom:calc(45px + env(safe-area-inset-bottom,0px)); left:50%; max-width:calc(100% - 24px); width:max-content; z-index:7; opacity:0; pointer-events:none; transform:translate(-50%,24px) scale(.94); transform-origin:50% 100%; transition:transform .38s cubic-bezier(.18,.86,.24,1),opacity .22s; box-shadow:0 15px 45px var(--hf-shadow),0 1px 0 light-dark(#ffffffbb,#ffffff0a); }
+#hole-fluid-os .hf-os[data-app-fullscreen=true][data-dock-revealed=true] .hf-dock { opacity:1; pointer-events:auto; transform:translate(-50%,0) scale(1); }
+#hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-system-handle { height:36px; }
+#hole-fluid-os .hf-edge-preview { position:absolute; z-index:80; pointer-events:none; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; left:50%; bottom:146px; width:194px; padding:13px 18px 12px; border:1px solid light-dark(#ffffffbb,#ffffff18); background:light-dark(#fffef4eb,#282b36ed); color:var(--hf-ink); border-radius:24px; box-shadow:0 10px 35px var(--hf-shadow); transform:translateX(-50%); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); animation:hf-edge-preview-in .25s cubic-bezier(.18,.86,.24,1); }
+#hole-fluid-os .hf-edge-preview-label { font-size:12px; font-weight:550; }
+#hole-fluid-os .hf-edge-preview-symbol { display:grid; place-items:center; width:20px; height:20px; color:var(--hf-accent); font-size:19px; line-height:1; }
+#hole-fluid-os .hf-edge-progress { position:relative; flex-basis:100%; margin-top:3px; height:3px; border-radius:2px; background:var(--hf-line); }
+#hole-fluid-os .hf-edge-progress b { display:block; width:0; height:100%; border-radius:2px; background:var(--hf-accent); }
+#hole-fluid-os .hf-edge-progress i { position:absolute; width:5px; height:5px; border-radius:50%; top:-1px; background:var(--hf-muted); }
+#hole-fluid-os .hf-edge-progress i:nth-of-type(1) { left:20%; }
+#hole-fluid-os .hf-edge-progress i:nth-of-type(2) { left:60%; }
+#hole-fluid-os .hf-edge-progress i:nth-of-type(3) { right:0; }
+#hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-edge-preview { bottom:140px; }
+@keyframes hf-window-menu-in { from{opacity:0;transform:translateY(5px) scale(.96)} to{opacity:1;transform:none} }
+@keyframes hf-edge-preview-in { from{opacity:0;transform:translate(-50%,8px) scale(.95)} to{opacity:1;transform:translate(-50%,0) scale(1)} }
+@media(pointer:coarse) {
+  #hole-fluid-os .hf-window-resizer { width:44px; height:44px; }
+  #hole-fluid-os .hf-window-resizer span { width:14px; height:14px; }
+  #hole-fluid-os .hf-window-size-menu { bottom:44px; }
+  #hole-fluid-os .hf-window-size-menu button { min-height:44px; }
+  #hole-fluid-os .hf-system-handle { height:32px; }
+}
+@media(max-width:390px) {
+  #hole-fluid-os .hf-window-header { gap:7px; padding-left:12px; }
+  #hole-fluid-os .hf-window-header strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #hole-fluid-os .hf-window-header>svg { width:16px; height:16px; }
+  #hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-dock { max-width:calc(100% - 12px); }
+}
+@media(prefers-reduced-motion:reduce) {
+  #hole-fluid-os .hf-window-header button,#hole-fluid-os .hf-window-resizer span,#hole-fluid-os .hf-system-handle span,#hole-fluid-os .hf-os[data-app-fullscreen=true] .hf-dock { transition:none!important; }
+  #hole-fluid-os .hf-window-size-menu,#hole-fluid-os .hf-edge-preview { animation:none!important; }
+}

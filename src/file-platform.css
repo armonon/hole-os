@@ -1,0 +1,95 @@
+#hole-fluid-os .hfiles-layer{position:absolute;inset:0;z-index:1000;pointer-events:none;color:var(--hf-ink);font:inherit}
+#hole-fluid-os .hfiles-layer [hidden]{display:none!important}
+#hole-fluid-os .hfiles-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:13px;padding:9px 12px;min-height:38px;background:var(--hf-soft);color:var(--hf-ink);font:inherit;font-size:11px;cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1),background .2s,box-shadow .2s}
+#hole-fluid-os .hfiles-button:hover{background:color-mix(in srgb,var(--hf-soft),#bbaaef 18%);transform:translateY(-1px)}
+#hole-fluid-os .hfiles-button:active{transform:scale(.96)}
+#hole-fluid-os .hfiles-button:disabled{opacity:.5;cursor:wait;transform:none}
+#hole-fluid-os .hfiles-button svg{width:16px;height:16px;flex-shrink:0}
+#hole-fluid-os .hfiles-button:focus-visible,#hole-fluid-os .hfiles-input:focus-visible{outline:2px solid light-dark(#7b62bf,#c5b3f8);outline-offset:3px}
+#hole-fluid-os .hfiles-primary{background:light-dark(#d8f08a,#617837);color:light-dark(#26330e,#efffd2)}
+#hole-fluid-os .hfiles-activity-button{flex-shrink:0;margin-left:auto;padding:8px 10px;background:transparent}
+#hole-fluid-os .hfiles-activity-button[data-active=true]{background:light-dark(#eae1fb,#393044)}
+#hole-fluid-os .hfiles-activity-button[data-active=true] svg{animation:hfiles-breathe 2s ease-in-out infinite}
+#hole-fluid-os .hfiles-body{padding:0!important;container-type:inline-size}
+#hole-fluid-os .hfiles-app{padding:20px;min-height:100%;box-sizing:border-box;transition:background .25s;position:relative}
+#hole-fluid-os .hfiles-app.is-dropping{background:light-dark(#ede6ff,#393047);outline:2px dashed light-dark(#967ace,#c4acef);outline-offset:-8px}
+#hole-fluid-os .hfiles-head{display:flex;align-items:center;gap:12px;justify-content:space-between}
+#hole-fluid-os .hfiles-head h2{font-size:23px;line-height:1.12;letter-spacing:-.7px;margin:7px 0!important}
+#hole-fluid-os .hfiles-eyebrow{font-size:9px;letter-spacing:1.4px;color:var(--hf-muted);margin:0;font-weight:600}
+#hole-fluid-os .hfiles-local-note{font-size:10px;color:var(--hf-muted);line-height:1.6;margin:10px 0 18px}
+#hole-fluid-os .hfiles-input-file{display:none}
+#hole-fluid-os .hfiles-work{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
+#hole-fluid-os .hfiles-list{display:flex;flex-direction:column;gap:5px;min-width:0}
+#hole-fluid-os .hfiles-row{display:flex;border-radius:15px;gap:2px;align-items:center;min-width:0;transition:background .2s}
+#hole-fluid-os .hfiles-row:hover{background:var(--hf-soft)}
+#hole-fluid-os .hfiles-row.is-selected{background:light-dark(#eee7fb,#393147)}
+#hole-fluid-os .hfiles-file-open{justify-content:flex-start;text-align:left;flex:1;min-width:0;background:transparent;padding:12px 10px;min-height:56px}
+#hole-fluid-os .hfiles-file-open:hover{background:transparent;transform:none}
+#hole-fluid-os .hfiles-file-open>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:12px}
+#hole-fluid-os .hfiles-file-open>svg{width:24px;height:24px;color:light-dark(#8b78bb,#c2a9ed);margin-right:3px}
+#hole-fluid-os .hfiles-file-meta{display:block;font-size:9px;color:var(--hf-muted);margin-top:5px;font-weight:400}
+#hole-fluid-os .hfiles-more{width:36px;min-width:36px;padding:8px;background:transparent}
+#hole-fluid-os .hfiles-more>span{display:none}
+#hole-fluid-os .hfiles-preview{border-radius:18px;background:var(--hf-soft);padding:16px;min-width:0;overflow:hidden}
+#hole-fluid-os .hfiles-preview h3{margin:8px 0 14px;font-size:17px;font-weight:500;letter-spacing:-.35px;overflow-wrap:anywhere}
+#hole-fluid-os .hfiles-preview-intro{font-size:19px;line-height:1.2;max-width:230px;letter-spacing:-.6px;margin-bottom:10px}
+#hole-fluid-os .hfiles-muted{font-size:11px;line-height:1.65;color:var(--hf-muted);overflow-wrap:anywhere;margin:8px 0 14px}
+#hole-fluid-os .hfiles-media{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70px;overflow:hidden;border-radius:12px}
+#hole-fluid-os .hfiles-media>svg{width:36px;height:36px;color:light-dark(#b2a1cc,#b2a1cc);margin:20px}
+#hole-fluid-os .hfiles-image{max-width:100%;max-height:280px;object-fit:contain;border-radius:10px;display:block;background:repeating-conic-gradient(light-dark(#eee9ef,#34303a) 0% 25%,light-dark(#fff,#25222b) 0% 50%) 50% / 16px 16px}
+#hole-fluid-os .hfiles-player{max-width:100%;width:100%;border-radius:10px;display:block}
+#hole-fluid-os .hfiles-text-preview{font:11px/1.7 ui-monospace,SFMono-Regular,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;width:100%;margin:0;box-sizing:border-box;padding:12px;background:light-dark(#fffaf3,#211f24);border-radius:10px;user-select:text}
+#hole-fluid-os .hfiles-action-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#hole-fluid-os .hfiles-preview .hfiles-button{background:light-dark(#fff9,#ffffff0d)}
+#hole-fluid-os .hfiles-empty{padding:24px 12px;text-align:center;display:flex;flex-direction:column;align-items:center}
+#hole-fluid-os .hfiles-empty>svg{width:34px;height:34px;color:light-dark(#a18ac6,#c4ade7);margin:5px 0 10px}
+#hole-fluid-os .hfiles-empty h3{font-size:18px;font-weight:500;letter-spacing:-.5px;margin:10px 0 5px}
+#hole-fluid-os .hfiles-empty p{max-width:290px}
+#hole-fluid-os .hfiles-quick{position:absolute;pointer-events:auto;width:max-content;max-width:calc(100% - 16px);box-sizing:border-box;background:light-dark(#fffdf8f7,#2a2630f5);border:1px solid light-dark(#ffffffcc,#ffffff15);box-shadow:0 14px 50px light-dark(#39244826,#0007);backdrop-filter:blur(24px);border-radius:22px;padding:12px}
+#hole-fluid-os .hfiles-quick-title{display:flex;gap:18px;align-items:center;justify-content:space-between;margin:0 4px 10px;min-width:0}
+#hole-fluid-os .hfiles-quick-title strong{font-size:11px;font-weight:500;max-width:220px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#hole-fluid-os .hfiles-quick-title small{font-size:7px;letter-spacing:1px;color:var(--hf-muted);flex-shrink:0}
+#hole-fluid-os .hfiles-quick-row{display:flex;gap:5px;max-width:660px;flex-wrap:wrap}
+#hole-fluid-os .hfiles-quick-row .hfiles-button{flex-direction:column;gap:6px;min-width:58px;min-height:54px;padding:8px;font-size:9px;background:transparent}
+#hole-fluid-os .hfiles-quick-row .hfiles-button:hover{background:var(--hf-soft)}
+#hole-fluid-os .hfiles-quick-row .hfiles-button svg{width:19px;height:19px}
+#hole-fluid-os .hfiles-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:light-dark(#37274425,#0007);backdrop-filter:blur(8px);pointer-events:auto}
+#hole-fluid-os .hfiles-dialog{width:430px;max-width:100%;max-height:calc(100% - 20px);display:flex;flex-direction:column;background:light-dark(#fffdf9,#27242d);border:1px solid light-dark(#fff,#ffffff1a);box-shadow:0 24px 100px #0002;border-radius:26px;overflow:hidden}
+#hole-fluid-os .hfiles-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 10px;flex-shrink:0}
+#hole-fluid-os .hfiles-dialog-head h2{font-size:23px;font-weight:500;letter-spacing:-.7px;margin:0}
+#hole-fluid-os .hfiles-close{width:35px;min-height:35px;padding:8px;background:transparent}
+#hole-fluid-os .hfiles-close>span{display:none}
+#hole-fluid-os .hfiles-dialog-content{padding:0 20px 22px;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
+#hole-fluid-os .hfiles-dialog-content h3{font-size:19px;font-weight:500;letter-spacing:-.5px}
+#hole-fluid-os .hfiles-form{display:flex;flex-direction:column;gap:12px;margin-top:10px;font-size:12px}
+#hole-fluid-os .hfiles-form>.hfiles-button{align-self:flex-end}
+#hole-fluid-os .hfiles-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--hf-line);border-radius:12px;font:inherit;font-size:13px;background:var(--hf-soft);color:var(--hf-ink)}
+#hole-fluid-os .hfiles-format-options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:20px 0}
+#hole-fluid-os .hfiles-format{height:82px;flex-direction:column;background:light-dark(#ece5fb,#3d324e);font-weight:600}
+#hole-fluid-os .hfiles-format svg{width:24px;height:24px}
+#hole-fluid-os .hfiles-timeline{list-style:none;padding:0 0 0 14px;margin:22px 0 5px;border-left:1px solid var(--hf-line)}
+#hole-fluid-os .hfiles-timeline li{position:relative;margin-bottom:22px;padding-left:10px}
+#hole-fluid-os .hfiles-timeline li:before{content:'';position:absolute;left:-19px;top:16px;width:8px;height:8px;border-radius:50%;background:light-dark(#bdb0d6,#8c7ba8)}
+#hole-fluid-os .hfiles-timeline li.is-current:before{background:light-dark(#96b738,#d1ed87);box-shadow:0 0 0 4px light-dark(#e9f2ce,#465331)}
+#hole-fluid-os .hfiles-version{justify-content:flex-start;text-align:left;max-width:100%;background:transparent;padding-left:0}
+#hole-fluid-os .hfiles-version span{overflow-wrap:anywhere;min-width:0}
+#hole-fluid-os .hfiles-timeline small{display:block;font-size:9px;margin:0}
+#hole-fluid-os .hfiles-history-detail{font-size:10px;line-height:1.5;color:var(--hf-muted);margin:9px 0 0}
+#hole-fluid-os .hfiles-job{border:1px solid var(--hf-line);border-radius:17px;padding:14px;margin-top:10px}
+#hole-fluid-os .hfiles-job-head{display:flex;align-items:flex-start;gap:9px;min-width:0}
+#hole-fluid-os .hfiles-job-head strong{font-size:12px;line-height:1.5;font-weight:500;overflow-wrap:anywhere;min-width:0}
+#hole-fluid-os .hfiles-job-head svg{width:18px;height:18px;flex-shrink:0;color:light-dark(#967ec4,#c4a9ee)}
+#hole-fluid-os .hfiles-job[data-status=running] .hfiles-job-head svg{animation:hfiles-spin 2s linear infinite}
+#hole-fluid-os .hfiles-job[data-status=completed] .hfiles-job-head svg{color:light-dark(#7c9a33,#c2dc82)}
+#hole-fluid-os .hfiles-job .hfiles-muted{margin:5px 0;font-size:10px}
+#hole-fluid-os .hfiles-job progress{width:100%;height:5px;appearance:none;border:0;border-radius:10px;margin-top:8px;overflow:hidden;background:var(--hf-soft)}
+#hole-fluid-os .hfiles-job progress::-webkit-progress-bar{background:var(--hf-soft)}
+#hole-fluid-os .hfiles-job progress::-webkit-progress-value{background:light-dark(#b4a0da,#b49bdc);border-radius:10px;transition:width .4s}
+#hole-fluid-os .hfiles-job progress::-moz-progress-bar{background:#b4a0da;border-radius:10px}
+#hole-fluid-os .hfiles-job-error{font-size:10px;line-height:1.6;color:light-dark(#9a574d,#edb4a9)}
+#hole-fluid-os .hfiles-toast{pointer-events:none;position:absolute;left:50%;bottom:105px;transform:translateX(-50%);background:light-dark(#302a3bed,#e9e1f4f2);color:light-dark(#fff,#292231);padding:12px 18px;border-radius:17px;font-size:11px;line-height:1.5;text-align:center;max-width:min(400px,calc(100% - 40px));width:max-content;box-shadow:0 8px 30px #0002;z-index:2;backdrop-filter:blur(16px)}
+@container(min-width:620px){#hole-fluid-os .hfiles-work{grid-template-columns:minmax(180px,.8fr) minmax(230px,1.2fr)}#hole-fluid-os .hfiles-list{max-height:65vh;overflow:auto}}
+@media(max-width:650px){#hole-fluid-os .hfiles-activity-button>span{display:none}#hole-fluid-os .hfiles-activity-button{width:35px;padding:8px}#hole-fluid-os .hfiles-quick-title{gap:8px}#hole-fluid-os .hfiles-quick-title strong{max-width:175px}#hole-fluid-os .hfiles-quick-row .hfiles-button{min-width:50px;flex:1}#hole-fluid-os .hfiles-overlay{padding:10px}#hole-fluid-os .hfiles-dialog{border-radius:22px}#hole-fluid-os .hfiles-app{padding:16px}#hole-fluid-os .hfiles-head h2{font-size:21px}}
+@keyframes hfiles-spin{to{transform:rotate(360deg)}}
+@keyframes hfiles-breathe{50%{opacity:.45;transform:scale(.9)}}
+@media(prefers-reduced-motion:reduce){#hole-fluid-os .hfiles-button,#hole-fluid-os .hfiles-app,#hole-fluid-os .hfiles-row{transition:none}#hole-fluid-os .hfiles-job[data-status=running] .hfiles-job-head svg,#hole-fluid-os .hfiles-activity-button[data-active=true] svg{animation:none}}

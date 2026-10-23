@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile, readdir } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -16,6 +16,7 @@ export async function build() {
   if (/<!doctype\s|<\s*(html|head|body)(?:\s|>)/i.test(fragment)) throw new Error('Expected an HTML fragment in src/hole-fluid-os.html.');
   if (/<iframe\b/i.test(shell + fragment)) throw new Error('Standalone output must not contain an iframe.');
   await mkdir(path.join(publicRoot, 'assets'), { recursive: true });
+  await Promise.all((await readdir(sourceRoot)).filter(name => /\.(js|css)$/.test(name)).map(name => copyFile(path.join(sourceRoot, name), path.join(publicRoot, 'assets', name))));
   await Promise.all([
     copyFile(path.join(sourceRoot, 'standalone.css'), path.join(publicRoot, 'assets', 'standalone.css')),
     copyFile(path.join(sourceRoot, 'persistence.js'), path.join(publicRoot, 'assets', 'persistence.js')),

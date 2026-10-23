@@ -1,0 +1,159 @@
+#hole-fluid-os .hf-os{--hw-paper:light-dark(#fffefb,#272a31);--hw-bg:light-dark(#f4f3ef,#1d2025);--hw-ink:light-dark(#292a2d,#f3f1ec);--hw-muted:light-dark(#71716f,#b2b2ae);--hw-line:light-dark(#e3e1db,#3b3e43);--hw-lav:light-dark(#ddd3f4,#554766);--hw-lime:light-dark(#e2f391,#5c6d39);--hw-shadow:light-dark(#34314016,#00000038)}
+#hole-fluid-os .hw-welcome,#hole-fluid-os .hw-control-overlay{position:absolute;inset:0;z-index:20000;color:var(--hw-ink);font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;isolation:isolate}
+#hole-fluid-os .hw-welcome{background:radial-gradient(ellipse at 80% 12%,color-mix(in srgb,var(--hw-lav),transparent 62%),transparent 43%),radial-gradient(ellipse at 4% 89%,color-mix(in srgb,var(--hw-lime),transparent 73%),transparent 42%),var(--hw-bg);overflow:hidden}
+#hole-fluid-os .hw-welcome-scroll{height:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--hw-line) transparent;touch-action:pan-y}
+#hole-fluid-os .hw-welcome button,#hole-fluid-os .hw-control-overlay button,#hole-fluid-os .hw-topbar-control{cursor:pointer}
+#hole-fluid-os .hw-welcome svg,#hole-fluid-os .hw-control-overlay svg,#hole-fluid-os .hw-topbar-control svg{width:20px;height:20px;stroke-width:1.7;flex-shrink:0}
+#hole-fluid-os .hw-welcome h1,#hole-fluid-os .hw-welcome h2,#hole-fluid-os .hw-welcome p,#hole-fluid-os .hw-control-overlay h2,#hole-fluid-os .hw-control-overlay h3,#hole-fluid-os .hw-control-overlay p{margin:0}
+#hole-fluid-os .hw-welcome a{color:inherit;text-decoration:none}
+#hole-fluid-os .hw-welcome a:hover{text-decoration:underline}
+#hole-fluid-os .hw-welcome-header{height:78px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+#hole-fluid-os .hw-wordmark{font-size:32px;font-weight:650;letter-spacing:-2px;display:flex;align-items:baseline;line-height:1}
+#hole-fluid-os .hw-wordmark>span{font-weight:400;margin:0 1px;font-size:32px}
+#hole-fluid-os .hw-wordmark>b{color:light-dark(#9c82c8,#c1a4e9);font-size:30px;margin-left:1px}
+#hole-fluid-os .hw-wordmark>small{font-size:11px;letter-spacing:0;font-weight:400;margin-left:14px;color:var(--hw-muted)}
+#hole-fluid-os .hw-header-actions{display:flex;gap:8px}
+#hole-fluid-os .hw-icon-button,#hole-fluid-os .hw-topbar-control{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;padding:0;background:color-mix(in srgb,var(--hw-paper),transparent 35%);transition:background .2s,transform .35s cubic-bezier(.2,.9,.2,1)}
+#hole-fluid-os .hw-icon-button:hover,#hole-fluid-os .hw-topbar-control:hover{background:var(--hw-paper);transform:translateY(-2px)}
+#hole-fluid-os .hw-topbar-control{margin-left:4px;flex:none}
+#hole-fluid-os .hw-welcome-content{max-width:1140px;margin:auto;padding:7px 44px 24px}
+#hole-fluid-os .hw-hero{display:grid;grid-template-columns:.87fr 1.13fr;gap:28px;align-items:center;min-height:350px;padding-bottom:28px}
+#hole-fluid-os .hw-arrival{min-width:0;position:relative}
+#hole-fluid-os .hw-eyebrow{font-size:10px;line-height:1.5;font-weight:550;letter-spacing:1.6px;color:var(--hw-muted)}
+#hole-fluid-os .hw-clock{font-size:58px;letter-spacing:-3px;line-height:1.12;font-weight:350;display:block;margin-top:14px;white-space:nowrap}
+#hole-fluid-os .hw-date{font-size:12px;color:var(--hw-muted);margin-top:4px}
+#hole-fluid-os .hw-arrival h1{font-size:44px;line-height:1.03;letter-spacing:-2px;font-weight:500;margin:23px 0 12px}
+#hole-fluid-os .hw-arrival>p{font-size:12px;color:var(--hw-muted)}
+#hole-fluid-os .hw-enter{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-top:23px;padding:13px 19px;min-height:46px;border-radius:26px;background:var(--hw-lime);font-size:13px;font-weight:550;box-shadow:0 5px 12px color-mix(in srgb,var(--hw-shadow),transparent 50%);transition:transform .4s cubic-bezier(.2,1.3,.3,1),box-shadow .3s}
+#hole-fluid-os .hw-enter:hover{transform:translateY(-3px);box-shadow:0 9px 20px var(--hw-shadow)}
+#hole-fluid-os .hw-enter svg{width:18px;height:18px}
+#hole-fluid-os .hw-space-collection{position:relative;min-height:310px;display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;align-items:center;padding-top:22px;min-width:0}
+#hole-fluid-os .hw-orbit-ring{position:absolute;inset:18% -3% 21%;border:1px solid color-mix(in srgb,var(--hw-line),transparent 15%);border-radius:50%;transform:rotate(-18deg);pointer-events:none}
+#hole-fluid-os .hw-space{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;padding:8px 0;background:transparent;position:relative;text-align:center}
+#hole-fluid-os .hw-space strong{font-size:13px;font-weight:550;margin-top:5px}
+#hole-fluid-os .hw-space small{font-size:10px;color:var(--hw-muted);white-space:nowrap}
+#hole-fluid-os .hw-space-desk{transform:translateY(-27px)}
+#hole-fluid-os .hw-space-life{transform:translateY(32px)}
+#hole-fluid-os .hw-planet{display:block;position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:var(--hw-paper);box-shadow:inset 0 2px 7px color-mix(in srgb,var(--hw-paper),transparent 10%),0 17px 33px var(--hw-shadow);transition:transform .55s cubic-bezier(.2,1.25,.2,1),box-shadow .35s}
+#hole-fluid-os .hw-space:hover .hw-planet{transform:scale(1.06) translateY(-4px);box-shadow:inset 0 2px 7px color-mix(in srgb,var(--hw-paper),transparent 10%),0 22px 40px var(--hw-shadow)}
+#hole-fluid-os .hw-space-desk .hw-planet{background:radial-gradient(ellipse at 25% 13%,var(--hw-paper),transparent 60%),linear-gradient(155deg,var(--hw-lav),var(--hw-paper))}
+#hole-fluid-os .hw-space-studio .hw-planet{background:linear-gradient(155deg,var(--hw-paper),light-dark(#c8b9d2,#6c5c76))}
+#hole-fluid-os .hw-space-life .hw-planet{background:linear-gradient(155deg,var(--hw-paper),color-mix(in srgb,var(--hw-lime),var(--hw-bg) 20%))}
+#hole-fluid-os .hw-planet>span{display:grid;place-items:center;position:absolute;box-shadow:0 6px 14px var(--hw-shadow)}
+#hole-fluid-os .hw-mini-note{left:17%;top:38%;width:29%;height:35%;border-radius:5px;background:light-dark(#f6e5b8,#89784d)}
+#hole-fluid-os .hw-mini-art{left:48%;top:23%;width:32%;height:34%;border:4px solid var(--hw-paper);border-radius:5px;background:radial-gradient(ellipse at 30% 20%,var(--hw-paper),transparent 55%),linear-gradient(135deg,light-dark(#dba9a0,#a56c71),light-dark(#a6a9d4,#4c5285))}
+#hole-fluid-os .hw-mini-orb{width:24%;height:24%;left:48%;top:65%;background:var(--hw-paper);border-radius:50%}
+#hole-fluid-os .hw-mini-type{width:36%;height:38%;left:17%;top:44%;border-radius:5px;background:var(--hw-paper);font:28px Georgia,serif;z-index:1}
+#hole-fluid-os .hw-mini-book{width:31%;height:42%;left:19%;top:27%;border-radius:5px;background:var(--hw-paper)}
+#hole-fluid-os .hw-mini-time{width:31%;height:31%;left:55%;top:23%;border-radius:50%;background:var(--hw-paper);font-size:23px}
+#hole-fluid-os .hw-space-caption{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:var(--hw-muted)}
+#hole-fluid-os .hw-widget-grid{display:grid;grid-template-columns:1fr 1.13fr 1fr;gap:14px;align-items:stretch}
+#hole-fluid-os .hw-card{position:relative;min-width:0;padding:19px;border:1px solid color-mix(in srgb,var(--hw-line),transparent 20%);border-radius:24px;background:color-mix(in srgb,var(--hw-paper),transparent 8%);overflow:hidden}
+#hole-fluid-os .hw-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+#hole-fluid-os .hw-card-head>.hw-eyebrow{font-size:9px;letter-spacing:1.25px}
+#hole-fluid-os .hw-card-head>svg{width:16px;height:16px;color:var(--hw-muted)}
+#hole-fluid-os .hw-card h2{font-size:20px;line-height:1.15;letter-spacing:-.6px;font-weight:500;margin-top:10px}
+#hole-fluid-os .hw-quick-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:22px}
+#hole-fluid-os .hw-quick-tools button{min-height:69px;padding:0;display:flex;flex-direction:column;align-items:center;gap:9px;font-size:10px;background:transparent}
+#hole-fluid-os .hw-quick-tools button>span{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;box-shadow:0 5px 9px var(--hw-shadow);transition:transform .4s cubic-bezier(.2,1.3,.2,1)}
+#hole-fluid-os .hw-quick-tools button:hover>span{transform:translateY(-4px) scale(1.05)}
+#hole-fluid-os .hw-tool-note{background:light-dark(#f1deb0,#736440)}
+#hole-fluid-os .hw-tool-create{background:var(--hw-lav)}
+#hole-fluid-os .hw-tool-convert{background:light-dark(#d2dfd0,#49604a)}
+#hole-fluid-os .hw-tool-files{background:light-dark(#c5d7ed,#425b7a)}
+#hole-fluid-os .hw-card-foot{font-size:10px;color:var(--hw-muted);margin-top:17px}
+#hole-fluid-os .hw-text-button{display:inline-flex;align-items:center;gap:6px;padding:0;min-height:30px;font-size:10px;background:transparent;white-space:nowrap}
+#hole-fluid-os .hw-text-button svg{width:14px;height:14px}
+#hole-fluid-os .hw-recents{margin-top:16px}
+#hole-fluid-os .hw-recent-empty{min-height:88px;display:flex;align-items:center;gap:14px;color:var(--hw-muted)}
+#hole-fluid-os .hw-recent-empty>svg{width:32px;height:32px;stroke-width:1.2;opacity:.7}
+#hole-fluid-os .hw-recent-empty strong{font-size:12px;font-weight:500;color:var(--hw-ink)}
+#hole-fluid-os .hw-recent-empty p{font-size:11px;margin-top:4px;max-width:160px}
+#hole-fluid-os .hw-recent-file{display:flex;align-items:center;gap:10px;min-height:44px;width:100%;padding:5px 0;background:transparent;text-align:left;border-radius:8px}
+#hole-fluid-os .hw-recent-file:hover{background:color-mix(in srgb,var(--hw-lav),transparent 82%)}
+#hole-fluid-os .hw-recent-icon{display:grid;place-items:center;width:29px;height:32px;border-radius:7px;background:color-mix(in srgb,var(--hw-lav),transparent 55%);flex-shrink:0}
+#hole-fluid-os .hw-recent-icon svg{width:16px;height:16px}
+#hole-fluid-os .hw-recent-copy{min-width:0;flex:1}
+#hole-fluid-os .hw-recent-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:500}
+#hole-fluid-os .hw-recent-copy small{font-size:9px;color:var(--hw-muted)}
+#hole-fluid-os .hw-recent-file>svg{width:13px;height:13px;color:var(--hw-muted)}
+#hole-fluid-os .hw-job-widget{border-top:1px solid var(--hw-line);margin-top:10px;padding-top:8px}
+#hole-fluid-os .hw-job-widget button{display:flex;align-items:center;gap:9px;padding:4px 0;min-height:44px;width:100%;background:transparent;text-align:left}
+#hole-fluid-os .hw-job-widget button>span{min-width:0;flex:1}
+#hole-fluid-os .hw-job-widget strong,#hole-fluid-os .hw-job-widget small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:400}
+#hole-fluid-os .hw-job-widget small{font-size:9px;color:var(--hw-muted);margin-top:2px}
+#hole-fluid-os .hw-job-widget svg{width:15px;height:15px}
+#hole-fluid-os .hw-story-card{background:linear-gradient(135deg,var(--hw-paper),color-mix(in srgb,var(--hw-lav),var(--hw-paper) 35%));min-height:224px}
+#hole-fluid-os .hw-story-card .hw-dismiss{width:24px;height:24px;min-width:24px;background:none}
+#hole-fluid-os .hw-dismiss svg{width:14px;height:14px}
+#hole-fluid-os .hw-story-copy{position:relative;z-index:1;max-width:215px}
+#hole-fluid-os .hw-story-copy p{font-size:10px;line-height:1.5;margin-top:9px;color:var(--hw-muted);max-width:160px}
+#hole-fluid-os .hw-story-art{position:absolute;right:0;bottom:20px;font:110px Georgia,serif;color:color-mix(in srgb,var(--hw-ink),transparent 87%);transform:rotate(-12deg);pointer-events:none;transition:color .3s}
+#hole-fluid-os .hw-story-card[data-story=color] .hw-story-art{font:150px/1.2 -apple-system,sans-serif;color:color-mix(in srgb,var(--hw-ink),transparent 90%)}
+#hole-fluid-os .hw-story-card[data-story=form] .hw-story-art{font:150px/1.2 -apple-system,sans-serif;bottom:3px;right:-10px}
+#hole-fluid-os .hw-story-bottom{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;margin-top:11px}
+#hole-fluid-os .hw-story-bottom>.hw-icon-button{width:30px;height:30px;background:color-mix(in srgb,var(--hw-paper),transparent 40%)}
+#hole-fluid-os .hw-story-bottom>.hw-icon-button svg{width:15px;height:15px}
+#hole-fluid-os .hw-editorial-label{font-size:8px;color:var(--hw-muted);margin-top:9px;position:relative;z-index:1}
+#hole-fluid-os .hw-welcome-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:10px;color:var(--hw-muted);padding:20px 3px 0}
+#hole-fluid-os .hw-welcome-footer>span,#hole-fluid-os .hw-welcome-footer label,#hole-fluid-os .hw-welcome-footer a{display:inline-flex;align-items:center;gap:6px;min-height:28px}
+#hole-fluid-os .hw-welcome-footer svg{width:12px;height:12px}
+#hole-fluid-os .hw-welcome input[type=checkbox]{accent-color:light-dark(#786193,#c6b5e2);width:14px;height:14px;margin:0}
+#hole-fluid-os .hw-control-overlay{z-index:20020;background:light-dark(#37313b24,#0000004a);backdrop-filter:blur(8px);display:flex;align-items:flex-start;justify-content:flex-end;padding:18px;overflow:auto;overscroll-behavior:contain}
+#hole-fluid-os .hw-control-panel{position:relative;width:370px;max-width:100%;border-radius:28px;padding:24px;background:color-mix(in srgb,var(--hw-paper),transparent 3%);box-shadow:0 24px 70px var(--hw-shadow);border:1px solid var(--hw-line);flex-shrink:0}
+#hole-fluid-os .hw-control-heading{display:flex;align-items:center;justify-content:space-between;gap:15px}
+#hole-fluid-os .hw-control-heading .hw-eyebrow{font-size:9px;letter-spacing:1.3px}
+#hole-fluid-os .hw-control-heading h2{font-size:27px;line-height:1.2;font-weight:500;letter-spacing:-1px;margin-top:8px}
+#hole-fluid-os .hw-control-heading>.hw-icon-button{align-self:flex-start;background:var(--hw-bg)}
+#hole-fluid-os .hw-control-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:22px 0 11px}
+#hole-fluid-os .hw-control-tiles button{min-height:72px;border-radius:17px;background:var(--hw-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;font-size:11px;transition:background .2s,transform .3s}
+#hole-fluid-os .hw-control-tiles button:hover{background:var(--hw-lav);transform:translateY(-2px)}
+#hole-fluid-os .hw-control-section{border-bottom:1px solid var(--hw-line);padding-bottom:7px}
+#hole-fluid-os .hw-setting{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:62px;padding:10px 0;cursor:pointer}
+#hole-fluid-os .hw-setting>span{min-width:0}
+#hole-fluid-os .hw-setting strong{display:block;font-size:12px;font-weight:500}
+#hole-fluid-os .hw-setting small{display:block;font-size:10px;line-height:1.4;color:var(--hw-muted);margin-top:3px}
+#hole-fluid-os .hw-setting input[type=checkbox]{appearance:none;-webkit-appearance:none;display:block;width:37px;height:23px;border-radius:16px;background:var(--hw-line);position:relative;border:0;flex:none;margin:0;cursor:pointer;transition:background .25s}
+#hole-fluid-os .hw-setting input[type=checkbox]::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:var(--hw-paper);box-shadow:0 2px 4px var(--hw-shadow);transition:transform .3s cubic-bezier(.2,.9,.2,1)}
+#hole-fluid-os .hw-setting input[type=checkbox]:checked{background:light-dark(#8e79b5,#9f8bbe)}
+#hole-fluid-os .hw-setting input[type=checkbox]:checked::after{transform:translateX(14px)}
+#hole-fluid-os .hw-setting input:focus-visible,#hole-fluid-os .hw-setting select:focus-visible{outline:2px solid light-dark(#786193,#c6b5e2);outline-offset:4px}
+#hole-fluid-os .hw-setting select{max-width:115px;background:var(--hw-bg);color:var(--hw-ink);font:inherit;font-size:11px;border:1px solid var(--hw-line);border-radius:10px;padding:8px;min-height:36px}
+#hole-fluid-os .hw-layout-setting{padding:17px 0}
+#hole-fluid-os .hw-segment{display:grid;grid-template-columns:1fr 1fr;padding:3px;background:var(--hw-bg);border-radius:14px;margin-top:9px;gap:3px}
+#hole-fluid-os .hw-segment button{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;min-height:38px;background:none;font-size:11px}
+#hole-fluid-os .hw-segment button[aria-pressed=true]{background:var(--hw-paper);box-shadow:0 2px 5px var(--hw-shadow)}
+#hole-fluid-os .hw-segment svg{width:16px;height:16px}
+#hole-fluid-os .hw-setup{margin-top:20px;display:grid;grid-template-columns:33px 1fr;gap:12px}
+#hole-fluid-os .hw-setup-icon{width:33px;height:33px;border-radius:50%;display:grid;place-items:center;background:var(--hw-lav)}
+#hole-fluid-os .hw-setup-icon svg{width:17px;height:17px}
+#hole-fluid-os .hw-setup h3{font-weight:500;font-size:13px;line-height:1.3}
+#hole-fluid-os .hw-setup p{font-size:10px;color:var(--hw-muted);line-height:1.5;margin-top:5px}
+#hole-fluid-os .hw-setup-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#hole-fluid-os .hw-soft-button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;font-size:10px;border-radius:13px;background:var(--hw-bg);transition:background .2s}
+#hole-fluid-os .hw-soft-button:hover{background:var(--hw-lav)}
+#hole-fluid-os .hw-soft-button svg{width:15px;height:15px}
+#hole-fluid-os .hw-start-setting{border-top:1px solid var(--hw-line);margin-top:20px}
+#hole-fluid-os .hw-control-note{color:var(--hw-muted);font-size:9px;text-align:center;margin-top:8px}
+#hole-fluid-os .hw-toast{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);z-index:20050;max-width:min(440px,calc(100% - 32px));width:max-content;padding:12px 18px;border-radius:18px;background:var(--hw-ink);color:var(--hw-paper);box-shadow:0 8px 24px var(--hw-shadow);font-size:12px;line-height:1.45;text-align:center;pointer-events:none}
+#hole-fluid-os .hf-os[data-quiet=true] *,#hole-fluid-os .hf-os[data-quiet=true] *::before,#hole-fluid-os .hf-os[data-quiet=true] *::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+#hole-fluid-os .hf-os[data-focus=true] .hw-widget-grid,#hole-fluid-os .hf-os[data-stories=false] .hw-widget-grid{grid-template-columns:1fr 1fr}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-welcome-header{height:69px;padding:0 20px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-wordmark>small{display:none}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-welcome-content{padding:8px 22px 28px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-hero{grid-template-columns:1fr;gap:15px;padding-bottom:24px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-clock{font-size:49px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-arrival h1{font-size:40px;margin-top:22px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-space-collection{min-height:220px;gap:14px;padding-top:20px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-space small{display:none}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-space-desk{transform:translateY(-13px)}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-space-life{transform:translateY(13px)}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-widget-grid{grid-template-columns:1fr}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-welcome-footer{flex-wrap:wrap;gap:7px 18px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-control-overlay{padding:10px}
+#hole-fluid-os .hf-os[data-layout=pocket] .hw-control-panel{padding:20px}
+@media(max-width:760px){#hole-fluid-os .hw-welcome-header{padding:0 24px}#hole-fluid-os .hw-welcome-content{padding:8px 26px 24px}#hole-fluid-os .hw-hero{gap:18px}#hole-fluid-os .hw-arrival h1{font-size:38px}#hole-fluid-os .hw-clock{font-size:48px}#hole-fluid-os .hw-space small{display:none}#hole-fluid-os .hw-widget-grid{grid-template-columns:1fr 1fr}#hole-fluid-os .hw-story-card{grid-column:1/-1;min-height:190px}#hole-fluid-os .hw-story-copy{max-width:65%}#hole-fluid-os .hw-story-copy p{max-width:260px}#hole-fluid-os .hw-story-art{right:12%;font-size:140px;bottom:0}#hole-fluid-os .hw-story-bottom{max-width:280px}#hole-fluid-os .hw-space-collection{min-height:275px}#hole-fluid-os .hw-space-caption{font-size:9px}#hole-fluid-os .hw-card-head>.hw-eyebrow{font-size:9px;letter-spacing:1px}}
+@media(max-width:560px){#hole-fluid-os .hw-welcome-header{height:68px;padding:0 20px}#hole-fluid-os .hw-wordmark>small{display:none}#hole-fluid-os .hw-welcome-content{padding:8px 22px 26px}#hole-fluid-os .hw-hero{grid-template-columns:1fr;gap:16px;padding-bottom:24px}#hole-fluid-os .hw-arrival h1{font-size:42px;margin-top:20px}#hole-fluid-os .hw-arrival>p{font-size:12px}#hole-fluid-os .hw-clock{font-size:50px}#hole-fluid-os .hw-space-collection{min-height:220px;padding:21px 0 10px;gap:14px}#hole-fluid-os .hw-space-desk{transform:translateY(-12px)}#hole-fluid-os .hw-space-life{transform:translateY(13px)}#hole-fluid-os .hw-space strong{font-size:12px}#hole-fluid-os .hw-space-caption{bottom:-4px}#hole-fluid-os .hw-widget-grid,#hole-fluid-os .hf-os[data-focus=true] .hw-widget-grid,#hole-fluid-os .hf-os[data-stories=false] .hw-widget-grid{grid-template-columns:1fr}#hole-fluid-os .hw-card{padding:21px}#hole-fluid-os .hw-quick-tools{margin-top:20px}#hole-fluid-os .hw-story-card{min-height:222px}#hole-fluid-os .hw-story-copy{max-width:220px}#hole-fluid-os .hw-story-copy p{max-width:175px}#hole-fluid-os .hw-story-art{right:0;font-size:130px}#hole-fluid-os .hw-welcome-footer{flex-wrap:wrap;gap:6px 15px;padding-top:17px}#hole-fluid-os .hw-control-overlay{padding:10px}#hole-fluid-os .hw-control-panel{padding:20px;border-radius:23px}#hole-fluid-os .hw-control-heading h2{font-size:25px}#hole-fluid-os .hw-mini-type{font-size:23px}#hole-fluid-os .hw-mini-time{font-size:19px}#hole-fluid-os .hw-planet svg{width:16px;height:16px}#hole-fluid-os .hw-topbar-control{width:36px;height:36px;margin-left:0}}
+@media(max-width:360px){#hole-fluid-os .hw-welcome-content{padding-left:18px;padding-right:18px}#hole-fluid-os .hw-welcome-header{padding:0 18px}#hole-fluid-os .hw-space-collection{min-height:196px;gap:9px}#hole-fluid-os .hw-arrival h1{font-size:38px}#hole-fluid-os .hw-clock{font-size:46px}#hole-fluid-os .hw-enter{font-size:12px;gap:20px}#hole-fluid-os .hw-space-caption{font-size:9px}#hole-fluid-os .hw-control-panel{padding:17px}#hole-fluid-os .hw-setting small{font-size:9px}#hole-fluid-os .hw-soft-button{font-size:9px;gap:5px}#hole-fluid-os .hw-control-heading .hw-eyebrow{font-size:8px}}
+@media(pointer:coarse){#hole-fluid-os .hw-icon-button,#hole-fluid-os .hw-topbar-control{width:44px;height:44px}#hole-fluid-os .hw-story-card .hw-dismiss{width:36px;height:36px;min-width:36px}#hole-fluid-os .hw-story-bottom>.hw-icon-button{width:40px;height:40px}#hole-fluid-os .hw-soft-button,#hole-fluid-os .hw-segment button{min-height:44px}#hole-fluid-os .hw-setting select{font-size:16px;max-width:125px}#hole-fluid-os .hw-welcome-footer label{min-height:40px}#hole-fluid-os .hw-text-button{min-height:40px}}
+@media(prefers-reduced-motion:reduce){#hole-fluid-os .hw-welcome *,#hole-fluid-os .hw-control-overlay *{animation:none!important;transition:none!important}}

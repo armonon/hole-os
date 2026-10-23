@@ -6,18 +6,23 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#151820">
   <meta name="description" content="Your personal browser workspace. A fluid desktop, familiar apps, and a little room for your ideas.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Hole OS</title>
   <link rel="stylesheet" href="/assets/standalone.css">
+  <link rel="stylesheet" href="/assets/continuum.css">
+  <link rel="stylesheet" href="/assets/window-system.css">
+  <link rel="stylesheet" href="/assets/file-platform.css">
+  <link rel="stylesheet" href="/assets/welcome.css">
   <script src="/assets/persistence.js"></script>
   <script src="/assets/lucide-1.17.0.js"></script>
+  <script src="/assets/ecosystem.js"></script>
 </head>
 <body>
 <div id="hole-fluid-os">
   <div class="hf-os" data-layout="desktop" data-drawer-open="false" aria-label="Hole fluid operating system concept">
     <header class="hf-topbar">
       <button class="hf-brand cursor-interaction" data-home aria-label="Return to desktop">h<span>◎</span>le</button>
-      <span class="hf-space-name">Personal workspace</span>
+      <span class="hf-space-name">by thecreatingco.</span>
       <button class="hf-activity cursor-interaction" data-launch="Music"><span class="hf-activity-bars" aria-hidden="true"><b></b><b></b><b></b></span><span class="hf-activity-text">A little headspace</span></button>
       <span class="hf-concept">INTERACTION STUDY</span>
     </header>
@@ -62,7 +67,7 @@
     <footer class="hf-bottom">
       <p class="hf-hint" aria-live="polite">Your workspace. Your pace.</p>
       <nav class="hf-dock" aria-label="Home, pinned and recent apps">
-        <button class="hf-dock-button cursor-interaction" data-home aria-label="Home"><i data-lucide="orbit" aria-hidden="true"></i><span>Home</span></button>
+        <button class="hf-dock-button cursor-interaction" data-home aria-label="Spaces"><i data-lucide="orbit" aria-hidden="true"></i><span>Spaces</span></button>
         <button class="hf-dock-button hf-drawer-toggle cursor-interaction" data-drawer-toggle aria-label="App Drawer" aria-controls="hole-app-drawer" aria-expanded="false"><i data-lucide="layout-grid" aria-hidden="true"></i><span>App Drawer</span></button>
         <span class="hf-dock-divider" aria-hidden="true"></span>
         <div class="hf-dock-apps" role="group" aria-label="Pinned and recent apps"></div>
@@ -355,11 +360,13 @@
     ['Studio','shapes','#8d83d7'],['Clock','clock-3','#525d78'],['Camera','camera','#8b92a3'],['Maps','map','#68af9f'],['Mail','mail','#70a0d3'],['Tasks','check-check','#6fb7bc'],['Phone','phone','#63aa82'],['Weather','cloud-sun','#79b6d2'],['Recorder','audio-lines','#d57785'],['Canvas','paintbrush','#b08bc8'],['Calculator','calculator','#be9867'],['Contacts','contact-round','#b58d75'],
     ['Books','book-open','#c79d70'],['Terminal','terminal','#626b80'],['Windows','panels-top-left','#658bc9'],['Linux','square-terminal','#959066'],['Mac','laptop','#9598a8'],['Store','blocks','#8f93d1'],['Settings','sliders-horizontal','#9299a7'],['Compass','navigation','#bc8c82'],['Translate','languages','#8fa9bb'],['Drive','hard-drive','#8caaa6'],['Meet','video','#92a17b'],['Code','code-2','#9585b6'],['Docs','file-text','#8cabc4'],['Wallet','wallet','#9c8b91'],['Shortcuts','workflow','#a58dc6'],['Health','heart','#c98c9f'],['Play','gamepad-2','#9b9fc5'],['Home','house','#aaa18c']
   ].map((a,i)=>({name:a[0],icon:a[1],color:a[2],ink:a[3]||'#fff',index:i}));
+  for(const app of window.HoleCatalog||[])if(!apps.some(a=>a.name===app.name))apps.push({...app,ink:'#fff',index:apps.length});
+  const priorityApps=['Notes','Files','Luma','Glyph','Form','Bounce','ScenePilot','StemDeck','NOW','Converter','Locker','Librarian','Moodboard','Portfolio','Ghost','Animate','Music','Photos'];apps.sort((a,b)=>(priorityApps.includes(a.name)?priorityApps.indexOf(a.name):99)-(priorityApps.includes(b.name)?priorityApps.indexOf(b.name):99));
   const byName=new Map(apps.map(a=>[a.name,a])),pinnedApps=['Notes','Music','Files'];
   const dock=root.querySelector('.hf-dock'),dockApps=dock.querySelector('.hf-dock-apps'),dockButtons=new Map();
   const recentDivider=document.createElement('span');recentDivider.className='hf-dock-divider';recentDivider.setAttribute('aria-hidden','true');
   const settings={magnification:.24,fluid:true,labels:true};
-  const spaces={desk:{x:0,y:0,name:'My desk'},studio:{x:560,y:0,name:'Studio'},life:{x:-560,y:0,name:'Life'}};
+  const spaces=Object.assign(Object.create(null),{desk:{x:0,y:0,name:'My desk'},studio:{x:560,y:0,name:'Studio'},life:{x:-560,y:0,name:'Life'}});
   const deskFiles=[
     {id:'thought',name:'A new thought',app:'Notes',kind:'note',space:'desk',x:-96,y:-8,turn:-7},
     {id:'color',name:'Color study.png',app:'Photos',kind:'photo',space:'desk',x:98,y:-15,turn:7},
@@ -373,25 +380,27 @@
     {id:'books',name:'Books',app:'Books',kind:'app',space:'life',x:-656,y:139,turn:3}
   ];
   const defaultPlacement=f=>({x:.93,y:.12+deskFiles.filter(other=>other.space===f.space).indexOf(f)*.24});
-  let state={layout:'desktop',note:'A computer that moves with you.\n\nAn idea becomes a note.\nA note becomes a project.\nYour whole world stays close.',playing:false,recentApps:[],views:{},desk:{view:'desk',panX:0,panY:0,files:Object.fromEntries(deskFiles.map(f=>[f.id,{x:f.x,y:f.y,space:f.space}])),placements:Object.fromEntries(deskFiles.map(f=>[f.id,defaultPlacement(f)]))}};
+  let state={layout:'desktop',note:'A computer that moves with you.\n\nAn idea becomes a note.\nA note becomes a project.\nYour whole world stays close.',playing:false,recentApps:[],views:{},projects:[],pins:[],session:[],desk:{view:'overview',panX:0,panY:0,files:Object.fromEntries(deskFiles.map(f=>[f.id,{x:f.x,y:f.y,space:f.space}])),placements:Object.fromEntries(deskFiles.map(f=>[f.id,defaultPlacement(f)]))}};
   function restore(s){
-    if(!s||typeof s!=='object')return;if(['desktop','pocket'].includes(s.layout))state.layout=s.layout;if(typeof s.note==='string')state.note=s.note;if(typeof s.playing==='boolean')state.playing=s.playing;
+    if(!s||typeof s!=='object')return;if(Array.isArray(s.projects)){for(const p of s.projects.slice(0,12)){if(!p||typeof p.id!=='string'||!/^space-[a-z0-9-]{1,60}$/.test(p.id)||typeof p.name!=='string')continue;const name=p.name.trim().slice(0,40);if(!name||(!Object.hasOwn(spaces,p.id)&&state.projects.length>=12))continue;spaces[p.id]={x:0,y:0,name};if(!state.projects.some(q=>q.id===p.id))state.projects.push({id:p.id,name});}}if(['desktop','pocket'].includes(s.layout))state.layout=s.layout;if(typeof s.note==='string')state.note=s.note;if(typeof s.playing==='boolean')state.playing=s.playing;
+    if(Array.isArray(s.session))state.session=s.session.filter(r=>r&&byName.has(r.name)&&spaces[r.space]).slice(0,30).map(r=>({name:r.name,space:r.space,minimized:!!r.minimized}));
+    if(Array.isArray(s.pins)){for(const pin of s.pins.slice(0,500)){if(!pin||typeof pin.localId!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(pin.localId)||typeof pin.name!=='string'||!spaces[pin.space])continue;const id='local-'+pin.localId;if(!deskFiles.some(f=>f.id===id)){const f={id,localId:pin.localId,name:pin.name.slice(0,180),app:'Files',kind:['photo','audio','note'].includes(pin.kind)?pin.kind:'folder',space:pin.space,x:0,y:0,turn:0};deskFiles.push(f);state.desk.files[id]={space:pin.space,x:0,y:0};state.desk.placements[id]={x:.7,y:.3};}if(!state.pins.some(p=>p.localId===pin.localId))state.pins.push({localId:pin.localId,name:pin.name.slice(0,180),space:pin.space,kind:['photo','audio','note'].includes(pin.kind)?pin.kind:'folder'});}}
     if(Array.isArray(s.recentApps))state.recentApps=[...new Set(s.recentApps.filter(name=>byName.has(name)&&!pinnedApps.includes(name)))];
-    if(s.views&&typeof s.views==='object')for(const key of ['desk','studio','life','overview','drawer']){const v=s.views[key];if(v&&[v.x,v.y,v.z].every(Number.isFinite))state.views[key]={x:Math.max(-1.8,Math.min(1.8,v.x)),y:Math.max(-1.8,Math.min(1.8,v.y)),z:Math.max(.65,Math.min(2.2,v.z))};}
+    if(s.views&&typeof s.views==='object')for(const key of [...Object.keys(spaces),'overview','drawer']){const v=s.views[key];if(v&&[v.x,v.y,v.z].every(Number.isFinite))state.views[key]={x:Math.max(-1.8,Math.min(1.8,v.x)),y:Math.max(-1.8,Math.min(1.8,v.y)),z:Math.max(.65,Math.min(2.2,v.z))};}
     if(s.desk&&typeof s.desk==='object'){const d=s.desk;if([...Object.keys(spaces),'overview'].includes(d.view))state.desk.view=d.view;
       deskFiles.forEach(f=>{const p=d.files?.[f.id];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&spaces[p.space])state.desk.files[f.id]={x:Math.max(-1050,Math.min(1050,p.x)),y:Math.max(-450,Math.min(450,p.y)),space:p.space};});
-      Object.keys(spaces).forEach(id=>{deskFiles.filter(f=>state.desk.files[f.id].space===id).forEach((f,index)=>{const p=d.placements?.[f.id];state.desk.placements[f.id]=p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?{x:Math.max(0,Math.min(1,p.x)),y:Math.max(0,Math.min(1,p.y))}:{x:.93-Math.floor(index/4)*.18,y:.12+(index%4)*.24};});});
+      Object.keys(spaces).forEach(id=>{deskFiles.filter(f=>state.desk.files[f.id].space===id).forEach((f,index)=>{const p=d.placements?.[f.id]||state.desk.placements[f.id];state.desk.placements[f.id]=p&&Number.isFinite(p.x)&&Number.isFinite(p.y)?{x:Math.max(0,Math.min(1,p.x)),y:Math.max(0,Math.min(1,p.y))}:{x:.93-Math.floor(index/4)*.18,y:.12+(index%4)*.24};});});
     }
   }
   restore(window.openai?.widgetState?.privateContent);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  const motion=()=>settings.fluid&&!reduced.matches;
-  function save(){storeViews();window.openai?.setWidgetState?.({modelContent:{concept:'Hole fluid workspace',layout:state.layout,space:state.desk.view},privateContent:state})?.catch(()=>{});}
+  const motion=()=>settings.fluid&&!reduced.matches&&os.dataset.quiet!=='true';
+  function save(){state.pins.forEach(p=>{const f=state.desk.files['local-'+p.localId];if(f)p.space=f.space;});state.session=[...windows.values()].filter(r=>!r.closing).map(r=>({name:r.app.name,space:r.space,minimized:!!r.minimized}));storeViews();window.openai?.setWidgetState?.({modelContent:{concept:'Hole fluid workspace',layout:state.layout,space:state.desk.view},privateContent:state})?.catch(()=>{});}
   function icons(){globalThis.lucide?.createIcons({attrs:{width:20,height:20}});}
   let width=1,height=1,fit=1,frame=0,steps=0,zCounter=10,pan=null,lastDragEnd=0,hover=null,windowDrag=null,searchReturnFocus=null,suppressFocusPan=false,drawerOpen=false,drawerAnimation=null,drawerEpoch=0,drawerReturnFocus=null;
   const camera={x:0,y:0,z:1,tx:0,ty:0,tz:1};
   const positions=[];
-  for(let r=-3;r<=3;r++)for(let q=-3;q<=3;q++)if(Math.abs(q+r)<=3)positions.push({q,r,d:Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))});
+  for(let r=-4;r<=4;r++)for(let q=-4;q<=4;q++)if(Math.abs(q+r)<=4)positions.push({q,r,d:Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))});
   positions.sort((a,b)=>a.d-b.d||Math.atan2(a.r,a.q+a.r/2)-Math.atan2(b.r,b.q+b.r/2));
   const nodes=apps.map((app,i)=>{
     const p=positions[i],ax=(p.q+p.r/2)*110,ay=p.r*83;
@@ -402,18 +411,23 @@
   const windows=new Map();
   const deskStage=root.querySelector('.hf-desk-stage'),deskWorld=root.querySelector('.hf-desk-world'),deskItems=root.querySelector('.hf-desk-items'),arrangeBar=root.querySelector('.hf-arrange-bar'),moveSelect=arrangeBar.querySelector('select');
   let deskScale=1,deskBaseScale=1,deskDrag=null,lastDeskDrag=0,arranging=false,selectedFile=null,deskFrame=0,spaceHeld=false,spacePanUsed=false,desktopGestures=null,drawerGestures=null;
-  const workspaceControls=root.querySelector('.hf-workspace-controls'),deskViews=Object.fromEntries(['desk','studio','life','overview'].map(key=>[key,{x:0,y:0,z:1,tx:0,ty:0,tz:1}]));
+  const workspaceControls=root.querySelector('.hf-workspace-controls'),deskViews=Object.fromEntries([...Object.keys(spaces),'overview'].map(key=>[key,{x:0,y:0,z:1,tx:0,ty:0,tz:1}]));
+  const orbitMap=document.createElement('div');orbitMap.className='hf-orbit-map';deskStage.append(orbitMap);
+  const managerHeading=document.createElement('div');managerHeading.className='hf-manager-heading';managerHeading.innerHTML='<span>YOUR SPACES</span><h1>A little room for everything.</h1><p>Zoom into a space. Make it yours.</p>';desktop.append(managerHeading);
+  const newSpaceButton=document.createElement('button');newSpaceButton.className='hf-new-space cursor-interaction';newSpaceButton.type='button';newSpaceButton.textContent='+ New space';newSpaceButton.addEventListener('click',showSpaceForm);desktop.append(newSpaceButton);
+  let zoomSpace=null;
   const currentDeskView=()=>deskViews[state.desk.view];
   function storeViews(){Object.entries(deskViews).forEach(([key,c])=>{state.views[key]={x:c.tx/Math.max(1,deskStage.clientWidth),y:c.ty/Math.max(1,deskStage.clientHeight),z:c.tz};});state.views.drawer={x:camera.tx/Math.max(1,width),y:camera.ty/Math.max(1,height),z:camera.tz/fit};}
   function restoreViews(){Object.entries(deskViews).forEach(([key,c])=>{const v=state.views[key];if(v)Object.assign(c,{x:v.x*deskStage.clientWidth,tx:v.x*deskStage.clientWidth,y:v.y*deskStage.clientHeight,ty:v.y*deskStage.clientHeight,z:v.z,tz:v.z});});const v=state.views.drawer;if(v)Object.assign(camera,{x:v.x*width,tx:v.x*width,y:v.y*height,ty:v.y*height,z:v.z*fit,tz:v.z*fit});clampDeskView();clampCamera();renderDeskView();kick();}
-  function clampDeskView(){const c=currentDeskView(),w=deskStage.clientWidth,h=deskStage.clientHeight;c.tz=Math.max(.7,Math.min(2.2,c.tz));const bx=state.desk.view==='overview'?Math.max(w*.35,780*deskBaseScale*c.tz-w/2+80):w*(.4+Math.max(0,c.tz-1)/2),by=state.desk.view==='overview'?Math.max(h*.25,240*deskBaseScale*c.tz-h/2+60):h*(.4+Math.max(0,c.tz-1)/2);c.tx=Math.max(-bx,Math.min(bx,c.tx));c.ty=Math.max(-by,Math.min(by,c.ty));}
-  function renderDeskView(){const c=currentDeskView();deskScale=deskBaseScale*c.z;deskWorld.style.setProperty('--view-x',c.x+'px');deskWorld.style.setProperty('--view-y',c.y+'px');deskWorld.style.setProperty('--view-z',c.z);deskWorld.style.setProperty('--desk-scale',deskScale);deskWorld.style.setProperty('--label-scale',Math.max(1,1/deskScale));desktop.style.setProperty('--wall-x',c.x*.08+'px');desktop.style.setProperty('--wall-y',c.y*.08+'px');root.querySelector('.hf-workspace-zoom-value').textContent=Math.round(c.tz*100)+'%';}
+  function clampDeskView(){const c=currentDeskView(),w=deskStage.clientWidth,h=deskStage.clientHeight;c.tz=Math.max(state.desk.view==='overview'?.65:.45,Math.min(2.2,c.tz));const bx=state.desk.view==='overview'?Math.max(w*.35,780*deskBaseScale*c.tz-w/2+80):w*(.4+Math.max(0,c.tz-1)/2),by=state.desk.view==='overview'?Math.max(h*.25,(orbitMap.scrollHeight-h/2)*c.tz):h*(.4+Math.max(0,c.tz-1)/2);c.tx=Math.max(-bx,Math.min(bx,c.tx));c.ty=Math.max(-by,Math.min(by,c.ty));}
+  function renderDeskView(){const c=currentDeskView();if(orbitMap){orbitMap.style.transform='translate3d('+c.x+'px,'+c.y+'px,0) scale('+c.z+')';}desktop.dataset.detail=String(state.desk.view!=='overview'&&c.z>=1.5);deskScale=deskBaseScale*c.z;deskWorld.style.setProperty('--view-x',c.x+'px');deskWorld.style.setProperty('--view-y',c.y+'px');deskWorld.style.setProperty('--view-z',c.z);deskWorld.style.setProperty('--desk-scale',deskScale);deskWorld.style.setProperty('--label-scale',Math.max(1,1/deskScale));desktop.style.setProperty('--wall-x',c.x*.08+'px');desktop.style.setProperty('--wall-y',c.y*.08+'px');root.querySelector('.hf-workspace-zoom-value').textContent=Math.round(c.tz*100)+'%';}
   function kickDesk(){if(!deskFrame)deskFrame=requestAnimationFrame(tickDesk);}
   function tickDesk(){deskFrame=0;const c=currentDeskView();let energy=0;for(const key of ['x','y','z']){const delta=c['t'+key]-c[key];c[key]+=delta*(motion()?.2:1);energy+=Math.abs(delta);}renderDeskView();if(energy>.015&&motion())kickDesk();}
   function setDeskView(v,immediate=false){const c=currentDeskView();Object.assign(c,{tx:v.x,ty:v.y,tz:v.z});clampDeskView();if(immediate)Object.assign(c,{x:c.tx,y:c.ty,z:c.tz});renderDeskView();kickDesk();}
-  function fileFace(f){const app=byName.get(f.app);if(f.kind==='note')return '<span class="hf-object-face hf-object-note"><i data-lucide="notebook-pen" aria-hidden="true"></i><strong class="hf-note-preview"></strong></span>';if(f.kind==='photo')return '<span class="hf-object-face hf-object-photo"><span class="hf-object-art"></span></span>';if(f.kind==='audio')return '<span class="hf-object-face hf-object-audio"><i data-lucide="music-2" aria-hidden="true"></i><span class="hf-audio-wave" aria-hidden="true">'+Array(15).fill('<b></b>').join('')+'</span></span>';if(f.kind==='folder')return '<span class="hf-object-face hf-object-folder"><i data-lucide="folder-open" aria-hidden="true"></i><small>Files & ideas</small></span>';return '<span class="hf-object-face hf-object-shortcut" style="--shortcut-color:'+app.color+'"><i data-lucide="'+app.icon+'" aria-hidden="true"></i></span>';}
-  deskFiles.forEach(f=>{const button=document.createElement('button');button.type='button';button.className='hf-desk-item cursor-interaction';button.dataset.file=f.id;button.style.setProperty('--turn',f.turn+'deg');button.setAttribute('aria-label','Open '+f.name+' in '+f.app);button.setAttribute('aria-description','Drag with a mouse, or hold then drag with touch, to move. In Arrange mode, arrow keys move this item.');button.innerHTML=fileFace(f)+'<span class="hf-object-label">'+f.name+'</span>';deskItems.append(button);f.el=button;});
-  Object.entries(spaces).forEach(([id,s])=>{const island=root.querySelector('[data-island="'+id+'"]');island.style.left=s.x+'px';island.style.top=s.y+'px';});
+  function fileFace(f){const app=byName.get(f.app);if(f.localId)return '<span class="hf-object-face hf-object-import"><i data-lucide="'+(f.kind==='photo'?'image':f.kind==='audio'?'audio-lines':'file-text')+'" aria-hidden="true"></i></span>';if(f.kind==='note')return '<span class="hf-object-face hf-object-note"><i data-lucide="notebook-pen" aria-hidden="true"></i><strong class="hf-note-preview"></strong></span>';if(f.kind==='photo')return '<span class="hf-object-face hf-object-photo"><span class="hf-object-art"></span></span>';if(f.kind==='audio')return '<span class="hf-object-face hf-object-audio"><i data-lucide="music-2" aria-hidden="true"></i><span class="hf-audio-wave" aria-hidden="true">'+Array(15).fill('<b></b>').join('')+'</span></span>';if(f.kind==='folder')return '<span class="hf-object-face hf-object-folder"><i data-lucide="folder-open" aria-hidden="true"></i><small>Files & ideas</small></span>';return '<span class="hf-object-face hf-object-shortcut" style="--shortcut-color:'+app.color+'"><i data-lucide="'+app.icon+'" aria-hidden="true"></i></span>';}
+  function attachDesktopFile(f){const button=document.createElement('button');button.type='button';button.className='hf-desk-item cursor-interaction';button.dataset.file=f.id;button.style.setProperty('--turn',f.turn+'deg');button.setAttribute('aria-label','Open '+f.name+' in '+f.app);button.setAttribute('aria-description','Drag with a mouse, or hold then drag with touch, to move. In Arrange mode, arrow keys move this item.');button.innerHTML=fileFace(f)+'<span class="hf-object-label"></span>';button.querySelector('.hf-object-label').textContent=f.name;deskItems.append(button);f.el=button;}
+  deskFiles.forEach(attachDesktopFile);
+  Object.entries(spaces).forEach(([id,s])=>{const island=root.querySelector('[data-island="'+id+'"]');if(!island)return;island.style.left=s.x+'px';island.style.top=s.y+'px';});
   function deskHint(){hint.textContent=arranging?'Drag a file to place it · arrow keys move the selected file.':state.layout==='pocket'||matchMedia('(pointer: coarse)').matches?'Swipe to move · pinch to zoom · hold a file to place':'Drag space or scroll to move · pinch / Ctrl-scroll to zoom';}
   function deskPoint(f){const p=state.desk.placements[f.id],w=deskStage.clientWidth,h=deskStage.clientHeight;return{x:Math.max(53,Math.min(w-53,p.x*w)),y:Math.max(48,Math.min(h-48,p.y*h))};}
   function positionFile(f,x,y){const w=deskStage.clientWidth,h=deskStage.clientHeight;state.desk.placements[f.id]={x:Math.max(53,Math.min(w-53,x))/w,y:Math.max(48,Math.min(h-48,y))/h};const point=deskPoint(f);f.el.style.left=point.x+'px';f.el.style.top=point.y+'px';}
@@ -427,52 +441,54 @@
     root.querySelector('[data-arrange]').setAttribute('aria-pressed',String(arranging));arrangeBar.hidden=!arranging;moveSelect.disabled=!selectedFile;
     root.querySelector('.hf-selected-name').textContent=selectedFile?.name||'Select a file';if(selectedFile)moveSelect.value=state.desk.files[selectedFile.id].space;
     deskFiles.forEach(f=>{const p=state.desk.files[f.id],point=overview?p:deskPoint(f);f.el.hidden=!overview&&p.space!==state.desk.view;f.el.style.left=point.x+'px';f.el.style.top=point.y+'px';f.el.classList.toggle('is-selected',arranging&&selectedFile===f);f.el.inert=overview;});
-    Object.keys(spaces).forEach(id=>{root.querySelector('[data-island="'+id+'"] .hf-space-count').textContent=Object.values(state.desk.files).filter(f=>f.space===id).length+' items';});
-    root.querySelector('.hf-desk-status').textContent=overview?'Your spaces, all together.':s.name+' · '+Object.values(state.desk.files).filter(f=>f.space===state.desk.view).length+' items';
+    Object.keys(spaces).forEach(id=>{const count=Object.values(state.desk.files).filter(f=>f.space===id).length;const label=root.querySelector('[data-island="'+id+'"] .hf-space-count');if(label)label.textContent=count+' items';const orbit=root.querySelector('.hf-space-orbit[data-space="'+id+'"]');if(orbit){orbit.querySelector('small').textContent=count+' items';orbit.querySelector('.hf-orbit-contents').replaceChildren(...deskFiles.filter(f=>state.desk.files[f.id].space===id).slice(0,4).map(f=>{const preview=document.createElement('span');preview.className='hf-orbit-mini hf-orbit-mini-'+f.kind;preview.innerHTML=fileFace(f);return preview;}));}});
+    icons();root.querySelector('.hf-desk-status').textContent=overview?'Your spaces, all together.':s.name+' · '+Object.values(state.desk.files).filter(f=>f.space===state.desk.view).length+' items';
   }
   function visitSpace(id,persist=true){
-    if(!spaces[id]&&id!=='overview')return;clearDeskDrag(true);const previous=state.desk.view,priorFocus=document.activeElement,rects=new Map();
+    if(drawerOpen)closeDrawer({restoreFocus:false,animate:false});window.HoleWindows?.exitFullscreen();
+    if(!spaces[id]&&id!=='overview')return;clearDeskDrag(true);const previous=state.desk.view,priorFocus=document.activeElement,rects=new Map(),portal=root.querySelector('.hf-space-orbit[data-space="'+id+'"]')?.getBoundingClientRect();
     deskFiles.forEach(f=>{if(!f.el.hidden)rects.set(f.id,f.el.getBoundingClientRect());f.el.getAnimations().forEach(a=>a.cancel());});
-    state.desk.view=id;state.desk.panX=0;state.desk.panY=0;selectedFile=null;if(id==='overview')arranging=false;paintDesk();deskHint();
-    if(motion()&&previous!==id){deskFiles.forEach(f=>{if(f.el.hidden)return;const before=rects.get(f.id),after=f.el.getBoundingClientRect();if(!before||!after.width||!after.height)return;const dx=(before.left+before.width/2-after.left-after.width/2)/deskScale,dy=(before.top+before.height/2-after.top-after.height/2)/deskScale;f.el.animate([{transform:'translate(-50%,-50%) translate('+dx+'px,'+dy+'px) scale('+(before.width/after.width)+','+(before.height/after.height)+')',opacity:.55},{transform:'translate(-50%,-50%) translate(0,0) scale(1,1)',opacity:1}],{duration:560,easing:'cubic-bezier(.2,.85,.2,1)'});});}
+    state.desk.view=id;windows.forEach(rec=>{if((rec.minimized||rec.closing)&&rec.animation?.playState==='running')return;rec.el.hidden=id==='overview'||rec.space!==id||!!rec.minimized||!!rec.closing;});state.desk.panX=0;state.desk.panY=0;selectedFile=null;if(id==='overview')arranging=false;paintDesk();deskHint();
+    if(motion()&&previous!==id){if(previous==='overview'&&portal){const a=desktop.getBoundingClientRect(),x=portal.left+portal.width/2-a.left,y=portal.top+portal.height/2-a.top;desktop.animate([{clipPath:'circle('+portal.width/2+'px at '+x+'px '+y+'px)',opacity:.4},{clipPath:'circle('+Math.hypot(a.width,a.height)+'px at '+x+'px '+y+'px)',opacity:1}],{duration:700,easing:'cubic-bezier(.18,.9,.22,1)'});}else if(id==='overview')orbitMap.animate([{transform:'translate3d(0,35px,0) scale(1.14)',opacity:.1},{transform:orbitMap.style.transform,opacity:1}],{duration:650,easing:'cubic-bezier(.18,.9,.22,1)'});deskFiles.forEach(f=>{if(f.el.hidden)return;const before=rects.get(f.id),after=f.el.getBoundingClientRect();if(!before||!after.width||!after.height)return;const dx=(before.left+before.width/2-after.left-after.width/2)/deskScale,dy=(before.top+before.height/2-after.top-after.height/2)/deskScale;f.el.animate([{transform:'translate(-50%,-50%) translate('+dx+'px,'+dy+'px) scale('+(before.width/after.width)+','+(before.height/after.height)+')',opacity:.55},{transform:'translate(-50%,-50%) translate(0,0) scale(1,1)',opacity:1}],{duration:560,easing:'cubic-bezier(.2,.85,.2,1)'});});}
     if(root.contains(priorFocus)&&(!priorFocus.getClientRects().length||priorFocus.closest('[hidden],[inert]')))root.querySelector('.hf-space-nav [data-space="'+id+'"]').focus({preventScroll:true});
-    if(persist)save();
+    root.dispatchEvent(new CustomEvent('hole:space-change',{detail:{space:id}}));if(persist)save();
   }
   function selectFile(f){selectedFile=f;paintDesk();}
   function clearDeskDrag(){desktopGestures?.cancel();deskDrag=null;}
   function bindGestureSurface(element,adapter){
-    const pointers=new Map();let gesture=null,holdTimer=0,wheelTimer=0,suppressUntil=0,safariGesture=null;
+    const pointers=new Map();let gesture=null,holdTimer=0,focusFrame=0,wheelTimer=0,suppressUntil=0,safariGesture=null;
     const local=(x,y)=>{const r=element.getBoundingClientRect();return{x:x-r.left-r.width/2,y:y-r.top-r.height/2};};
-    const stopHold=()=>{clearTimeout(holdTimer);holdTimer=0;};
+    const stopHold=()=>{clearTimeout(holdTimer);cancelAnimationFrame(focusFrame);holdTimer=0;focusFrame=0;};
     const capture=(target,id)=>{try{target.setPointerCapture(id);}catch{}};
     const release=p=>{try{if(p.capture.hasPointerCapture(p.id))p.capture.releasePointerCapture(p.id);}catch{}};
     const settle=()=>{const c=adapter.current();adapter.set(c,true);return adapter.get();};
     const limits=z=>Math.max(adapter.min,Math.min(adapter.max,z));
-    function zoom(factor,point){const c=adapter.get(),z=limits(c.z*factor),ratio=z/c.z;adapter.set({x:point.x-(point.x-c.x)*ratio,y:point.y-(point.y-c.y)*ratio,z});}
-    function startPinch(){stopHold();if(gesture?.file){adapter.cancelFile(gesture);gesture.file=null;}const [a,b]=[...pointers.values()],mid=local((a.x+b.x)/2,(a.y+b.y)/2),c=settle();gesture={mode:'pinch',moved:true,c,mid,distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};suppressUntil=performance.now()+400;element.classList.add('is-dragging');adapter.active(true);}
+    function zoom(factor,point){adapter.anchor?.(point);const c=adapter.get(),z=limits(c.z*factor),ratio=z/c.z;adapter.set({x:point.x-(point.x-c.x)*ratio,y:point.y-(point.y-c.y)*ratio,z});}
+    function startPinch(){stopHold();window.HoleFiles?.closeTools?.();if(gesture?.file){adapter.cancelFile(gesture);gesture.file=null;}const [a,b]=[...pointers.values()],mid=local((a.x+b.x)/2,(a.y+b.y)/2),c=settle();adapter.anchor?.(mid);gesture={mode:'pinch',zoomed:true,moved:true,c,mid,distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};suppressUntil=performance.now()+400;element.classList.add('is-dragging');adapter.active(true);}
     function cancel(){const hadGesture=!!gesture||!!safariGesture,pendingWheel=wheelTimer;stopHold();clearTimeout(wheelTimer);wheelTimer=0;if(gesture?.file)adapter.cancelFile(gesture);const held=[...pointers.values()];pointers.clear();gesture=null;safariGesture=null;held.forEach(release);element.classList.remove('is-dragging');adapter.active(false);if(hadGesture){settle();suppressUntil=performance.now()+350;}if(pendingWheel)save();}
     element.addEventListener('pointerdown',e=>{
       if((e.button!==0&&e.button!==1)||pointers.size>=2)return;if(!pointers.size)suppressUntil=0;const captureTarget=e.target.closest('button')||element,p={id:e.pointerId,x:e.clientX,y:e.clientY,capture:captureTarget};pointers.set(e.pointerId,p);capture(captureTarget,e.pointerId);
       if(pointers.size>1){startPinch();return;}clearTimeout(wheelTimer);const file=!spaceHeld&&e.button!==1?adapter.file?.(e.target):null,c=settle();
-      gesture={mode:file&&(e.pointerType!=='touch'||arranging)?'file-pending':'pending',file,c,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,lastTime:performance.now(),vx:0,vy:0,moved:false};
+      gesture={mode:file&&(e.pointerType!=='touch'||arranging)?'file-pending':'pending',file,object:!!e.target.closest('button'),c,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,lastTime:performance.now(),vx:0,vy:0,moved:false};
       if(file){file.el.getAnimations().forEach(a=>a.finish());gesture.original={...state.desk.placements[file.id]};gesture.point=deskPoint(file);selectedFile=file;if(arranging)paintDesk();}
       adapter.active(true);
-      if(file&&e.pointerType==='touch'&&!arranging)holdTimer=setTimeout(()=>{if(gesture&&pointers.size===1&&!gesture.moved){gesture.mode='file';file.el.classList.add('is-held');element.classList.add('is-dragging');hint.textContent='File picked up. Drag to place it.';}},360);
+      if(file&&e.pointerType==='touch'&&!arranging)holdTimer=setTimeout(()=>{if(gesture&&pointers.size===1&&!gesture.moved){gesture.mode='file';gesture.tools=true;suppressUntil=performance.now()+800;window.HoleFiles?.openTools({element:file.el,file,x:e.clientX,y:e.clientY});hint.textContent='Quick Tools · continue dragging to move this file.';}},360);
+      if(!file&&!e.target.closest('button')&&e.button===0){holdTimer=setTimeout(()=>{if(!gesture||gesture.moved)return;gesture.held=true;let last=performance.now(),began=last;const pull=now=>{if(!gesture||gesture.moved)return;const dt=Math.min(40,now-last);last=now;zoom(Math.exp(dt*(.00009+Math.min(1,(now-began)/1200)*.00024)),local(gesture.startX,gesture.startY));if(adapter.get().z<1.5)focusFrame=requestAnimationFrame(pull);};focusFrame=requestAnimationFrame(pull);},380);}
       if(e.button===1)e.preventDefault();
     });
     element.addEventListener('pointermove',e=>{
       const p=pointers.get(e.pointerId);if(!p||!gesture)return;p.x=e.clientX;p.y=e.clientY;
       if(gesture.mode==='pinch'&&pointers.size>=2){const [a,b]=[...pointers.values()],mid=local((a.x+b.x)/2,(a.y+b.y)/2),z=limits(gesture.c.z*Math.hypot(a.x-b.x,a.y-b.y)/gesture.distance),ratio=z/gesture.c.z;adapter.set({x:mid.x-(gesture.mid.x-gesture.c.x)*ratio,y:mid.y-(gesture.mid.y-gesture.c.y)*ratio,z},true);return;}
       const dx=e.clientX-gesture.startX,dy=e.clientY-gesture.startY;if(!gesture.moved&&Math.hypot(dx,dy)<7)return;
-      if(!gesture.moved){stopHold();if(spaceHeld)spacePanUsed=true;gesture.moved=true;gesture.mode=['file','file-pending'].includes(gesture.mode)?'file':'pan';if(gesture.mode==='pan')gesture.file=null;else gesture.file.el.classList.add('is-held');element.classList.add('is-dragging');}
+      if(!gesture.moved){stopHold();window.HoleFiles?.closeTools?.();if(spaceHeld)spacePanUsed=true;gesture.moved=true;gesture.mode=['file','file-pending'].includes(gesture.mode)?'file':'pan';if(gesture.mode==='pan')gesture.file=null;else gesture.file.el.classList.add('is-held');element.classList.add('is-dragging');}
       if(gesture.mode==='file'){positionFile(gesture.file,gesture.point.x+dx/gesture.c.z,gesture.point.y+dy/gesture.c.z);}
       else{adapter.set({x:gesture.c.x+dx,y:gesture.c.y+dy,z:gesture.c.z},true);const now=performance.now(),dt=Math.max(8,now-gesture.lastTime);gesture.vx=.35*gesture.vx+.65*(e.clientX-gesture.lastX)/dt;gesture.vy=.35*gesture.vy+.65*(e.clientY-gesture.lastY)/dt;gesture.lastX=e.clientX;gesture.lastY=e.clientY;gesture.lastTime=now;}
     });
     function end(e,cancelled=false){
       const p=pointers.get(e.pointerId);if(!p)return;if(cancelled){cancel();return;}pointers.delete(e.pointerId);release(p);stopHold();
-      if(pointers.size){const a=[...pointers.values()][0],c=settle();gesture={mode:'pan',c,startX:a.x,startY:a.y,lastX:a.x,lastY:a.y,lastTime:performance.now(),vx:0,vy:0,moved:true};suppressUntil=performance.now()+400;return;}
+      if(pointers.size){const a=[...pointers.values()][0],c=settle();gesture={mode:'pan',zoomed:!!gesture?.zoomed,c,startX:a.x,startY:a.y,lastX:a.x,lastY:a.y,lastTime:performance.now(),vx:0,vy:0,moved:true};suppressUntil=performance.now()+400;return;}
       const g=gesture;gesture=null;element.classList.remove('is-dragging');adapter.active(false);if(!g)return;
-      if(g.moved||g.mode==='file'){suppressUntil=performance.now()+400;if(g.file){g.file.el.classList.remove('is-held');paintDesk();hint.textContent=g.file.name+' placed.';}else if(g.mode==='pan'&&motion()&&performance.now()-g.lastTime<85){const c=adapter.get();adapter.set({x:c.x+Math.max(-2.5,Math.min(2.5,g.vx))*150,y:c.y+Math.max(-2.5,Math.min(2.5,g.vy))*150,z:c.z});}save();}
+      if(g.moved||g.mode==='file'||g.held){suppressUntil=performance.now()+400;if(g.file){g.file.el.classList.remove('is-held');paintDesk();if(g.moved)hint.textContent=g.file.name+' placed.';}else if(g.mode==='pan'&&motion()&&performance.now()-g.lastTime<85){const c=adapter.get();adapter.set({x:c.x+Math.max(-2.5,Math.min(2.5,g.vx))*150,y:c.y+Math.max(-2.5,Math.min(2.5,g.vy))*150,z:c.z});}save();}else if(!g.object){adapter.tap?.(local(e.clientX,e.clientY));}if(g.zoomed||g.held)adapter.settled?.();
     }
     element.addEventListener('pointerup',e=>end(e));element.addEventListener('pointercancel',e=>end(e,true));element.addEventListener('lostpointercapture',e=>{if(pointers.has(e.pointerId))end(e,true);});
     element.addEventListener('click',e=>{if(e.detail!==0&&performance.now()<suppressUntil){e.preventDefault();e.stopPropagation();}},true);
@@ -480,13 +496,15 @@
       e.preventDefault();if(pointers.size)return;const unit=e.deltaMode===1?16:e.deltaMode===2?element.clientHeight:1,dx=e.deltaX*unit,dy=e.deltaY*unit;
       if(e.ctrlKey||e.metaKey)zoom(Math.exp(-Math.max(-200,Math.min(200,dy))*.006),local(e.clientX,e.clientY));
       else{const c=adapter.get(),horizontal=e.shiftKey&&!dx;adapter.set({x:c.x-Math.max(-200,Math.min(200,horizontal?dy:dx)),y:c.y-(horizontal?0:Math.max(-200,Math.min(200,dy))),z:c.z});}
-      clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>{wheelTimer=0;save();},180);
+      clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>{wheelTimer=0;adapter.settled?.();save();},220);
     },{passive:false});
     element.addEventListener('gesturestart',e=>{e.preventDefault();if(pointers.size>=2)return;const c=settle(),r=element.getBoundingClientRect();safariGesture={c,point:local(e.clientX||r.left+r.width/2,e.clientY||r.top+r.height/2)};},{passive:false});
     element.addEventListener('gesturechange',e=>{e.preventDefault();if(!safariGesture||pointers.size>=2)return;const {c,point}=safariGesture,z=limits(c.z*e.scale),ratio=z/c.z;adapter.set({x:point.x-(point.x-c.x)*ratio,y:point.y-(point.y-c.y)*ratio,z},true);},{passive:false});
-    element.addEventListener('gestureend',e=>{e.preventDefault();if(safariGesture){safariGesture=null;save();}},{passive:false});
-    return{cancel,zoom:(factor)=>{zoom(factor,{x:0,y:0});save();},reset:()=>{cancel();adapter.set({x:0,y:0,z:1});save();},get active(){return pointers.size>0;}};
+    element.addEventListener('gestureend',e=>{e.preventDefault();if(safariGesture){safariGesture=null;adapter.settled?.();save();}},{passive:false});
+    return{cancel,zoom:(factor)=>{zoom(factor,{x:0,y:0});adapter.settled?.();save();},reset:()=>{cancel();adapter.set({x:0,y:0,z:1});save();},get active(){return pointers.size>0;}};
   }
+  deskItems.addEventListener('contextmenu',e=>{const file=deskFiles.find(f=>f.el===e.target.closest('[data-file]'));if(!file)return;e.preventDefault();window.HoleFiles?.openTools({element:file.el,file,x:e.clientX,y:e.clientY});});
+  deskItems.addEventListener('keydown',e=>{if(e.key!=='ContextMenu'&&!(e.shiftKey&&e.key==='F10'))return;const file=deskFiles.find(f=>f.el===e.target.closest('[data-file]'));if(file){e.preventDefault();e.stopPropagation();const r=file.el.getBoundingClientRect();window.HoleFiles?.openTools({element:file.el,file,x:r.left+r.width/2,y:r.bottom});}});
   deskItems.addEventListener('keydown',e=>{const f=deskFiles.find(f=>f.el===e.target);if(!f||!arranging)return;if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();e.stopPropagation();selectedFile=f;const p=deskPoint(f),step=e.shiftKey?36:12;positionFile(f,p.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0),p.y+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0));paintDesk();save();hint.textContent=f.name+' moved. Enter to select.';});
   moveSelect.addEventListener('change',()=>{
     if(!selectedFile)return;const file=selectedFile,id=moveSelect.value,s=spaces[id],others=deskFiles.filter(f=>f!==file),slots=[[-96,-8],[98,-15],[-100,145],[102,145],[-260,145],[270,145],[-260,-10],[270,-10],[0,300],[-160,300],[160,300]],slot=slots.find(([x,y])=>others.every(f=>{const p=state.desk.files[f.id];return Math.abs(p.x-s.x-x)>145||Math.abs(p.y-s.y-y)>135;}))||[0,310];
@@ -536,6 +554,7 @@
     if(restoreFocus){const target=drawerReturnFocus?.isConnected&&!drawerReturnFocus.closest('[hidden],[inert]')?drawerReturnFocus:drawerToggle;target.focus({preventScroll:true});}
   }
   function sizeWindow(rec){
+    if(window.HoleWindows?.sizeWindow)return window.HoleWindows.sizeWindow(rec);
     const compact=state.layout==='pocket'||width<560;
     rec.w=compact?width-20:Math.min(rec.app.name==='Music'?310:390,width-30);
     rec.h=compact?height-20:Math.min(rec.app.name==='Music'?435:350,height-28);
@@ -545,7 +564,7 @@
     Object.assign(rec.el.style,{left:x+'px',top:y+'px',width:rec.w+'px',height:rec.h+'px'});
   }
   function resize(){width=field.clientWidth;height=field.clientHeight;const nextFit=state.layout==='pocket'||width<520?.94:Math.min(1.03,(width-65)/770,(height-30)/570);const ratio=camera.tz/fit;fit=nextFit;camera.tz=fit*Math.min(1.8,Math.max(.65,ratio));clampCamera();windows.forEach(sizeWindow);paintDesk();kick();}
-  function focusWindow(rec){rec.el.style.zIndex=String(++zCounter);}
+  function focusWindow(rec){rec.el.style.zIndex=String(++zCounter);emitWindow('focus',rec);}
   function sourceRect(app,preferred){
     const candidates=[preferred,drawerOpen?nodes.find(n=>n.name===app.name).button:null,dockButtons.get(app.name),drawerToggle];
     for(const button of candidates){
@@ -625,6 +644,7 @@
     buttons[next].focus({preventScroll:true});revealDockButton(buttons[next]);
   });
   function bodyContent(app){
+    if(app.url)return '<p class="hf-eyebrow">THECREATINGCO / BROWSER APP</p><div class="hf-app-hero"><i data-lucide="'+app.icon+'" aria-hidden="true"></i></div><h2>'+app.name+'</h2><p class="hf-caption">'+app.description+'</p><a class="hf-open-external" href="'+app.url+'" target="_blank" rel="noopener noreferrer">Open '+app.name+' <span aria-hidden="true">↗</span></a><p class="hf-caption">Opens in a separate tab. Your Hole files stay here until you choose to export them.</p>';
     if(app.name==='Notes')return'<p class="hf-eyebrow">PERSONAL / SCRATCHPAD</p><textarea class="hf-note" aria-label="Your note" spellcheck="false"></textarea>';
     if(app.name==='Music')return'<div class="hf-cover" role="img" aria-label="Peach and lavender abstract album artwork"></div><strong class="hf-track-title">A little headspace</strong><div class="hf-player"><button class="cursor-interaction hf-play" data-play aria-label="'+(state.playing?'Pause':'Play')+' soundless preview"><i data-lucide="'+(state.playing?'pause':'play')+'" aria-hidden="true"></i></button></div><p class="hf-caption" style="text-align:center">Ambient · Soundless preview</p>';
     if(app.name==='Files')return'<p class="hf-eyebrow">YOUR FILES / SAMPLE CONTENT</p><h2>Everything travels<br>with you.</h2><div class="hf-files"><button class="hf-file cursor-interaction" data-launch="Notes"><i data-lucide="file-text" aria-hidden="true"></i><span>A thought worth keeping<small>Open in Notes</small></span></button><button class="hf-file cursor-interaction" data-launch="Photos"><i data-lucide="images" aria-hidden="true"></i><span>Color studies<small>4 abstract studies</small></span></button><button class="hf-file cursor-interaction" data-launch="Music"><i data-lucide="music-2" aria-hidden="true"></i><span>A little headspace<small>Music preview</small></span></button></div>';
@@ -636,7 +656,7 @@
   function createWindow(app){
     const el=document.createElement('section');el.className='hf-window';el.setAttribute('aria-label',app.name+' window');el.style.setProperty('--app-color',app.color);el.dataset.app=app.name;
     el.innerHTML='<header class="hf-window-header"><i data-lucide="'+app.icon+'" aria-hidden="true"></i><strong>'+app.name+'</strong><button class="cursor-interaction" data-minimize aria-label="Minimize '+app.name+'"><i data-lucide="minus" aria-hidden="true"></i></button><button class="cursor-interaction" data-maximize aria-label="Resize '+app.name+'"><i data-lucide="maximize-2" aria-hidden="true"></i></button><button class="cursor-interaction" data-close aria-label="Close '+app.name+'"><i data-lucide="x" aria-hidden="true"></i></button></header><div class="hf-window-body">'+bodyContent(app)+'</div>';
-    windowLayer.append(el);const count=windows.size,rec={app,el,x:Math.max(16,width*.18+(count%3)*72),y:24+(count%3)*38,w:390,h:350,max:false,animation:null};windows.set(app.name,rec);
+    windowLayer.append(el);const count=windows.size,rec={app,el,x:Math.max(16,width*.18+(count%3)*72),y:24+(count%3)*38,w:390,h:350,max:false,animation:null};rec.space=state.desk.view==='overview'?'desk':state.desk.view;windows.set(app.name,rec);
     if(app.name==='Notes'){el.querySelector('textarea').value=state.note;el.querySelector('textarea').addEventListener('input',e=>{state.note=e.target.value;updateNotePreview();save();});}
     el.addEventListener('pointerdown',()=>focusWindow(rec));
     el.querySelector('.hf-window-header').addEventListener('pointerdown',e=>{
@@ -649,21 +669,21 @@
     });
     el.querySelector('.hf-window-header').addEventListener('pointerup',()=>{windowDrag=null;});
     el.querySelector('.hf-window-header').addEventListener('pointercancel',()=>{windowDrag=null;});
-    icons();return rec;
+    icons();emitWindow('create',rec);return rec;
   }
   function openApp(name,origin){
-    const app=byName.get(name);if(!app)return;const launchOrigin=sourceRect(app,origin);dismissSearch(false);if(drawerOpen)closeDrawer({restoreFocus:false,animate:false});hover=null;
+    const app=byName.get(name);if(!app)return;const prior=windows.get(name);if(prior?.space&&prior.space!==state.desk.view)visitSpace(prior.space);else if(state.desk.view==='overview')visitSpace('desk');const launchOrigin=sourceRect(app,origin);dismissSearch(false);if(drawerOpen)closeDrawer({restoreFocus:false,animate:false});hover=null;
     let rec=windows.get(name);const opening=!rec||rec.el.hidden||rec.minimized||rec.closing;rec=rec||createWindow(app);rec.minimized=false;rec.closing=false;
     if(!pinnedApps.includes(name))state.recentApps=[name,...state.recentApps.filter(recent=>recent!==name)];updateRunning(name);save();
     if(state.layout==='pocket'||width<560)windows.forEach(other=>{if(other!==rec)other.el.hidden=true;});
     if(origin?.dataset.file)rec.origin=origin;rec.el.hidden=false;sizeWindow(rec);focusWindow(rec);if(opening)morph(rec,true,launchOrigin);kick();
     hint.textContent=state.layout==='pocket'||width<560?'Your apps stay with you.':'Open another app. Move your windows. Make room.';
-    rec.el.querySelector('[data-minimize]').focus({preventScroll:true});
+    rec.el.querySelector('[data-minimize]').focus({preventScroll:true});emitWindow('open',rec);
   }
   function appFocus(app){const target=dockButtons.get(app.name)||drawerToggle;revealDockButton(target);suppressFocusPan=true;target.focus({preventScroll:true});suppressFocusPan=false;}
-  function minimize(rec){revealDockButton(dockButtons.get(rec.app.name));rec.minimized=true;morph(rec,false);hint.textContent=rec.app.name+' is still here. Open it again to return.';appFocus(rec.app);}
+  function minimize(rec){emitWindow('minimize',rec);revealDockButton(dockButtons.get(rec.app.name));rec.minimized=true;save();morph(rec,false);hint.textContent=rec.app.name+' is still here. Open it again to return.';appFocus(rec.app);}
   function closeWindow(rec){
-    revealDockButton(dockButtons.get(rec.app.name));rec.closing=true;morph(rec,false);const animation=rec.animation;animation.onfinish=()=>{if(!rec.closing||rec.animation!==animation||windows.get(rec.app.name)!==rec)return;rec.el.remove();windows.delete(rec.app.name);updateRunning();save();};
+    emitWindow('close',rec);revealDockButton(dockButtons.get(rec.app.name));rec.closing=true;morph(rec,false);const animation=rec.animation;animation.onfinish=()=>{if(!rec.closing||rec.animation!==animation||windows.get(rec.app.name)!==rec)return;rec.el.remove();windows.delete(rec.app.name);updateRunning();save();emitWindow('closed',rec);};
     appFocus(rec.app);hint.textContent='Your workspace. Your pace.';
   }
   function musicUI(){root.querySelector('.hf-activity-text').textContent=state.playing?'Headspace · playing':'A little headspace';root.querySelectorAll('[data-play]').forEach(b=>{b.setAttribute('aria-label',(state.playing?'Pause':'Play')+' soundless preview');b.innerHTML='<i data-lucide="'+(state.playing?'pause':'play')+'" aria-hidden="true"></i>';});icons();}
@@ -680,7 +700,7 @@
   searchInput.addEventListener('input',e=>renderResults(e.target.value));
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button)return;
-    if(button.dataset.file){if(performance.now()-lastDeskDrag<350)return;const f=deskFiles.find(f=>f.id===button.dataset.file);if(arranging)selectFile(f);else openApp(f.app,button);return;}
+    if(button.dataset.file){if(performance.now()-lastDeskDrag<350)return;const f=deskFiles.find(f=>f.id===button.dataset.file);if(arranging)selectFile(f);else if(f.localId)window.HoleFiles?.openFiles(f.localId);else openApp(f.app,button);return;}
     if(button.dataset.space){visitSpace(button.dataset.space);return;}
     if(button.hasAttribute('data-arrange')){arranging=!arranging;if(arranging&&state.desk.view==='overview')visitSpace('desk',false);paintDesk();deskHint();return;}
     if(button.classList.contains('hf-bubble')&&performance.now()-lastDragEnd<280)return;
@@ -689,7 +709,7 @@
     if(button.hasAttribute('data-close-drawer')){closeDrawer();return;}
     if(button.hasAttribute('data-reset-universe')){home();return;}
     if(button.hasAttribute('data-reset-workspace')){desktopGestures.reset();deskHint();return;}
-    if(button.hasAttribute('data-home')){if(drawerOpen)closeDrawer({restoreFocus:false});dismissSearch(false);windows.forEach(r=>{if(!r.el.hidden)minimize(r);});visitSpace('desk');desktopGestures.reset();deskHint();return;}
+    if(button.hasAttribute('data-home')){if(drawerOpen)closeDrawer({restoreFocus:false});dismissSearch(false);windows.forEach(r=>{if(!r.el.hidden)minimize(r);});visitSpace('overview');deskHint();return;}
     if(button.dataset.layout){setLayout(button.dataset.layout);return;}
     if(button.dataset.zoom){(drawerOpen?drawerGestures:desktopGestures).zoom(button.dataset.zoom==='in'?1.2:1/1.2);hover=null;return;}
     if(button.hasAttribute('data-search')){search();return;}
@@ -701,13 +721,13 @@
     if(button.hasAttribute('data-maximize')){const before=rec.el.getBoundingClientRect();rec.max=!rec.max;sizeWindow(rec);const after=rec.el.getBoundingClientRect();if(motion())rec.el.animate([{transform:'translate('+(before.left-after.left)+'px,'+(before.top-after.top)+'px) scale('+(before.width/after.width)+','+(before.height/after.height)+')'},{transform:'none'}],{duration:420,easing:'cubic-bezier(.2,.9,.2,1)'});}
   });
   desktopGestures=bindGestureSurface(deskStage,{
-    min:.7,max:2.2,get:()=>{const c=currentDeskView();return{x:c.tx,y:c.ty,z:c.tz};},current:()=>{const c=currentDeskView();return{x:c.x,y:c.y,z:c.z};},set:setDeskView,
+    min:.45,max:2.2,settled:()=>settleWorkspaceZoom(),anchor:p=>rememberZoomSpace(p),tap:p=>focusWorkspace(p),get:()=>{const c=currentDeskView();return{x:c.tx,y:c.ty,z:c.tz};},current:()=>{const c=currentDeskView();return{x:c.x,y:c.y,z:c.z};},set:setDeskView,
     file:target=>state.desk.view==='overview'?null:deskFiles.find(f=>f.el===target.closest('[data-file]')),
     cancelFile:g=>{if(g.original)state.desk.placements[g.file.id]={...g.original};g.file.el.classList.remove('is-held');paintDesk();},
     active:value=>{deskDrag=value?{}:null;}
   });
   drawerGestures=bindGestureSurface(bubbleLayer,{
-    min:.65,max:1.8,get:()=>({x:camera.tx,y:camera.ty,z:camera.tz/fit}),current:()=>({x:camera.x,y:camera.y,z:camera.z/fit}),
+    min:.65,max:1.8,tap:p=>focusDrawer(p),get:()=>({x:camera.tx,y:camera.ty,z:camera.tz/fit}),current:()=>({x:camera.x,y:camera.y,z:camera.z/fit}),
     set:(v,immediate=false)=>{camera.tx=v.x;camera.ty=v.y;camera.tz=Math.max(fit*.65,Math.min(fit*1.8,v.z*fit));clampCamera();if(immediate)Object.assign(camera,{x:camera.tx,y:camera.ty,z:camera.tz});hover=null;kick();},
     active:value=>{pan=value?{}:null;field.classList.toggle('is-panning',value);}
   });
@@ -727,12 +747,56 @@
   root.addEventListener('keyup',e=>{if(e.code==='Space'&&spacePanUsed){e.preventDefault();e.stopPropagation();spaceHeld=false;spacePanUsed=false;os.classList.remove('is-space-pan');}},true);
   window.addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;spacePanUsed=false;os.classList.remove('is-space-pan');}});
   window.addEventListener('blur',()=>{spaceHeld=false;os.classList.remove('is-space-pan');desktopGestures.cancel();drawerGestures.cancel();});
-  window.addEventListener('openai:set_globals',e=>{const saved=e.detail?.globals?.widgetState?.privateContent;if(saved&&!desktopGestures.active&&!drawerGestures.active){if(JSON.stringify(saved)===JSON.stringify(state))return;const priorLayout=state.layout;restore(saved);if(priorLayout!==state.layout)setLayout(state.layout,false);restoreViews();paintDesk();musicUI();updateNotePreview();updateRunning();const notes=windows.get('Notes');if(notes&&notes.el.querySelector('textarea')!==document.activeElement)notes.el.querySelector('textarea').value=state.note;}});
+  window.addEventListener('openai:set_globals',e=>{const saved=e.detail?.globals?.widgetState?.privateContent;if(saved&&!desktopGestures.active&&!drawerGestures.active){if(JSON.stringify(saved)===JSON.stringify(state))return;const priorLayout=state.layout;restore(saved);renderSpaces();deskFiles.filter(f=>!f.el).forEach(attachDesktopFile);if(priorLayout!==state.layout)setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);musicUI();updateNotePreview();updateRunning();const notes=windows.get('Notes');if(notes&&notes.el.querySelector('textarea')!==document.activeElement)notes.el.querySelector('textarea').value=state.note;}});
+
+  function emitWindow(type,rec){root.dispatchEvent(new CustomEvent('hole:window-change',{detail:{type,rec}}));}
+  function renderSpaces(){
+    orbitMap.replaceChildren();
+    for(const [id,s] of Object.entries(spaces)){
+      const button=document.createElement('button');button.type='button';button.className='hf-space-orbit cursor-interaction';button.dataset.space=id;button.setAttribute('aria-label','Enter '+s.name);
+      button.innerHTML='<span class="hf-orbit-sphere"><span class="hf-orbit-contents"></span></span><strong></strong><small></small>';
+      button.querySelector('strong').textContent=s.name;orbitMap.append(button);
+      if(!deskViews[id])deskViews[id]={x:0,y:0,z:1,tx:0,ty:0,tz:1};
+      if(!root.querySelector('.hf-space-nav [data-space="'+id+'"]')){const nav=document.createElement('button');nav.type='button';nav.dataset.space=id;nav.className='cursor-interaction';nav.textContent=s.name;root.querySelector('.hf-space-nav').insertBefore(nav,root.querySelector('.hf-space-nav>span'));}
+      if(![...moveSelect.options].some(o=>o.value===id)){const option=document.createElement('option');option.value=id;option.textContent=s.name;moveSelect.append(option);}
+    }
+    orbitMap.dataset.many=String(Object.keys(spaces).length>3);icons();
+  }
+  function showSpaceForm(){
+    if(root.querySelector('.hf-space-dialog'))return;
+    const dialog=document.createElement('dialog');dialog.className='hf-space-dialog';dialog.setAttribute('aria-label','Create a project space');
+    dialog.innerHTML='<form method="dialog"><span class="hf-eyebrow">ROOM FOR AN IDEA</span><h2>A space of your own.</h2><label>Space name<input name="space" maxlength="40" required placeholder="A new project" autocomplete="off"></label><div><button type="button" data-cancel>Cancel</button><button type="submit">Create space</button></div><p class="hf-caption" role="status"></p></form>';
+    os.append(dialog);dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{dialog.remove();newSpaceButton.focus({preventScroll:true});});
+    dialog.querySelector('form').addEventListener('submit',e=>{e.preventDefault();const name=dialog.querySelector('input').value.trim();if(!name)return;if(state.projects.length>=12){dialog.querySelector('[role=status]').textContent='You can keep up to 12 custom spaces in this browser.';return;}const id='space-'+crypto.randomUUID();state.projects.push({id,name});spaces[id]={x:0,y:0,name};renderSpaces();dialog.close();visitSpace(id);});dialog.showModal();
+  }
+  function rememberZoomSpace(p){if(state.desk.view!=='overview')return;const r=deskStage.getBoundingClientRect(),x=r.left+r.width/2+p.x,y=r.top+r.height/2+p.y;const target=[...orbitMap.children].find(b=>{const a=b.getBoundingClientRect();return x>=a.left-24&&x<=a.right+24&&y>=a.top-24&&y<=a.bottom+24;});zoomSpace=target?.dataset.space||null;}
+  function settleWorkspaceZoom(){if(drawerOpen)return;const c=currentDeskView();if(state.desk.view!=='overview'&&c.tz<=.57){Object.assign(c,{x:0,y:0,z:1,tx:0,ty:0,tz:1});visitSpace('overview');}else if(state.desk.view==='overview'&&c.tz>=1.5&&zoomSpace){const id=zoomSpace;zoomSpace=null;Object.assign(c,{x:0,y:0,z:1,tx:0,ty:0,tz:1});visitSpace(id);}}
+  function focusWorkspace(p){if(state.desk.view==='overview'){rememberZoomSpace(p);if(zoomSpace){visitSpace(zoomSpace);zoomSpace=null;return;}}const c=currentDeskView();setDeskView({x:c.tx-p.x*.14,y:c.ty-p.y*.14,z:Math.min(1.4,c.tz*1.055)});save();}
+  function focusDrawer(p){camera.tx-=p.x*.14;camera.ty-=p.y*.14;camera.tz=Math.min(fit*1.8,camera.tz*1.04);clampCamera();kick();save();}
+
+  function pinFile(file){
+    if(!file||typeof file.id!=='string'||typeof file.name!=='string')return false;
+    const existing=deskFiles.find(f=>f.localId===file.id);if(existing){visitSpace(state.desk.files[existing.id].space);existing.el.focus({preventScroll:true});return true;}
+    const space=state.desk.view==='overview'?'desk':state.desk.view,kind=file.type?.startsWith('image/')?'photo':file.type?.startsWith('audio/')?'audio':file.type?.startsWith('text/')?'note':'folder';
+    const f={id:'local-'+file.id,localId:file.id,name:file.name,app:'Files',kind,space,x:0,y:0,turn:0},count=deskFiles.filter(f=>state.desk.files[f.id].space===space).length;
+    deskFiles.push(f);state.pins.push({localId:file.id,name:file.name,space,kind});state.desk.files[f.id]={space,x:0,y:0};state.desk.placements[f.id]={x:.2+(count%4)*.18,y:.22+(Math.floor(count/4)%3)*.25};attachDesktopFile(f);paintDesk();save();return true;
+  }
+  root.addEventListener('hole:files-change',()=>{const files=window.HoleFiles?.getRecent(500);if(!files)return;for(const f of [...deskFiles]){if(!f.localId)continue;const source=files.find(p=>p.id===f.localId);if(source){f.name=source.name;f.el.querySelector('.hf-object-label').textContent=f.name;f.el.setAttribute('aria-label','Open '+f.name+' in Files');const pin=state.pins.find(p=>p.localId===f.localId);if(pin)pin.name=f.name;}else{if(selectedFile===f)selectedFile=null;f.el.remove();deskFiles.splice(deskFiles.indexOf(f),1);state.pins=state.pins.filter(p=>p.localId!==f.localId);delete state.desk.files[f.id];delete state.desk.placements[f.id];}}paintDesk();save();});
+
+  function exportSetup(){storeViews();return{format:'hole-workspace',version:1,layout:state.layout,views:JSON.parse(JSON.stringify(state.views)),projects:state.projects.map(p=>({...p})),desk:{view:state.desk.view,files:Object.fromEntries(Object.entries(state.desk.files).filter(([id])=>!id.startsWith('local-'))),placements:Object.fromEntries(Object.entries(state.desk.placements).filter(([id])=>!id.startsWith('local-')))}};}
+  function importSetup(data){if(!data||data.format!=='hole-workspace'||data.version!==1)return false;desktopGestures.cancel();drawerGestures.cancel();restore({layout:data.layout,views:data.views,desk:data.desk,projects:data.projects});renderSpaces();deskFiles.filter(f=>!f.el).forEach(attachDesktopFile);setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);save();return true;}
+
+  window.HoleOS={root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,exportSetup,importSetup,get isDrawerOpen(){return drawerOpen;}};
+  const previousSession=state.session.map(r=>({...r})),previousSpace=state.desk.view;document.addEventListener('DOMContentLoaded',()=>{for(const entry of previousSession){visitSpace(entry.space,false);openApp(entry.name);const rec=windows.get(entry.name);rec.animation?.cancel();rec.minimized=entry.minimized;rec.el.hidden=entry.minimized;}visitSpace(previousSpace,false);save();},{once:true});
+  renderSpaces();
   new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();
   if(globalThis.Tweak){const tweak=new Tweak({container:os,onChange:()=>{paintDesk();kick();}});tweak.addSlider(settings,'magnification',{label:'Bubble magnetism',min:0,max:.45,step:.05});tweak.addToggle(settings,'fluid',{label:'Elastic transitions'});tweak.addToggle(settings,'labels',{label:'App names'});}
 })();
 </script>
 
+  <script src="/assets/window-system.js"></script>
+  <script src="/assets/file-platform.js"></script>
+  <script src="/assets/welcome.js"></script>
   <noscript>This workspace needs JavaScript enabled to open apps and save your changes.</noscript>
 </body>
 </html>

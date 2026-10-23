@@ -6,6 +6,7 @@
   "description": "Hole OS browser workspace",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
     "dev": "node scripts/dev.mjs",
     "start": "node scripts/dev.mjs"
   },

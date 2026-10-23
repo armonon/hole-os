@@ -1,8 +1,8 @@
 # Hole OS
 
-A fluid browser desktop with a spatial workspace overview, small upright desktop icons, and a bubble App Drawer. The same gestures work across the desktop and App Drawer: drag or swipe to pan, pinch or Ctrl-scroll to zoom, and hold a file on touch to move it.
+A fluid browser workspace with a circular spaces manager, small upright desktop icons, and a circular App Drawer. Drag or swipe to pan, pinch or Ctrl-scroll to zoom. Zoom far enough out of a desktop to return to your spaces; tap a space to enter. Empty canvas taps gently focus that area, and a sustained hold increases the zoom. Single-click opens files; right-click or a stationary long-press opens Quick Tools. Continue a touch hold and drag to move a desktop file.
 
-The drawer and dock share colored circular app icons. Home and App Drawer stay fixed beside a scrollable app row: Notes, Music, and Files are pinned, every running app stays available, and the three most recently used closed apps remain as shortcuts. Drag, swipe, or scroll the row; arrow keys move between dock buttons. Running dots belong to the current tab, while recent shortcuts are saved in this browser.
+The drawer and dock share colored circular app icons. Spaces and App Drawer stay fixed beside a scrollable app row: Notes, Music, and Files are pinned, every running app stays available, and the three most recently used closed apps remain as shortcuts. Drag, swipe, or scroll the row; arrow keys move between dock buttons. Running dots belong to the current tab, while recent shortcuts are saved in this browser.
 
 ## Open Hole
 
@@ -10,7 +10,7 @@ The drawer and dock share colored circular app icons. Home and App Drawer stay f
 - Source: https://github.com/armonon/hole-os
 - Browser code editor: https://github.dev/armonon/hole-os
 
-The source repository is private. Sign in to the owning GitHub account to edit it. The published prototype is publicly accessible; each visitor's sample notes, file placements, and camera views are stored only in that browser.
+The source repository is private. Sign in to the owning GitHub account to edit it. The published workspace is publicly accessible. Notes, layouts, and window geometry are saved in browser storage; imported file bytes and version history use IndexedDB on that browser. Clearing site data removes those local files, so export anything you need to keep.
 
 ## Work from another computer
 
@@ -34,10 +34,11 @@ npm run dev
 
 ## Edit and build
 
-The canonical interface is `src/hole-fluid-os.html`. Keep the desktop, overview, and App Drawer on the shared gesture system. Build the standalone site with:
+The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `welcome.js` handles Welcome and Control Center. Each module has a matching stylesheet. `ecosystem.js` lists the verified Creating Co destinations. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
 
 ```sh
 npm run build
+npm test
 ```
 
 Netlify publishes `public/`. The original interface source is retained separately from the browser runtime so it can also remain usable in the conversation preview.
@@ -54,15 +55,19 @@ git push
 
 Use the GitHub web editor's **Commit & Push** action for browser-only edits. Check build status in the [Netlify dashboard](https://app.netlify.com/projects/hole-os-armonon/deploys). The live site changes only after a successful deployment.
 
-## Current scope
+## Current features and scope
 
-This is an interactive interface prototype. Notes, workspace arrangement, navigation, window controls, and view persistence work locally. App tiles include representative utilities and concept screens. There is no account system, cross-device file sync, cloud computer, or Windows/macOS/Linux application execution yet. Publishing the UI does not add those backend services.
+- Create up to twelve custom project spaces. Camera views, file placements, pinned imported files, recent apps, and open/minimized app sessions survive reloads.
+- Resize windows with the corner handle or its arrow-key controls. Fullscreen reduces the dock to a handle; hover or press Enter to reveal it. Start an upward swipe on that handle: 10% reveals the dock, 30% returns to the desktop, and 50% opens all spaces. Release commits the selected stage; reversing the gesture changes it before release.
+- Import files, preview supported media/text, rename, duplicate, download, place on a desktop, and inspect version history. PNG/JPEG/WebP conversion creates a new real file while preserving its original. Activity shows actual conversion work and outcomes. Files stay in this browser.
+- Welcome combines recent files, current activity, clearly labeled product stories, and useful launch shortcuts. Control Center provides appearance, quiet motion, focus, layout, and portable setup JSON. Setup files contain layout metadata, not private files or notes; they are not account sync.
+- The drawer includes fourteen verified Creating Co destinations alongside the existing utility and concept apps. External apps open in another tab and require manual file handoff. Audio stem separation is an explicit external workflow, not a built-in processing service.
 
-## Interaction verification
+There is no account authentication, live phone pairing, cross-device file sync, cloud computer, or native Windows/macOS/Linux application execution yet. Welcome is a public start screen, not a security lock. Some existing app tiles remain concept screens. Remote code editing is available through GitHub and Codespaces above.
 
-The shared gesture implementation passed 27 simulated touch/wheel assertions covering swipe, hold-and-drag, pinch anchors, second-pointer transitions, cancellation, and app-body wheel isolation. Mouse dragging, native scrolling inside Notes, state restoration, and 320-pixel layouts were also checked. Physical touch-device testing remains outstanding.
+## Verification
 
-The recent-app dock was checked at desktop, Pocket, and 320-pixel widths: six running apps, three closed recents, pinned-app deduplication, minimize/restore, immediate close/reopen, keyboard reveal, wheel/drag isolation, reload, and cross-tab persistence. The updated app produced no browser console errors during these checks.
+Run `npm test` for production-code checks of gesture thresholds and reversibility, file names/formats/limits, and saved-state validation. The overhaul was also checked in the browser at desktop and 320-pixel widths: circular navigation, zoom-out return, keyboard resizing, fullscreen dock gestures, recent apps, real image import/conversion/history, previews, pinned-file reload, quiet motion, and appearance controls. Physical touch-device testing remains outstanding.
 
 ## References
 

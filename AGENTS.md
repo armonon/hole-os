@@ -1,6 +1,6 @@
 # Hole OS project
 
-- Edit the interface in `src/hole-fluid-os.html`; build `public/index.html` with `npm run build`.
+- Edit the shared shell and gestures in `src/hole-fluid-os.html`, and the matching window-system, file-platform, welcome, and ecosystem modules in `src/`. Build `public/index.html` and `public/assets/` with `npm run build`; run `npm test` for state, file-model, and gesture checks.
 - Keep the shared movement language consistent across the desktop, workspace overview, and App Drawer.
 - Selected desktops use small upright icons. The bubble universe belongs to the App Drawer.
 - Preserve mouse, keyboard, wheel, touch swipe, long-press file movement, pinch anchors, and reduced-motion behavior.

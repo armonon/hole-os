@@ -6,14 +6,22 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#151820">
   <meta name="description" content="Your personal browser workspace. A fluid desktop, familiar apps, and a little room for your ideas.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Hole OS</title>
   <link rel="stylesheet" href="/assets/standalone.css">
+  <link rel="stylesheet" href="/assets/continuum.css">
+  <link rel="stylesheet" href="/assets/window-system.css">
+  <link rel="stylesheet" href="/assets/file-platform.css">
+  <link rel="stylesheet" href="/assets/welcome.css">
   <script src="/assets/persistence.js"></script>
   <script src="/assets/lucide-1.17.0.js"></script>
+  <script src="/assets/ecosystem.js"></script>
 </head>
 <body>
 <!--__HOLE_FRAGMENT__-->
+  <script src="/assets/window-system.js"></script>
+  <script src="/assets/file-platform.js"></script>
+  <script src="/assets/welcome.js"></script>
   <noscript>This workspace needs JavaScript enabled to open apps and save your changes.</noscript>
 </body>
 </html>
