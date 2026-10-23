@@ -12,7 +12,22 @@
   const formatBytes = bytes => bytes < 1024 ? `${bytes} B` : bytes < 1024 ** 2 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   const dateLabel = at => new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const inferType = file => file.type || ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json', mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', mp4: 'video/mp4', pdf: 'application/pdf' }[file.name?.split('.').pop().toLowerCase()] || 'application/octet-stream');
-  const model = Object.freeze({ cleanName, derivativeName, formatBytes, inferType });
+  function duplicateRecord(file, id, now) {
+    if (!file || typeof file.id !== 'string' || !file.id || typeof id !== 'string' || !id || id === file.id) throw new Error('Could not create a separate copy. Try again.');
+    const dot = file.name.lastIndexOf('.'), name = dot > 0 ? `${file.name.slice(0, dot)} copy${file.name.slice(dot)}` : `${file.name} copy`;
+    return { ...file, id, name: cleanName(name), parentId: file.id, rootId: file.rootId || file.id, createdAt: now, modifiedAt: now,
+      operation: 'Duplicate', provenance: { app: 'Files', mode: 'local', sourceId: file.id, sourceName: file.name },
+      history: [{ id: uid(), type: 'duplicate', detail: `Copied from ${file.name}`, at: now }] };
+  }
+  function lineage(file, library) {
+    const rootId = file.rootId || file.id, parentId = file.parentId;
+    const source = parentId && parentId !== file.id ? library.find(item => item.id === parentId) || null : null;
+    const sourceName = source?.name || (parentId && file.provenance?.sourceId === parentId ? file.provenance.sourceName : null) || null;
+    return { source, sourceName, missingSource: !!parentId && !source,
+      missingOriginal: rootId !== file.id && !library.some(item => item.id === rootId),
+      family: library.filter(item => (item.rootId || item.id) === rootId).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id)) };
+  }
+  const model = Object.freeze({ cleanName, derivativeName, formatBytes, inferType, duplicateRecord, lineage });
   if (typeof document === 'undefined') { globalThis.HoleFileModel = model; return; }
 
   let initialized = false;
@@ -104,10 +119,11 @@
       if (!(content instanceof Blob)) throw new Error('This file’s contents are no longer available in this browser.');
       return content;
     }
-    async function saveFile(meta, blob) {
+    async function saveFile(meta, blob, createOnly = false) {
       if (!files.some(file => file.id === meta.id) && files.length >= MAX_FILES) throw new Error('This library holds up to 500 files. Remove a local file before adding another.');
       await transaction(['files', 'contents'], 'readwrite', tx => {
-        tx.objectStore('files').put(meta); if (blob) tx.objectStore('contents').put(blob, meta.id);
+        const method = createOnly ? 'add' : 'put';
+        tx.objectStore('files')[method](meta); if (blob) tx.objectStore('contents')[method](blob, meta.id);
       });
       const existing = files.findIndex(f => f.id === meta.id);
       if (existing < 0) files.push(meta); else files[existing] = meta;
@@ -216,6 +232,7 @@
     }
     function downloadLink(file, contents) {
       const link = node('a', 'hfiles-button cursor-interaction');
+      link.dataset.fileId = file.id; link.dataset.fileAction = 'download';
       link.setAttribute('aria-label', 'Download'); link.setAttribute('aria-disabled', 'true'); link.tabIndex = -1; link.style.textDecoration = 'none';
       const label = node('span', '', 'Preparing…'); link.append(icon('download'), label);
       // Prepare the Blob before the click, so saving is a direct native link action.
@@ -245,11 +262,14 @@
       content.append(node('p', 'hfiles-muted', 'Select and copy this name with your device’s copy command.'), input); input.focus(); input.select();
     }
     async function duplicateFile(file) {
+      const priorSelection = selectedId;
       try {
         const blob = await blobFor(file.id), now = Date.now(), id = uid();
-        const dot = file.name.lastIndexOf('.'), name = dot > 0 ? `${file.name.slice(0, dot)} copy${file.name.slice(dot)}` : `${file.name} copy`;
-        const saved = await saveFile({ ...file, id, name: cleanName(name), parentId: file.id, rootId: file.rootId || file.id, createdAt: now, modifiedAt: now, operation: 'Duplicate', history: [history('duplicate', `Copied from ${file.name}`)] }, blob);
-        selectedId = saved.id; renderFiles(); announce('A separate copy is ready.');
+        const saved = await saveFile(duplicateRecord(file, id, now), blob, true);
+        if (selectedId === priorSelection && !overlay && mount?.body.contains(document.activeElement)) {
+          selectedId = saved.id; renderFiles(); fileControl(saved.id)?.focus({ preventScroll: true });
+        }
+        announce('A separate copy is ready.');
       } catch (error) { announce(storageError(error)); }
     }
     function renameFile(file) {
@@ -260,7 +280,7 @@
       form.addEventListener('submit', async event => {
         event.preventDefault(); const name = cleanName(input.value); if (name === file.name) { closeOverlay(); return; }
         submit.disabled = true;
-        try { await saveFile({ ...file, name, modifiedAt: Date.now(), history: [...(file.history || []), history('rename', `Renamed from ${file.name} to ${name}`)].slice(-40) }); closeOverlay(); announce('File renamed.'); }
+        try { await saveFile({ ...file, name, modifiedAt: Date.now(), history: [...(file.history || []), history('rename', `Renamed from ${file.name} to ${name}`)].slice(-40) }); if (content.isConnected) closeOverlay(); announce('File renamed.'); }
         catch (error) { note.textContent = storageError(error); submit.disabled = false; }
       }); input.focus(); input.select(); paintIcons();
     }
@@ -273,20 +293,24 @@
           await transaction(['files', 'contents'], 'readwrite', tx => { tx.objectStore('files').delete(file.id); tx.objectStore('contents').delete(file.id); });
           files = files.filter(f => f.id !== file.id); if (selectedId === file.id) selectedId = null;
           const downloadURL = downloadURLs.get(file.id); if (downloadURL) { downloadURLs.delete(file.id); setTimeout(() => URL.revokeObjectURL(downloadURL), 30000); }
-          closeOverlay(); notifyFiles(); renderFiles(); announce('File removed from this browser.');
+          if (content.isConnected) closeOverlay(); notifyFiles(); renderFiles(); announce('File removed from this browser.');
         } catch (error) { announce(storageError(error)); remove.disabled = false; }
       });
       actions.append(button('Keep file', 'arrow-left', () => closeOverlay()), remove); content.append(actions); paintIcons();
     }
     function showHistory(file) {
       const content = openOverlay('File history', 'history');
-      content.append(node('p', 'hfiles-muted', 'Every result keeps its source. Your originals are never overwritten.'));
-      const family = files.filter(f => (f.rootId || f.id) === (file.rootId || file.id)).sort((a, b) => a.createdAt - b.createdAt);
+      const related = lineage(file, files);
+      content.append(node('p', 'hfiles-muted', 'Separate versions never overwrite their sources. Select a version to open it.'));
+      if (related.missingOriginal) content.append(node('p', 'hfiles-muted', 'The original is no longer in this library. The remaining versions are still available.'));
       const list = node('ol', 'hfiles-timeline');
-      family.forEach(version => {
+      related.family.forEach(version => {
         const entry = node('li', version.id === file.id ? 'is-current' : '');
         const open = button(version.name, fileIcon(version), () => { closeOverlay(); openFiles(version.id); }, 'hfiles-version');
         entry.append(open, node('small', 'hfiles-muted', `${version.operation} · ${dateLabel(version.createdAt)}${version.id === file.id ? ' · Current' : ''}`));
+        const parent = lineage(version, files);
+        if (parent.source) entry.append(node('p', 'hfiles-history-detail', `From ${parent.source.name}`));
+        else if (parent.missingSource) entry.append(node('p', 'hfiles-history-detail', `Source no longer in this library${parent.sourceName ? ': ' + parent.sourceName : '.'}`));
         (version.history || []).filter(h => h.type === 'rename').forEach(h => entry.append(node('p', 'hfiles-history-detail', `${h.detail} · ${dateLabel(h.at)}`)));
         list.append(entry);
       }); content.append(list); paintIcons();
@@ -382,8 +406,14 @@
       shell.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; shell.classList.remove('is-dropping'); importFiles([...event.dataTransfer.files]); });
       renderFiles();
     }
+    function fileControl(id, action = 'open') {
+      return [...mount?.body.querySelectorAll('[data-file-id]') || []].find(control => control.dataset.fileId === id && control.dataset.fileAction === action);
+    }
     function renderFiles() {
       if (!mount?.body.isConnected) return;
+      const focused = document.activeElement, focusId = mount.body.contains(focused) ? focused.dataset.fileId : null, focusAction = focused?.dataset.fileAction;
+      const returnId = overlayReturn && mount.body.contains(overlayReturn) ? overlayReturn.dataset.fileId : null, returnAction = overlayReturn?.dataset.fileAction;
+      const quickId = quickReturn && mount.body.contains(quickReturn) ? quickReturn.dataset.fileId : null, quickAction = quickReturn?.dataset.fileAction;
       mount.add.disabled = busy || !db; mount.add.querySelector('span').textContent = busy ? 'Importing…' : 'Import';
       mount.create.disabled = !db;
       mount.list.replaceChildren();
@@ -395,12 +425,17 @@
         getRecent(files.length).forEach(file => {
           const row = node('div', `hfiles-row${file.id === selectedId ? ' is-selected' : ''}`), open = button(file.name, fileIcon(file), () => { if (performance.now() < suppressClickUntil) return; selectedId = file.id; renderFiles(); }, 'hfiles-file-open');
           open.setAttribute('aria-label', `Open ${file.name}`); open.setAttribute('aria-pressed', String(file.id === selectedId));
+          open.dataset.fileId = file.id; open.dataset.fileAction = 'open';
           const meta = node('small', 'hfiles-file-meta', `${formatBytes(file.size)} · ${file.parentId ? 'Version' : 'Original'}`); open.querySelector('span').append(meta);
           const more = button('Quick tools', 'ellipsis', event => { const r = event.currentTarget.getBoundingClientRect(); openTools({ element: open, file, x: r.right, y: r.bottom }); }, 'hfiles-more'); more.setAttribute('aria-label', `Quick tools for ${file.name}`);
+          more.dataset.fileId = file.id; more.dataset.fileAction = 'tools';
           row.append(open, more); installToolsGesture(open, file); mount.list.append(row);
         });
       }
       renderPreview(); paintIcons();
+      if (returnId) overlayReturn = fileControl(returnId, returnAction) || mount.create;
+      if (quickId) quickReturn = fileControl(quickId, quickAction) || mount.create;
+      if (focusId && !overlay) (fileControl(focusId, focusAction) || mount.create).focus({ preventScroll: true });
     }
     async function renderPreview() {
       if (!mount) return; const panel = mount.preview, epoch = ++previewEpoch; revokePreview(); panel.replaceChildren();
@@ -409,12 +444,19 @@
       panel.append(node('p', 'hfiles-eyebrow', file.parentId ? 'A NEW VERSION' : 'ORIGINAL'), node('h3', 'hfiles-preview-name', file.name));
       const media = node('div', 'hfiles-media'); media.append(node('p', 'hfiles-muted', 'Opening preview…')); panel.append(media);
       const details = node('p', 'hfiles-muted', `${formatBytes(file.size)} · ${file.type} · ${dateLabel(file.modifiedAt)}`); panel.append(details);
-      if (file.provenance) panel.append(node('p', 'hfiles-muted', `${file.provenance.app} · ${file.provenance.sourceName ? 'From ' + file.provenance.sourceName : 'Saved locally'} · ${file.operation}`));
+      const parent = lineage(file, files);
+      if (file.provenance || file.parentId) {
+        const origin = parent.missingSource ? `Source no longer in this library${parent.sourceName ? ': ' + parent.sourceName : ''}` : parent.source ? `From ${parent.source.name}` : 'Saved locally';
+        panel.append(node('p', 'hfiles-muted', `${file.operation === 'Duplicate' ? 'Files' : file.provenance?.app || 'Files'} · ${origin} · ${file.operation}`));
+      }
       const contents = blobFor(file.id);
-      const actions = node('div', 'hfiles-action-row'); actions.append(downloadLink(file, contents), button('History', 'history', () => showHistory(file)));
-      if (window.HoleCapabilities?.forFile(file).length) actions.append(button('Open with', 'app-window', () => openWith(file)));
-      if (RASTER_TYPES.has(file.type)) actions.append(button('Convert', 'wand-sparkles', () => conversionDialog(file)));
-      if (file.type.startsWith('audio/')) actions.append(button('Audio tools', 'sliders-horizontal', () => audioTools(file)));
+      const actions = node('div', 'hfiles-action-row'); actions.append(downloadLink(file, contents));
+      const addAction = (label, glyph, action, key) => { const control = button(label, glyph, action); control.dataset.fileId = file.id; control.dataset.fileAction = key; actions.append(control); };
+      addAction('History', 'history', () => showHistory(file), 'history');
+      if (parent.source) addAction('Open source', 'corner-up-left', () => openFiles(parent.source.id), 'source');
+      if (window.HoleCapabilities?.forFile(file).length) addAction('Open with', 'app-window', () => openWith(file), 'open-with');
+      if (RASTER_TYPES.has(file.type)) addAction('Convert', 'wand-sparkles', () => conversionDialog(file), 'convert');
+      if (file.type.startsWith('audio/')) addAction('Audio tools', 'sliders-horizontal', () => audioTools(file), 'audio');
       panel.append(actions); paintIcons();
       try {
         const blob = await contents; if (epoch !== previewEpoch || !panel.isConnected) return; media.replaceChildren();
@@ -431,6 +473,7 @@
     function openFiles(id) {
       if (typeof id === 'string') selectedId = id;
       closeQuick(false); api.openApp('Files'); const rec = api.windows?.get('Files'); if (rec) mountFiles(rec); renderFiles();
+      if (typeof id === 'string' && !overlay) fileControl(id)?.focus({ preventScroll: true });
     }
 
     let suppressClickUntil = 0;

@@ -12,12 +12,13 @@ function section(from, to) {
 const editorFunctions = section('    function textEditor(', '    function handoff(');
 const overlayFunctions = section('    function openOverlay(', '    function showActivity(');
 const closeQuickFunction = section('    function closeQuick(', '    function openTools(');
+const mutationFunctions = section('    function renameFile(', '    function showHistory(');
 const quickAction = source.match(/^      const action = .*;$/m)?.[0];
 assert.ok(quickAction, 'Production Quick Tools action wrapper exists');
 
 // Run the real dialog/editor functions. This DOM fixture models removal moving
 // focus to body and background inertness; it does not simulate layout or a browser.
-function fixture({ load } = {}) {
+function fixture({ load, save, remove } = {}) {
   let document, body;
   class Element {
     constructor(tag, className = '', text = '') {
@@ -60,6 +61,8 @@ function fixture({ load } = {}) {
   let uid = 0;
   const context = {
     Blob, document, node, button, os, layer,
+    saveFile: save, transaction: remove, cleanName: String, history: () => ({}),
+    files: [], selectedId: null, downloadURLs: new Map(), notifyFiles() {}, renderFiles() {},
     api: { state: { desk: { view: 'desk' } } },
     window: {
       HoleCapabilities: { forFile: () => [{ mode: 'local', name: 'Text editor', description: 'Local editor' }] },
@@ -75,6 +78,7 @@ function fixture({ load } = {}) {
     let overlay = null, overlayReturn = null, overlayCloseRequest = null, inertRecords = [], quick = null, quickReturn = null;
     ${closeQuickFunction}
     ${editorFunctions}
+    ${mutationFunctions}
     ${overlayFunctions}
     function quickActionFor(file, origin) {
       quickReturn = origin; quick = node('section'); layer.append(quick);
@@ -83,7 +87,7 @@ function fixture({ load } = {}) {
       action('Open with', 'app-window', () => openWith(file));
       return tools.querySelector('button');
     }
-    globalThis.actions = { openWith, openOverlay, requestCloseOverlay, quickActionFor, get overlay() { return overlay; } };
+    globalThis.actions = { openWith, openOverlay, textEditor, renameFile, removeFile, requestCloseOverlay, quickActionFor, get overlay() { return overlay; } };
   `, context);
   const actions = context.actions;
   const findButton = text => actions.overlay?.descendants().find(child => child.tag === 'button' && child.textContent === text);
@@ -175,3 +179,33 @@ test('Quick Tools hands its connected file control through Open with, loading an
   assert.equal(f.document.activeElement, f.original, 'focus returns to the file control, not the removed Quick Tools action');
   assert.equal(f.background.inert, false);
 });
+
+for (const operation of ['rename', 'remove']) {
+  test(`late ${operation} completion preserves a newer dirty editor and its keyboard focus`, async () => {
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    const f = fixture({ save: () => pending, remove: () => pending });
+    f.original.focus();
+    const file = { id: 'source', name: 'Original.txt', history: [] };
+    let completing;
+    if (operation === 'rename') {
+      f.actions.renameFile(file);
+      f.actions.overlay.querySelector('input').value = 'Renamed.txt';
+      completing = f.actions.overlay.querySelector('form').fire('submit');
+    } else {
+      f.actions.removeFile(file);
+      completing = f.findButton('Remove file').click();
+    }
+    f.actions.requestCloseOverlay();
+    f.actions.textEditor();
+    const editor = f.actions.overlay.querySelector('textarea');
+    editor.value = 'A later unsaved draft'; editor.focus();
+    release(); await completing;
+    assert.equal(f.actions.overlay?.dataset.kind, 'text-editor', 'an old operation cannot dismiss the new editor');
+    assert.equal(f.document.activeElement, editor);
+    assert.equal(editor.value, 'A later unsaved draft');
+    assert.equal(f.background.inert, true);
+    f.actions.requestCloseOverlay();
+    assert.ok(f.findButton('Keep editing'), 'the new editor retains its discard guard');
+  });
+}
