@@ -10,6 +10,7 @@ window.HoleCatalog = [
   {name:'Librarian',icon:'book-open',color:'#9eaf86',url:'https://librarian.thecreatingco.com/',description:'Your books and local PDFs.'},
   {name:'Locker',icon:'folder-open',color:'#83a6cd',url:'https://thecreatingco.com/locker/',description:'The Creating Co browser file library. Each origin keeps its own local storage.'},
   {name:'NOW',icon:'messages-square',color:'#91a98c',url:'https://now-messenger.armonon.chatgpt.site/',description:'Rooms, conversations and community.'},
+  {name:'Circle',icon:'orbit',color:'#b4a2d0',url:'https://thecreatingco.com/community/network',description:'Your people, projects and creative community.'},
   {name:'Ghost',icon:'shirt',color:'#afa0be',url:'https://ghost.thecreatingco.com/',description:'Explore visual garment models.'},
   {name:'Moodboard',icon:'panels-top-left',color:'#c7a38b',url:'https://thecreatingco.com/apps/moodboard/board',description:'Collect references and shape a visual direction.'},
   {name:'Animate',icon:'film',color:'#97b9b2',url:'https://thecreatingco.com/apps/animate/studio',description:'Frame-by-frame and tween animation.'},

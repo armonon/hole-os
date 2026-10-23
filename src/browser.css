@@ -1,0 +1,25 @@
+#hole-fluid-os .hb-body{padding:0!important;container-type:inline-size}
+#hole-fluid-os .hb-app{min-height:100%;padding:24px;box-sizing:border-box;background:radial-gradient(ellipse at 90% 0,light-dark(#ddd3f455,#55476633),transparent 65%);color:var(--hf-ink)}
+#hole-fluid-os .hb-brand{display:flex;align-items:center;gap:10px;margin-bottom:21px}
+#hole-fluid-os .hb-mark{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:light-dark(#ddd3f4,#554766);color:var(--hf-ink)}
+#hole-fluid-os .hb-mark svg{width:19px;height:19px;stroke-width:1.6}
+#hole-fluid-os .hb-brand strong{font-size:13px;font-weight:550;letter-spacing:-.2px}
+#hole-fluid-os .hb-brand small{display:block;margin-top:1px;font-size:10px;color:var(--hf-muted)}
+#hole-fluid-os .hb-orbit{width:100px;height:63px;border:1px solid var(--hf-line);border-radius:50%;position:relative;margin:5px auto 24px;transform:rotate(-20deg)}
+#hole-fluid-os .hb-orbit-core{position:absolute;width:47px;height:47px;left:26px;top:7px;border-radius:50%;background:radial-gradient(circle at 28% 22%,light-dark(#f5eeff,#c9b1e2),light-dark(#c8b3e4,#796394) 67%);box-shadow:0 8px 15px var(--hf-shadow);animation:hb-drift 5s ease-in-out infinite}
+#hole-fluid-os .hb-orbit-moon{position:absolute;width:16px;height:16px;left:80px;top:39px;border-radius:50%;background:light-dark(#d6e998,#829855);box-shadow:0 4px 8px var(--hf-shadow)}
+#hole-fluid-os .hb-app h2{font-size:28px;font-weight:500;letter-spacing:-1px;line-height:1.15;margin:0 0 10px}
+#hole-fluid-os .hb-copy{font-size:11px;line-height:1.65;color:var(--hf-muted);margin:0 0 20px;max-width:370px}
+#hole-fluid-os .hb-launch{display:flex;align-items:center;gap:11px;padding:14px 16px;min-height:48px;box-sizing:border-box;border:1px solid var(--hf-line);border-radius:28px;box-shadow:0 5px 16px var(--hf-shadow);background:var(--hf-paper);color:var(--hf-ink);font:inherit;font-size:12px;text-decoration:none;transition:transform .3s cubic-bezier(.2,.85,.2,1),box-shadow .3s}
+#hole-fluid-os .hb-launch>span{flex:1}
+#hole-fluid-os .hb-launch svg{width:18px;height:18px;flex-shrink:0}
+#hole-fluid-os .hb-launch>svg:last-child{padding:6px;background:light-dark(#e2f391,#5c6d39);border-radius:50%;width:27px;height:27px;box-sizing:border-box}
+#hole-fluid-os .hb-launch:hover{transform:translateY(-3px);box-shadow:0 9px 20px var(--hf-shadow)}
+#hole-fluid-os .hb-launch:active{transform:scale(.98)}
+#hole-fluid-os .hb-launch:focus-visible{outline:2px solid light-dark(#8664b7,#c9b4ee);outline-offset:3px}
+#hole-fluid-os .hb-note{font-size:10px;line-height:1.6;color:var(--hf-muted);margin:11px 3px 0}
+@keyframes hb-drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@container (max-width:330px){#hole-fluid-os .hb-app{padding:19px}#hole-fluid-os .hb-app h2{font-size:25px}}
+#hole-fluid-os .hf-os[data-quiet=true] .hb-orbit-core{animation:none}
+#hole-fluid-os .hf-os[data-quiet=true] .hb-launch{transition:none}
+@media (prefers-reduced-motion:reduce){#hole-fluid-os .hb-orbit-core{animation:none}#hole-fluid-os .hb-launch{transition:none}}

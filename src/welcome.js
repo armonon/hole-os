@@ -11,10 +11,9 @@
     for (const key of ['quiet', 'focus', 'stories', 'startHere']) if (typeof saved[key] === 'boolean') prefs[key] = saved[key];
     if (['auto', 'light', 'dark'].includes(saved.theme)) prefs.theme = saved.theme;
   } catch { /* An unavailable browser store does not prevent entry. */ }
-  const names = { desk: 'My desk', studio: 'Studio', life: 'Life' };
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  let welcomeBackground = null, controlBackground = null, welcomeReturn = null, controlReturn = null;
-  let welcomeEpoch = 0, controlEpoch = 0, toastTimer = 0, storyIndex = 0;
+  let welcomeBackground = null, controlBackground = null, aboutBackground = null, welcomeReturn = null, controlReturn = null, aboutReturn = null;
+  let welcomeEpoch = 0, controlEpoch = 0, aboutEpoch = 0, toastTimer = 0, storyIndex = 0;
   const icon = (name) => '<i data-lucide="' + name + '" aria-hidden="true"></i>';
   const welcome = document.createElement('section');
   welcome.className = 'hw-welcome';
@@ -45,30 +44,53 @@
           </div>
         </div>
         <div class="hw-widget-grid">
-          <article class="hw-card hw-quick-card hw-rise">
-            <div class="hw-card-head"><span class="hw-eyebrow">MAKE A LITTLE SOMETHING</span>${icon('sparkles')}</div>
-            <h2>Start with an idea.</h2>
-            <div class="hw-quick-tools">
-              <button type="button" data-hw-app="Notes"><span class="hw-tool-note">${icon('notebook-pen')}</span>Write</button>
-              <button type="button" data-hw-app="Luma"><span class="hw-tool-create">${icon('paintbrush')}</span>Create</button>
-              <button type="button" data-hw-app="Converter"><span class="hw-tool-convert">${icon('repeat-2')}</span>Convert</button>
-              <button type="button" data-hw="files"><span class="hw-tool-files">${icon('folder-open')}</span>Files</button>
+          <article class="hw-card hw-apps-card hw-rise">
+            <button type="button" class="hw-apps-launch" data-hw="apps" aria-label="Start with an idea. Open the full App Drawer">
+              <span class="hw-card-head"><span class="hw-eyebrow">MAKE A LITTLE SOMETHING</span>${icon('sparkles')}</span>
+              <span class="hw-card-title">Start with an idea.</span>
+              <span class="hw-app-preview" aria-hidden="true"></span>
+              <span class="hw-card-action"><span>Explore all <b class="hw-app-count"></b> apps</span>${icon('arrow-up-right')}</span>
+            </button>
+          </article>
+          <article class="hw-card hw-messaging-card hw-rise">
+            <div class="hw-card-head"><span class="hw-eyebrow">CLOSE AT HAND</span>${icon('messages-square')}</div>
+            <h2>Keep your people close.</h2>
+            <div class="hw-messaging-apps">
+              <button type="button" data-hw-app="Circle"><span class="hw-message-orb hw-circle-orb">${icon('users-round')}</span><span><strong>Circle</strong><small>Your community, together.</small></span>${icon('arrow-up-right')}</button>
+              <button type="button" data-hw-app="NOW"><span class="hw-message-orb hw-now-orb">${icon('messages-square')}</span><span><strong>NOW</strong><small>A place for conversation.</small></span>${icon('arrow-up-right')}</button>
             </div>
-            <div class="hw-card-foot">A shortcut to your next good thought.</div>
           </article>
-          <article class="hw-card hw-recent-card hw-rise">
-            <div class="hw-card-head"><span class="hw-eyebrow">CLOSE AT HAND</span><button type="button" class="hw-text-button" data-hw="files">All files ${icon('arrow-up-right')}</button></div>
-            <h2>Pick up a thread.</h2><div class="hw-recents"></div>
-            <div class="hw-job-widget" hidden></div>
+          <article class="hw-card hw-search-card hw-rise">
+            <div class="hw-card-head"><span class="hw-eyebrow">HOLE BROWSER</span>${icon('compass')}</div>
+            <h2>A little curiosity.</h2>
+            <p class="hw-search-intro">Search, explore, and keep discoveries in Trails.</p>
+            <a class="hw-search-launch" href="https://thecreatingco.com/community/hole" target="_blank" rel="noopener noreferrer" aria-label="Search with Hole. Opens in a new tab">${icon('search')}<span>Search with Hole</span><span class="hw-search-arrow">${icon('arrow-up-right')}</span></a>
+            <div class="hw-browser-destination">Opens in a new tab</div>
           </article>
-          <article class="hw-card hw-story-card hw-rise">
-            <div class="hw-card-head"><span class="hw-eyebrow">DISCOVER CREATING CO</span><button type="button" class="hw-icon-button hw-dismiss" data-hw="dismiss-story" aria-label="Hide product stories">${icon('x')}</button></div>
+        </div>
+        <footer class="hw-welcome-footer"><span>${icon('hard-drive')} Saved in this browser</span><label><input type="checkbox" data-hw-pref="startHere"> Start here next time</label><button type="button" data-hw="about">About Hole ${icon('arrow-up-right')}</button></footer>
+      </div>
+    </div>`;
+  const about = document.createElement('section');
+  about.className = 'hw-about'; about.hidden = true; about.inert = true;
+  about.setAttribute('role', 'dialog'); about.setAttribute('aria-modal', 'true'); about.setAttribute('aria-labelledby', 'hw-about-title');
+  about.innerHTML = `
+    <div class="hw-about-scroll">
+      <header class="hw-about-header"><button type="button" class="hw-about-back" data-hw="close-about">${icon('arrow-left')} Back</button><span class="hw-eyebrow">ABOUT HOLE</span><span class="hw-about-wordmark">thecreatingco<b>.</b></span></header>
+      <div class="hw-about-content">
+        <div class="hw-about-hero"><span class="hw-eyebrow">A NEW HOME FOR THE CREATING CO ECOSYSTEM</span><h1 id="hw-about-title">One home.<br>Many ways to create.</h1><p>A desktop for your ideas, a place for your files, and a growing collection of tools. Hole brings a little more of your world within reach.</p><div class="hw-about-orbit" aria-hidden="true"><span>◎</span><b>Aa</b><i>${icon('paintbrush')}</i><em>${icon('box')}</em></div></div>
+        <div class="hw-about-features"><article>${icon('orbit')}<h2>Room to move.</h2><p>Give every project a space. Zoom out to see the bigger picture.</p></article><article>${icon('blocks')}<h2>Follow an idea.</h2><p>Open familiar utilities and explore tools from the Creating Co ecosystem.</p></article><article>${icon('hard-drive')}<h2>Your place, here.</h2><p>Workspace settings and imported files stay in this browser. Bring a setup file to another device.</p></article></div>
+        <div class="hw-about-discovery">
+          <div class="hw-about-section-heading"><div><span class="hw-eyebrow">DISCOVER CREATING CO</span><h2>A few doors to open.</h2></div><a href="https://thecreatingco.com/" target="_blank" rel="noopener noreferrer">Explore the ecosystem ${icon('arrow-up-right')}</a></div>
+          <article class="hw-card hw-story-card">
+            <div class="hw-card-head"><span class="hw-eyebrow">FROM THE ECOSYSTEM</span><button type="button" class="hw-icon-button hw-dismiss" data-hw="dismiss-story" aria-label="Hide product stories">${icon('x')}</button></div>
             <div class="hw-story-copy"></div><div class="hw-story-art" aria-hidden="true"></div>
             <div class="hw-story-bottom"><button type="button" class="hw-text-button hw-story-open"></button><button type="button" class="hw-icon-button" data-hw="next-story" aria-label="Next product story">${icon('arrow-right')}</button></div>
             <div class="hw-editorial-label">Product story · from the Creating Co ecosystem</div>
           </article>
+          <div class="hw-stories-hidden" hidden><p>Your discovery stories are hidden.</p><button type="button" class="hw-soft-button" data-hw="show-stories">Show product stories ${icon('arrow-up-right')}</button></div>
         </div>
-        <footer class="hw-welcome-footer"><span>${icon('hard-drive')} Saved in this browser</span><label><input type="checkbox" data-hw-pref="startHere"> Start here next time</label><a href="https://thecreatingco.com/" target="_blank" rel="noopener noreferrer">Meet thecreatingco. ${icon('arrow-up-right')}</a></footer>
+        <footer class="hw-about-footer"><span>Made for a world of ideas.</span><button type="button" class="hw-text-button" data-hw="apps">Explore your apps ${icon('arrow-up-right')}</button></footer>
       </div>
     </div>`;
   const controls = document.createElement('section');
@@ -80,17 +102,19 @@
       <div class="hw-control-tiles"><button type="button" data-hw="spaces">${icon('orbit')}<span>Spaces</span></button><button type="button" data-hw="apps">${icon('layout-grid')}<span>All apps</span></button><button type="button" data-hw="welcome">${icon('sun')}<span>Welcome</span></button></div>
       <div class="hw-control-section">
         <label class="hw-setting"><span><strong>Quiet motion</strong><small>Gentler transitions throughout Hole</small></span><input type="checkbox" data-hw-pref="quiet" role="switch"></label>
-        <label class="hw-setting"><span><strong>Focus</strong><small>Give your workspace a quieter welcome</small></span><input type="checkbox" data-hw-pref="focus" role="switch"></label>
-        <label class="hw-setting"><span><strong>Product stories</strong><small>Discover the Creating Co ecosystem</small></span><input type="checkbox" data-hw-pref="stories" role="switch"></label>
+        <label class="hw-setting"><span><strong>Focus</strong><small>Keep Welcome to useful tools and spaces</small></span><input type="checkbox" data-hw-pref="focus" role="switch"></label>
+        <label class="hw-setting"><span><strong>Product stories in About</strong><small>Discover the Creating Co ecosystem</small></span><input type="checkbox" data-hw-pref="stories" role="switch"></label>
         <label class="hw-setting"><span><strong>Appearance</strong><small>Color, at your own pace</small></span><select data-hw-theme aria-label="Appearance"><option value="auto">Automatic</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
       </div>
       <div class="hw-control-section hw-layout-setting"><span class="hw-eyebrow">WORKSPACE LAYOUT</span><div class="hw-segment" role="group" aria-label="Workspace layout"><button type="button" data-hw-layout="desktop">${icon('monitor')} Desktop</button><button type="button" data-hw-layout="pocket">${icon('smartphone')} Pocket</button></div></div>
       <div class="hw-setup"><div class="hw-setup-icon">${icon('send-to-back')}</div><div><h3>Take your setup.</h3><p>Carry your layout to another browser. Files and notes stay here; this is a setup file, not sync.</p></div><div class="hw-setup-actions"><button type="button" class="hw-soft-button" data-hw="export">${icon('download')} Export setup</button><button type="button" class="hw-soft-button" data-hw="import">${icon('upload')} Import setup</button></div><input type="file" accept=".json,application/json" class="hw-setup-input" aria-label="Choose a Hole workspace setup" hidden></div>
       <label class="hw-setting hw-start-setting"><span><strong>Start at Welcome</strong><small>When you open Hole in this browser</small></span><input type="checkbox" data-hw-pref="startHere" role="switch"></label>
+      <div class="hw-control-library"><button type="button" class="hw-soft-button" data-hw="files">${icon('folder-open')} Files</button><button type="button" class="hw-soft-button" data-hw="activity">${icon('activity')} <span class="hw-activity-label">Activity</span></button></div>
+      <button type="button" class="hw-control-about" data-hw="about">${icon('info')} <span>About Hole & Creating Co</span>${icon('arrow-up-right')}</button>
       <p class="hw-control-note">These controls apply to Hole in this browser.</p>
     </div>`;
   const toast = document.createElement('div'); toast.className = 'hw-toast'; toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite'); toast.hidden = true;
-  os.append(welcome, controls, toast);
+  os.append(welcome, about, controls, toast);
   const topbarButton = document.createElement('button');
   topbarButton.type = 'button'; topbarButton.className = 'hw-topbar-control cursor-interaction'; topbarButton.dataset.controlCenter = '';
   topbarButton.setAttribute('aria-label', 'Open Control Center'); topbarButton.setAttribute('aria-haspopup', 'dialog'); topbarButton.setAttribute('aria-expanded', 'false'); topbarButton.innerHTML = icon('sliders-horizontal');
@@ -103,7 +127,8 @@
   function syncPrefs() {
     os.dataset.quiet = String(prefs.quiet); os.dataset.focus = String(prefs.focus); os.dataset.stories = String(prefs.stories);
     root.style.colorScheme = prefs.theme === 'auto' ? 'light dark' : prefs.theme;
-    welcome.querySelector('.hw-story-card').hidden = prefs.focus || !prefs.stories;
+    about.querySelector('.hw-story-card').hidden = !prefs.stories;
+    about.querySelector('.hw-stories-hidden').hidden = prefs.stories;
     root.querySelectorAll('[data-hw-pref]').forEach(input => { input.checked = prefs[input.dataset.hwPref]; });
     controls.querySelector('[data-hw-theme]').value = prefs.theme;
     controls.querySelectorAll('[data-hw-layout]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.hwLayout === H.state.layout)));
@@ -119,17 +144,19 @@
   function returnFocus(target) { if (target?.isConnected && !target.closest('[hidden],[inert]')) target.focus({ preventScroll: true }); else root.querySelector('.hf-brand')?.focus({ preventScroll: true }); }
   function openWelcome() {
     closeControls(false, true);
+    closeAbout(false, true);
     if (!welcome.hidden && !welcome.inert) { welcome.querySelector('.hw-enter').focus({ preventScroll: true }); return; }
     welcome.getAnimations().forEach(animation => animation.cancel());
     welcomeEpoch++; welcomeReturn = document.activeElement; welcomeBackground = makeInert(welcome);
     welcome.hidden = false; welcome.inert = false; os.dataset.welcome = 'true';
-    syncPrefs(); renderRecent(); clock();
+    syncPrefs(); updateLibraryShortcuts(); clock();
     animate(welcome, [{ opacity: 0, transform: 'scale(1.035)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 520, easing: 'cubic-bezier(.2,.85,.2,1)' });
     welcome.querySelectorAll('.hw-rise').forEach((el, i) => animate(el, [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { duration: 650, delay: 50 + i * 45, fill: 'backwards', easing: 'cubic-bezier(.2,.85,.2,1)' }));
     welcome.querySelector('.hw-enter').focus({ preventScroll: true });
   }
   function closeWelcome(restore = true, immediate = false) {
     closeControls(false, true);
+    closeAbout(false, true);
     if (welcome.hidden) return;
     const epoch = ++welcomeEpoch; welcome.inert = true; os.dataset.welcome = 'false';
     restoreInert(welcomeBackground); welcomeBackground = null;
@@ -156,7 +183,26 @@
     if (transition) transition.finished.then(finish, finish); else finish();
     if (restore) returnFocus(controlReturn);
   }
-  function leave() { closeControls(false, true); closeWelcome(false); if (H.isDrawerOpen) H.closeDrawer({ restoreFocus: false }); }
+  function openAbout() {
+    const origin = !controls.hidden && !controls.inert ? controlReturn : document.activeElement;
+    closeControls(false, true);
+    if (!about.hidden && !about.inert) { about.querySelector('[data-hw="close-about"]').focus({ preventScroll: true }); return; }
+    about.getAnimations().forEach(animation => animation.cancel());
+    aboutEpoch++; aboutReturn = origin; aboutBackground = makeInert(about);
+    about.hidden = false; about.inert = false; syncPrefs();
+    animate(about, [{ opacity: 0, transform: 'translateY(22px) scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.18,.9,.22,1)' });
+    about.querySelector('[data-hw="close-about"]').focus({ preventScroll: true });
+  }
+  function closeAbout(restore = true, immediate = false) {
+    if (about.hidden) return;
+    closeControls(false, true);
+    const epoch = ++aboutEpoch; about.inert = true; restoreInert(aboutBackground); aboutBackground = null;
+    const transition = immediate ? null : animate(about, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(15px) scale(.99)' }], { duration: 260, easing: 'ease-in' });
+    const finish = () => { if (epoch === aboutEpoch) { about.hidden = true; about.inert = true; } };
+    if (transition) transition.finished.then(finish, finish); else finish();
+    if (restore) returnFocus(aboutReturn);
+  }
+  function leave() { closeControls(false, true); closeAbout(false, true); closeWelcome(false); if (H.isDrawerOpen) H.closeDrawer({ restoreFocus: false }); }
   function enterSpace(id = 'overview') {
     leave(); H.windows.forEach(rec => { if (!rec.el.hidden) H.minimize(rec); }); H.visitSpace(id);
     requestAnimationFrame(() => (root.querySelector('.hf-space-nav [data-space="' + id + '"]') || root.querySelector('.hf-brand'))?.focus({ preventScroll: true }));
@@ -173,36 +219,32 @@
     { app: 'Form', title: 'Give an idea<br>a new dimension.', body: 'A place for shape, space, and a different point of view.', art: '◎', style: 'form' }
   ];
   function renderStory() {
-    const story = stories[storyIndex], card = welcome.querySelector('.hw-story-card');
+    const story = stories[storyIndex], card = about.querySelector('.hw-story-card');
     card.dataset.story = story.style;
     card.querySelector('.hw-story-copy').innerHTML = '<h2>' + story.title + '</h2><p>' + story.body + '</p>';
     card.querySelector('.hw-story-art').textContent = story.art;
     const button = card.querySelector('.hw-story-open'); button.dataset.hwApp = story.app; button.innerHTML = 'Explore ' + story.app + ' ' + icon('arrow-up-right');
     H.icons();
   }
-  function renderRecent() {
-    const list = welcome.querySelector('.hw-recents'); list.replaceChildren();
-    const recent = window.HoleFiles?.getRecent?.(3) || [];
-    if (!recent.length) {
-      const empty = document.createElement('div'); empty.className = 'hw-recent-empty';
-      empty.innerHTML = icon('folder-open') + '<div><strong>Your files start here.</strong><p>Import something into Files to keep it close.</p></div>';
-      list.append(empty);
-    } else recent.forEach(file => {
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'hw-recent-file'; button.dataset.hwFile = file.id;
-      const mime = String(file.type || ''), glyph = mime.startsWith('audio/') ? 'audio-lines' : mime.startsWith('image/') ? 'image' : mime.startsWith('video/') ? 'film' : 'file-text';
-      button.innerHTML = '<span class="hw-recent-icon">' + icon(glyph) + '</span><span class="hw-recent-copy"><strong></strong><small></small></span>' + icon('arrow-up-right');
-      button.querySelector('strong').textContent = file.name; button.querySelector('small').textContent = (names[file.space] || H.state.projects?.find(space => space.id === file.space)?.name || 'My desk') + ' · in this browser'; list.append(button);
+  function renderAppPreview() {
+    const preview = welcome.querySelector('.hw-app-preview'); preview.replaceChildren();
+    ['Notes', 'Luma', 'Glyph', 'Bounce', 'Form', 'Files'].forEach(name => {
+      const app = H.byName.get(name); if (!app) return;
+      const orb = document.createElement('span'); orb.className = 'hw-preview-orb'; orb.style.setProperty('--hw-app-color', app.color); orb.style.setProperty('--hw-app-ink', app.ink || '#fff'); orb.innerHTML = icon(app.icon); preview.append(orb);
     });
-    const jobs = window.HoleFiles?.getJobs?.(4) || [], active = jobs.find(job => !['complete', 'completed', 'cancelled', 'failed', 'error'].includes(job.status)), latest = active || jobs[0];
-    const widget = welcome.querySelector('.hw-job-widget'); widget.hidden = !latest; widget.replaceChildren();
-    if (latest) {
-      const button = document.createElement('button'); button.type = 'button'; button.dataset.hw = 'activity';
-      button.innerHTML = icon(active ? 'loader-circle' : ['failed', 'error'].includes(latest.status) ? 'circle-alert' : 'circle-check') + '<span><strong></strong><small></small></span>' + icon('arrow-up-right');
-      button.querySelector('strong').textContent = latest.name || 'File activity'; button.querySelector('small').textContent = latest.step || latest.status;
-      widget.append(button);
-    }
+    welcome.querySelector('.hw-app-count').textContent = H.apps.length;
     H.icons();
   }
+  function updateLibraryShortcuts() {
+    const activeJobs = (window.HoleFiles?.getJobs?.(60) || []).filter(job => ['running', 'queued'].includes(job.status)).length;
+    controls.querySelector('.hw-activity-label').textContent = activeJobs ? 'Activity · ' + activeJobs : 'Activity';
+  }
+  const browserLink = welcome.querySelector('.hw-search-launch');
+  browserLink.addEventListener('click', () => {
+    // The native link opens Hole's real search workspace. Register its local
+    // launcher as well, so Browser remains available in the recent-app dock.
+    leave(); H.openApp('Browser', browserLink);
+  });
   function clock() {
     const now = new Date(), time = welcome.querySelector('.hw-clock');
     time.dateTime = now.toISOString(); time.textContent = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(now);
@@ -241,22 +283,24 @@
       event.preventDefault(); event.stopImmediatePropagation();
       if (target.matches('.hf-brand')) openWelcome(); else openControls(); return;
     }
-    if (!target || !(welcome.contains(target) || controls.contains(target))) return;
+    if (!target || !(welcome.contains(target) || controls.contains(target) || about.contains(target))) return;
     event.stopPropagation();
     if (target.dataset.hwSpace) { enterSpace(target.dataset.hwSpace); return; }
     if (target.dataset.hwApp) { launch(target.dataset.hwApp, target); return; }
-    if (target.dataset.hwFile) { leave(); window.HoleFiles?.openFiles(target.dataset.hwFile); return; }
     if (target.dataset.hwLayout) { H.setLayout?.(target.dataset.hwLayout); syncPrefs(); return; }
     const action = target.dataset.hw;
     if (action === 'controls') openControls();
     if (action === 'close-controls') closeControls();
     if (action === 'welcome') openWelcome();
+    if (action === 'about') openAbout();
+    if (action === 'close-about') closeAbout();
     if (action === 'enter' || action === 'spaces') enterSpace('overview');
     if (action === 'apps') { leave(); H.openDrawer({ focus: true }); }
     if (action === 'files') launch('Files', target);
-    if (action === 'activity') { leave(); window.HoleFiles?.showActivity(); }
-    if (action === 'dismiss-story') { prefs.stories = false; persist(); syncPrefs(); welcome.querySelector('[data-hw="controls"]').focus({ preventScroll: true }); notify('Product stories hidden. You can bring them back in Control Center.'); }
-    if (action === 'next-story') { storyIndex = (storyIndex + 1) % stories.length; renderStory(); animate(welcome.querySelector('.hw-story-copy'), [{ opacity: 0, transform: 'translateX(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'ease-out' }); }
+    if (action === 'activity') { if (window.HoleFiles?.showActivity) { leave(); window.HoleFiles.showActivity(); } else notify('Your activity is still opening. Try again in a moment.'); }
+    if (action === 'dismiss-story') { prefs.stories = false; persist(); syncPrefs(); about.querySelector('[data-hw="show-stories"]').focus({ preventScroll: true }); }
+    if (action === 'show-stories') { prefs.stories = true; persist(); syncPrefs(); about.querySelector('.hw-story-open').focus({ preventScroll: true }); }
+    if (action === 'next-story') { storyIndex = (storyIndex + 1) % stories.length; renderStory(); animate(about.querySelector('.hw-story-copy'), [{ opacity: 0, transform: 'translateX(8px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'ease-out' }); }
     if (action === 'export') exportSetup();
     if (action === 'import') setupInput.click();
   }, true);
@@ -264,15 +308,16 @@
   // Keep workspace pan, zoom, and launcher shortcuts behind the active dialog.
   welcome.addEventListener('keydown', event => event.stopPropagation());
   controls.addEventListener('keydown', event => event.stopPropagation());
+  about.addEventListener('keydown', event => event.stopPropagation());
   root.addEventListener('change', event => {
     const input = event.target;
     if (input.matches('[data-hw-pref]') && Object.hasOwn(defaults, input.dataset.hwPref)) { prefs[input.dataset.hwPref] = input.checked; persist(); syncPrefs(); }
     if (input.matches('[data-hw-theme]') && ['auto', 'light', 'dark'].includes(input.value)) { prefs.theme = input.value; persist(); syncPrefs(); }
   });
   document.addEventListener('keydown', event => {
-    const panel = !controls.hidden && !controls.inert ? controls : !welcome.hidden && !welcome.inert ? welcome : null;
+    const panel = !controls.hidden && !controls.inert ? controls : !about.hidden && !about.inert ? about : !welcome.hidden && !welcome.inert ? welcome : null;
     if (!panel) return;
-    if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); if (panel === controls) closeControls(); else closeWelcome(); }
+    if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); if (panel === controls) closeControls(); else if (panel === about) closeAbout(); else closeWelcome(); }
     if (event.key === 'Tab') {
       const items = focusable(panel), first = items[0], last = items[items.length - 1];
       if (!items.length) { event.preventDefault(); return; }
@@ -280,7 +325,7 @@
       else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
     }
   }, true);
-  root.addEventListener('hole:files-change', renderRecent); root.addEventListener('hole:jobs-change', renderRecent);
+  root.addEventListener('hole:jobs-change', updateLibraryShortcuts);
   root.addEventListener('hole:space-change', () => controls.querySelectorAll('[data-hw-layout]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.hwLayout === H.state.layout))));
   window.addEventListener('storage', event => {
     if (event.key !== storageKey || !event.newValue) return;
@@ -288,7 +333,7 @@
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) clock(); });
   setInterval(() => { if (!document.hidden && !welcome.hidden) clock(); }, 30000);
-  window.HoleWelcome = { open: openWelcome, close: closeWelcome, openControls, closeControls, notify, get preferences() { return { ...prefs }; } };
-  renderStory(); renderRecent(); syncPrefs(); clock(); H.icons();
+  window.HoleWelcome = { open: openWelcome, close: closeWelcome, openControls, closeControls, openAbout, closeAbout, notify, get preferences() { return { ...prefs }; } };
+  renderStory(); renderAppPreview(); updateLibraryShortcuts(); syncPrefs(); clock(); H.icons();
   if (prefs.startHere) requestAnimationFrame(openWelcome);
 })();

@@ -34,7 +34,7 @@ npm run dev
 
 ## Edit and build
 
-The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `welcome.js` handles Welcome and Control Center. Each module has a matching stylesheet. `ecosystem.js` lists the verified Creating Co destinations. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
+The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `welcome.js` handles Welcome, About, and Control Center; `browser.js` connects the Browser window to the existing Hole search workspace. Each module has a matching stylesheet. `ecosystem.js` lists the verified Creating Co destinations. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
 
 ```sh
 npm run build
@@ -60,8 +60,8 @@ Use the GitHub web editor's **Commit & Push** action for browser-only edits. Che
 - Create up to twelve custom project spaces. Camera views, file placements, pinned imported files, recent apps, and open/minimized app sessions survive reloads.
 - Resize windows with the corner handle or its arrow-key controls. Fullscreen reduces the dock to a handle; hover or press Enter to reveal it. Start an upward swipe on that handle: 10% reveals the dock, 30% returns to the desktop, and 50% opens all spaces. Release commits the selected stage; reversing the gesture changes it before release.
 - Import files, preview supported media/text, rename, duplicate, download, place on a desktop, and inspect version history. PNG/JPEG/WebP conversion creates a new real file while preserving its original. Activity shows actual conversion work and outcomes. Files stay in this browser.
-- Welcome combines recent files, current activity, clearly labeled product stories, and useful launch shortcuts. Control Center provides appearance, quiet motion, focus, layout, and portable setup JSON. Setup files contain layout metadata, not private files or notes; they are not account sync.
-- The drawer includes fourteen verified Creating Co destinations alongside the existing utility and concept apps. External apps open in another tab and require manual file handoff. Audio stem separation is an explicit external workflow, not a built-in processing service.
+- Welcome offers an expanding full-app launcher, Circle and NOW messaging shortcuts, and a Hole Browser search launcher. Discover Creating Co and its product stories live in the in-Hole About page, reachable from Welcome and Control Center. Files and actual job activity remain accessible through Control Center. Control Center also provides appearance, quiet motion, focus, layout, and portable setup JSON. Setup files contain layout metadata, not private files or notes; they are not account sync.
+- The drawer includes fifteen verified Creating Co destinations alongside the existing utility and concept apps. External apps open in another tab and require manual file handoff. The Hole Browser card opens the existing searchable Hole workspace; it does not submit a query from the OS because the upstream app currently has no supported query handoff. Audio stem separation is an explicit external workflow, not a built-in processing service.
 
 There is no account authentication, live phone pairing, cross-device file sync, cloud computer, or native Windows/macOS/Linux application execution yet. Welcome is a public start screen, not a security lock. Some existing app tiles remain concept screens. Remote code editing is available through GitHub and Codespaces above.
 

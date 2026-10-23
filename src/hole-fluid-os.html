@@ -1,7 +1,7 @@
 <div id="hole-fluid-os">
   <div class="hf-os" data-layout="desktop" data-drawer-open="false" aria-label="Hole fluid operating system concept">
     <header class="hf-topbar">
-      <button class="hf-brand cursor-interaction" data-home aria-label="Return to desktop">h<span>◎</span>le</button>
+      <button class="hf-brand cursor-interaction" data-home aria-label="Open Welcome">h<span>◎</span>le</button>
       <span class="hf-space-name">by thecreatingco.</span>
       <button class="hf-activity cursor-interaction" data-launch="Music"><span class="hf-activity-bars" aria-hidden="true"><b></b><b></b><b></b></span><span class="hf-activity-text">A little headspace</span></button>
       <span class="hf-concept">INTERACTION STUDY</span>
@@ -341,7 +341,7 @@
     ['Books','book-open','#c79d70'],['Terminal','terminal','#626b80'],['Windows','panels-top-left','#658bc9'],['Linux','square-terminal','#959066'],['Mac','laptop','#9598a8'],['Store','blocks','#8f93d1'],['Settings','sliders-horizontal','#9299a7'],['Compass','navigation','#bc8c82'],['Translate','languages','#8fa9bb'],['Drive','hard-drive','#8caaa6'],['Meet','video','#92a17b'],['Code','code-2','#9585b6'],['Docs','file-text','#8cabc4'],['Wallet','wallet','#9c8b91'],['Shortcuts','workflow','#a58dc6'],['Health','heart','#c98c9f'],['Play','gamepad-2','#9b9fc5'],['Home','house','#aaa18c']
   ].map((a,i)=>({name:a[0],icon:a[1],color:a[2],ink:a[3]||'#fff',index:i}));
   for(const app of window.HoleCatalog||[])if(!apps.some(a=>a.name===app.name))apps.push({...app,ink:'#fff',index:apps.length});
-  const priorityApps=['Notes','Files','Luma','Glyph','Form','Bounce','ScenePilot','StemDeck','NOW','Converter','Locker','Librarian','Moodboard','Portfolio','Ghost','Animate','Music','Photos'];apps.sort((a,b)=>(priorityApps.includes(a.name)?priorityApps.indexOf(a.name):99)-(priorityApps.includes(b.name)?priorityApps.indexOf(b.name):99));
+  const priorityApps=['Notes','Files','Luma','Glyph','Form','Bounce','ScenePilot','StemDeck','Circle','NOW','Browser','Converter','Locker','Librarian','Moodboard','Portfolio','Ghost','Animate','Music','Photos'];apps.sort((a,b)=>(priorityApps.includes(a.name)?priorityApps.indexOf(a.name):99)-(priorityApps.includes(b.name)?priorityApps.indexOf(b.name):99));
   const byName=new Map(apps.map(a=>[a.name,a])),pinnedApps=['Notes','Music','Files'];
   const dock=root.querySelector('.hf-dock'),dockApps=dock.querySelector('.hf-dock-apps'),dockButtons=new Map();
   const recentDivider=document.createElement('span');recentDivider.className='hf-dock-divider';recentDivider.setAttribute('aria-hidden','true');
