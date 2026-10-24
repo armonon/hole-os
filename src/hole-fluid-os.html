@@ -774,10 +774,17 @@
   }
   root.addEventListener('hole:files-change',()=>{const files=window.HoleFiles?.getRecent(500);if(!files)return;for(const f of [...deskFiles]){if(!f.localId)continue;const source=files.find(p=>p.id===f.localId);if(source){f.name=source.name;f.el.querySelector('.hf-object-label').textContent=f.name;f.el.setAttribute('aria-label','Open '+f.name+' in Files');const pin=state.pins.find(p=>p.localId===f.localId);if(pin)pin.name=f.name;}else{if(selectedFile===f)selectedFile=null;f.el.remove();deskFiles.splice(deskFiles.indexOf(f),1);state.pins=state.pins.filter(p=>p.localId!==f.localId);delete state.desk.files[f.id];delete state.desk.placements[f.id];}}window.HoleClusters?.refresh();paintDesk();save();});
 
-  function exportSetup(){storeViews();return{format:'hole-workspace',version:1,layout:state.layout,views:JSON.parse(JSON.stringify(state.views)),projects:state.projects.map(p=>({...p})),desk:{view:state.desk.view,files:Object.fromEntries(Object.entries(state.desk.files).filter(([id])=>!id.startsWith('local-')&&!id.startsWith('group-')&&!id.startsWith('app-'))),placements:Object.fromEntries(Object.entries(state.desk.placements).filter(([id])=>!id.startsWith('local-')&&!id.startsWith('group-')&&!id.startsWith('app-')))}};}
-  function importSetup(data){if(!data||data.format!=='hole-workspace'||data.version!==1)return false;desktopGestures.cancel();drawerGestures.cancel();restore({layout:data.layout,views:data.views,desk:data.desk,projects:data.projects});renderSpaces();deskFiles.filter(f=>!f.el).forEach(attachDesktopFile);setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);save();return true;}
+  function exportSetup(){storeViews();return window.HoleSetup.serialize(state,{itemIds:deskFiles.filter(f=>!f.groupId).map(f=>f.id),appNames:apps.map(a=>a.name)});}
+  let lastSetupImport=null;
+  function importSetup(data){
+    const plan=window.HoleSetup.plan(data,{state,itemIds:deskFiles.filter(f=>!f.groupId).map(f=>f.id),appNames:apps.map(a=>a.name),localIds:(window.HoleFiles?.getRecent(500)||[]).map(f=>f.id)});
+    if(!plan)return false;
+    desktopGestures.cancel();drawerGestures.cancel();selectedFile=null;
+    restore(plan.restore);renderSpaces();deskFiles.filter(f=>!f.el).forEach(attachDesktopFile);window.HoleClusters?.refresh();
+    setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);save();lastSetupImport=plan.report;return true;
+  }
 
-  window.HoleOS={root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get isDrawerOpen(){return drawerOpen;}};
+  window.HoleOS={root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
   const previousSession=state.session.map(r=>({...r})),previousSpace=state.desk.view;document.addEventListener('DOMContentLoaded',()=>{for(const entry of previousSession){visitSpace(entry.space,false);openApp(entry.name);const rec=windows.get(entry.name);rec.animation?.cancel();rec.minimized=entry.minimized;rec.el.hidden=entry.minimized;}visitSpace(previousSpace,false);save();},{once:true});
   renderSpaces();
   new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();

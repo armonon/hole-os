@@ -107,7 +107,7 @@
         <label class="hw-setting"><span><strong>Appearance</strong><small>Color, at your own pace</small></span><select data-hw-theme aria-label="Appearance"><option value="auto">Automatic</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
       </div>
       <div class="hw-control-section hw-layout-setting"><span class="hw-eyebrow">WORKSPACE LAYOUT</span><div class="hw-segment" role="group" aria-label="Workspace layout"><button type="button" data-hw-layout="desktop">${icon('monitor')} Desktop</button><button type="button" data-hw-layout="pocket">${icon('smartphone')} Pocket</button></div></div>
-      <div class="hw-setup"><div class="hw-setup-icon">${icon('send-to-back')}</div><div><h3>Take your setup.</h3><p>Carry your layout to another browser. Files and notes stay here; this is a setup file, not sync.</p></div><div class="hw-setup-actions"><button type="button" class="hw-soft-button" data-hw="export">${icon('download')} Export setup</button><button type="button" class="hw-soft-button" data-hw="import">${icon('upload')} Import setup</button></div><input type="file" accept=".json,application/json" class="hw-setup-input" aria-label="Choose a Hole workspace setup" hidden></div>
+      <div class="hw-setup"><div class="hw-setup-icon">${icon('send-to-back')}</div><div><h3>Take your setup.</h3><p>Carry your layout, app shortcuts and Clusters. Includes group names and file identifiers, never file contents or Notes. Existing groups stay intact; missing file links are skipped.</p></div><div class="hw-setup-actions"><button type="button" class="hw-soft-button" data-hw="export">${icon('download')} Export setup</button><button type="button" class="hw-soft-button" data-hw="import">${icon('upload')} Import setup</button></div><input type="file" accept=".json,application/json" class="hw-setup-input" aria-label="Choose a Hole workspace setup" hidden><p class="hw-setup-result" role="status"></p></div>
       <label class="hw-setting hw-start-setting"><span><strong>Start at Welcome</strong><small>When you open Hole in this browser</small></span><input type="checkbox" data-hw-pref="startHere" role="switch"></label>
       <div class="hw-control-library"><button type="button" class="hw-soft-button" data-hw="files">${icon('folder-open')} Files</button><button type="button" class="hw-soft-button" data-hw="activity">${icon('activity')} <span class="hw-activity-label">Activity</span></button></div>
       <button type="button" class="hw-control-about" data-hw="about">${icon('info')} <span>About Hole & Creating Co</span>${icon('arrow-up-right')}</button>
@@ -255,27 +255,42 @@
     try {
       const setup = { ...H.exportSetup(), welcome: { ...prefs } }, blob = new Blob([JSON.stringify(setup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob), anchor = document.createElement('a'); anchor.href = url; anchor.download = 'hole-workspace-setup.json'; document.body.append(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
-      notify('Setup download prepared. Your files and notes remain in this browser.');
+      notify('Setup download prepared with Cluster structure. File contents and Notes remain in this browser.');
     } catch { notify('This setup could not be exported. Please try again.'); }
   }
   const setupInput = controls.querySelector('.hw-setup-input');
+  let setupImportEpoch = 0;
+  function reportSetup(message) { controls.querySelector('.hw-setup-result').textContent = message; }
+  function setupSummary(report = {}) {
+    const parts = ['Layout imported.'];
+    if (report.groupsAdded) parts.push(`${report.groupsAdded} ${report.groupsAdded === 1 ? 'group' : 'groups'} added.`);
+    if (report.groupsKept) parts.push(`${report.groupsKept} existing ${report.groupsKept === 1 ? 'group' : 'groups'} kept.`);
+    if (report.missingFiles) parts.push(`${report.missingFiles} unavailable local file links skipped.`);
+    const otherLinks = Math.max(0, (report.skippedLinks || 0) - (report.missingFiles || 0));
+    if (otherLinks) parts.push(`${otherLinks} other unavailable or conflicting memberships skipped.`);
+    if (report.skippedApps) parts.push(`${report.skippedApps} unavailable app shortcuts skipped.`);
+    if (report.spacesFallback) parts.push('Unavailable space destinations use My desk.');
+    if (report.skippedGroups || report.skippedProjects) parts.push('Some groups or spaces did not fit within this workspace’s limits.');
+    parts.push('File contents and Notes were not imported or changed.');
+    return parts.join(' ');
+  }
   setupInput.addEventListener('change', async () => {
-    const file = setupInput.files?.[0]; setupInput.value = ''; if (!file) return;
-    if (file.size > 1024 * 1024) { notify('Choose a Hole setup file smaller than 1 MB.'); return; }
+    const attempt = ++setupImportEpoch, file = setupInput.files?.[0]; setupInput.value = ''; if (!file) { reportSetup('No setup selected.'); return; }
+    if (file.size > 1024 * 1024) { reportSetup('Choose a Hole setup file smaller than 1 MB.'); return; }
+    reportSetup('Reading setup…');
     try {
-      const setup = JSON.parse(await file.text());
-      if (!setup || typeof setup !== 'object' || Array.isArray(setup) || setup.format !== 'hole-workspace' || setup.version !== 1 || !['desktop', 'pocket'].includes(setup.layout) || !setup.desk || typeof setup.desk !== 'object' || Array.isArray(setup.desk)) throw new Error('Invalid setup');
-      const customSpace = typeof setup.desk.view === 'string' && /^space-[a-z0-9-]{1,60}$/.test(setup.desk.view) && Array.isArray(setup.projects) && setup.projects.some(space => space && space.id === setup.desk.view && typeof space.name === 'string' && space.name.trim());
-      if (!['desk', 'studio', 'life', 'overview'].includes(setup.desk.view) && !customSpace) throw new Error('Invalid setup');
+      const text = await file.text(); if (attempt !== setupImportEpoch) return;
+      const setup = JSON.parse(text);
+      await window.HoleFiles?.ready; if (attempt !== setupImportEpoch) return;
       if (!H.importSetup || !H.importSetup(setup)) throw new Error('Invalid setup');
       const incoming = setup.welcome;
-      if (incoming && typeof incoming === 'object') {
+      if (incoming && typeof incoming === 'object' && !Array.isArray(incoming)) {
         for (const key of ['quiet', 'focus', 'stories', 'startHere']) if (typeof incoming[key] === 'boolean') prefs[key] = incoming[key];
         if (['auto', 'light', 'dark'].includes(incoming.theme)) prefs.theme = incoming.theme;
         persist(); syncPrefs();
       }
-      notify('Your layout is here. Files and notes were not changed.');
-    } catch { notify('That is not a valid Hole workspace setup. Your layout was not imported.'); }
+      reportSetup(setupSummary(H.lastSetupImport));
+    } catch { if (attempt === setupImportEpoch) reportSetup('That is not a valid Hole workspace setup. Your layout was not imported.'); }
   });
   root.addEventListener('click', event => {
     const target = event.target.closest('button');
