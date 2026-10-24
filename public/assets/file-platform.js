@@ -499,8 +499,9 @@
       const title = node('div', 'hfiles-quick-title'); title.append(node('strong', '', current.name), node('small', '', local ? 'QUICK TOOLS' : 'WORKSPACE SHORTCUT'));
       const tools = node('div', 'hfiles-quick-row');
       const action = (label, glyph, fn) => tools.append(button(label, glyph, () => { closeQuick(); fn(); }));
-      action('Open', 'arrow-up-right', () => local ? openFiles(local.id) : api.openApp(file.app, element));
+      action('Open', 'arrow-up-right', () => local ? openFiles(local.id) : api.openDesktopItem ? api.openDesktopItem(file, element) : api.openApp(file.app, element));
       action('Copy name', 'copy', () => copyName(current.name));
+      if (element?.dataset.file && window.HoleClusters) action('Organize', 'boxes', () => window.HoleClusters.organize(file.id));
       if (local) {
         if (typeof api.pinFile === 'function') action('Place on desktop', 'monitor', () => { try { api.pinFile(local); announce(`${local.name} has a shortcut on your desktop.`); } catch (error) { announce(storageError(error)); } });
         action('Duplicate', 'copy-plus', () => duplicateFile(local)); action('Rename', 'pencil', () => renameFile(local));
