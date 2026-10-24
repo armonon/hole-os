@@ -23,6 +23,8 @@ test('duplicate records attribute Files and their immediate source without modif
   assert.equal(copy.history.length, 1);
   assert.equal(copy.history[0].type, 'duplicate');
   assert.match(copy.history[0].detail, /Edited\.txt/);
+  assert.equal(copy.operation, 'Duplicate');
+  assert.equal(copy.history[0].at, 30);
 });
 
 test('duplicating legacy originals assigns an explicit root and preserves safe names', () => {
