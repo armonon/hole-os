@@ -16,3 +16,13 @@
   for = "/assets/cutout-worker.js"
   [headers.values]
     Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/stem-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/transcription-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"

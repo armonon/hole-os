@@ -1,0 +1,18 @@
+{
+  "demucsWeb": "1.0.2",
+  "onnxruntimeWeb": "1.30.0",
+  "files": {
+    "DEMUCS-LICENSE": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+    "README.md": "44894db6c5341504b3d96d8b80c9bd1f676c2c758c3c7f24aef3af4c42fff4e0",
+    "ort/LICENSE": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+    "ort/ort-wasm-simd-threaded.wasm": "3398c10d07d229bd91b364548e130e0e51a8e5704b88c7c083ebbeb78842dee2",
+    "ort/ort.wasm.min.mjs": "219e6a1fc8a9938268d18efca3c91d310bd2f4a59bbd13744df5b2b7fc6cee3b",
+    "ort/ort-wasm-simd-threaded.mjs": "e13f7f94fc51b4ca72b12faeb1ee95f4ace6dfbc8939bc718aabdc0a27c4299b",
+    "demucs/constants.js": "be28bc4ae2d3cf7b962e158f6668221d357ad38a6d4fdc8e41d48a3c6a82c634",
+    "demucs/LICENSE": "75486ea0af9309140ca6e2c401d7e67bea8f4892344e5707f6394dc5e83dfc44",
+    "demucs/processor.js": "44be3bcb08b0b7452c1315322dc05dbed047881f7c48d151e53266cf9d711ed3",
+    "demucs/index.js": "56955e92089ff8413632bbb13d87f478a59287b6087efba3bb98dc59b96b494f",
+    "demucs/fft.js": "d9fa28b25c7f4a0c6ee10b42d4229d8dbe9d9fefe46c780263c8b9a700e96b80"
+  },
+  "weightsBundled": false
+}

@@ -78,11 +78,11 @@
     if (!blob || !blob.size || blob.type !== output.mime) throw error(`${output.extension.toUpperCase()} encoding is unavailable in this browser. Choose PNG instead.`, 'UNSUPPORTED_CODEC');
     return blob;
   }
-  async function decodeAudio(blob, signal) {
+  async function decodeAudio(blob, signal, sampleRate) {
     if (blob.size > 67108864) throw error('Audio processing is limited to 64 MiB inputs.', 'RESOURCE_LIMIT');
     const Audio = globalThis.AudioContext || globalThis.webkitAudioContext;
     if (!Audio) throw error('Audio decoding is unavailable in this browser.', 'UNSUPPORTED_CODEC');
-    const context = new Audio();
+    const context = sampleRate ? new Audio({ sampleRate }) : new Audio();
     try {
       abortCheck(signal);
       const buffer = await context.decodeAudioData(await blob.arrayBuffer());
@@ -175,6 +175,30 @@
       await progress(.95, 'Saving release collection');
       return outputs;
     } finally { image.close?.(); }
+  };
+  const transcriptionHandler = async context => {
+    if (!globalThis.HoleTranscription || !globalThis.HoleTranscriptionCues) throw error('Local transcription engine is unavailable.', 'ENGINE_UNAVAILABLE');
+    const { inputs: [input], parameters, signal } = context;
+    let queue = Promise.resolve(), progressError;
+    const result = await HoleTranscription.run(input.blob, { signal, timeoutMs: parameters.timeoutMs, onProgress: stage => { queue = queue.then(() => context.progress(.5, String(stage))).catch(cause => { progressError = cause; }); } });
+    await queue; if (progressError) throw progressError; abortCheck(signal);
+    const document = HoleTranscriptionCues.create(result, { assetId: input.asset.id, versionId: input.version.id });
+    const descriptors = HoleTranscriptionCues.outputs(document), suffixes = [['transcript', 'txt'], ['captions', 'srt'], ['captions', 'vtt'], ['captions', 'captions.json']];
+    if (descriptors.length !== 4) throw error('Transcription output set is incomplete.', 'OUTPUT_VALIDATION');
+    return descriptors.map((output, index) => ({ ...output, name: outputName(input, ...suffixes[index], context.project), operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), model: result.model, modelRevision: result.revision, modelFiles: result.modelFiles, duration: result.duration, timingWarnings: document.inference.timingWarnings, role: suffixes[index][1], reviewRequired: true } }));
+  };
+  const stemsHandler = async context => {
+    if (!globalThis.HoleStems || !globalThis.HoleStemModel) throw error('Local separation engine is unavailable.', 'ENGINE_UNAVAILABLE');
+    if (!(await HoleStemModel.status()).installed) throw error('Install the pinned HTDemucs model file locally before separation.', 'MODEL_MISSING');
+    const { inputs: [input], signal, parameters } = context;
+    if (input.blob.size > 16 * 1024 * 1024) throw error('Stem sources must fit within16 MiB.', 'RESOURCE_LIMIT');
+    await context.progress(.05, 'Decoding up to15 seconds for local separation');
+    const audio = await decodeAudio(input.blob, signal, 44100);
+    if (audio.duration > 15 || audio.numberOfChannels > 2 || audio.sampleRate !== 44100) throw error('Choose up to15 seconds of mono or stereo audio.', 'RESOURCE_LIMIT');
+    const result = await HoleStems.separate(audio.getChannelData(0), audio.getChannelData(audio.numberOfChannels - 1), { signal, timeoutMs: parameters.timeoutMs, onProgress: stage => context.progress(.5, stage) });
+    abortCheck(signal);
+    if (result.outputs?.length !== 4 || result.outputs.some(o => !(o.blob instanceof Blob) || o.blob.type !== 'audio/wav' || o.blob.size !== 44 + audio.length * 4)) throw error('Stem outputs did not match the expected stereo PCM lengths.', 'OUTPUT_VALIDATION');
+    return result.outputs.map(({ id, blob }) => ({ name: outputName(input, id, 'wav', context.project), blob, kind: 'audio', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), stem: id, model: result.model, modelRevision: result.revision, modelSHA256: result.sha256, sampleRate: result.sampleRate, channels: 2, samples: result.samples, encoding: '16-bit PCM stereo WAV', limitations: 'Learned separation may leak, omit or alter sources; no native parity or quality guarantee.' } }));
   };
   const cutoutHandler = async context => {
     if (!globalThis.HoleCutout?.run) throw error('Local cutout engine is unavailable.', 'ENGINE_UNAVAILABLE');
@@ -269,6 +293,8 @@
     { id: 'image.resize', label: 'Resize image', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { width: 'integer?', height: 'integer?', format: 'png|webp', allowUpscale: 'boolean' }, handler: imageHandler },
     { id: 'image.convert', label: 'Convert to PNG / WebP', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { format: 'png|webp', quality: '0..1 (WebP)' }, handler: imageHandler },
     { id: 'release.asset-pack', label: 'Release Asset Pack', acceptedTypes: imageTypes, outputPolicy: 'derived-assets', parameterSchema: { focalPoint: '{x:0..1,y:0..1} required', allowUpscale: 'boolean', format: 'png|webp', quality: '0..1 (WebP)' }, handler: releaseHandler },
+    { id: 'audio.transcribe', label: 'Transcribe locally to captions', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { timeoutMs: '1..180000 ms (default 180000)' }, handler: transcriptionHandler, note: 'Requires two explicitly installed pinned Whisper tiny.en model files. English audio up to60 seconds/20 MiB. Saves original inferred transcript, SRT, VTT and editable captions. Review text/timing; model errors and omissions are possible.' },
+    { id: 'audio.stems', label: 'Separate four stems locally', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { timeoutMs: '1..180000 ms (default 180000)' }, handler: stemsHandler, note: 'Requires explicitly installed pinned HTDemucs model. Up to15 seconds/16 MiB mono or stereo; four44.1kHz stereo PCM WAV outputs. CPU inference may exceed the180s deadline. Learned separation has artifacts and leakage.' },
     { id: 'audio.tempo', label: 'Estimate tempo (experimental)', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { maxSeconds: '8..120 seconds from start (default 60)', budgetMs: '1..30000 ms analysis budget (default 10000)' }, handler: tempoHandler, note: 'Local energy/onset estimate, 50–200 BPM. Saves JSON with source coverage and competing periods; no key estimate or calibrated confidence.' },
     { id: 'audio.trim', label: 'Trim to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { start: 'seconds >=0', end: 'seconds >start' }, handler: audioHandler, note: 'Browser-decodable audio, up to ten minutes. Output is 16-bit PCM WAV at the decoder sample rate.' },
     { id: 'audio.normalize', label: 'Peak normalize to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { peakDb: '-24..0 dBFS (default -1)' }, handler: audioHandler, note: 'Peak normalization, not loudness mastering. Browser-decodable audio, up to ten minutes; 16-bit PCM WAV output.' },
@@ -294,6 +320,8 @@
     'audio.trim': { required: ['start', 'end'], properties: { start: number(0, 600), end: number(0, 600) } },
     'audio.normalize': { properties: { peakDb: { ...number(-24, 0), default: -1 } } },
     'audio.wav': { properties: {} },
+    'audio.transcribe': { properties: { timeoutMs: { ...number(1, 180000), default: 180000 } } },
+    'audio.stems': { properties: { timeoutMs: { ...number(1, 180000), default: 180000 } } },
     'audio.tempo': { properties: { maxSeconds: { ...number(8, 120), default: 60 }, budgetMs: { ...number(1, 30000), default: 10000 } } },
     'video.thumbnail': { properties: { ...imageParameters, time: { ...number(0, 86400), default: 0 }, width: pixel, height: pixel, allowUpscale: { type: 'boolean', default: false } } },
     'video.audio': { properties: {} },
@@ -322,6 +350,8 @@
   function available(definition) {
     if (definition.id.startsWith('text.')) return true;
     if (definition.id === 'rack.render') return !!(globalThis.HoleRack && (globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext));
+    if (definition.id === 'audio.transcribe' && !(globalThis.HoleTranscription && globalThis.HoleTranscriptionCues && globalThis.Worker)) return false;
+    if (definition.id === 'audio.stems' && !(globalThis.HoleStems && globalThis.HoleStemModel && globalThis.Worker)) return false;
     if (definition.id === 'image.cutout') return !!(globalThis.HoleCutout?.run && globalThis.Worker);
     if (definition.id === 'video.trim') return !!(globalThis.HoleVideoTrim && globalThis.Worker && globalThis.VideoEncoder && globalThis.VideoDecoder);
     if (definition.id === 'audio.tempo' && !globalThis.HoleTempo) return false;
@@ -330,7 +360,7 @@
   function describe(definition) {
     if (!definition) return null;
     const { handler, ...publicDefinition } = definition;
-    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id === 'image.cutout' ? 'local.modnet-worker' : definition.id === 'video.trim' ? 'browser.webcodecs-worker' : definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'image.cutout' ? ['image', 'image'] : definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id === 'video.trim' ? 'video' : definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
+    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id === 'image.cutout' ? 'local.modnet-worker' : definition.id === 'video.trim' ? 'browser.webcodecs-worker' : definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'audio.transcribe' ? ['text', 'document', 'document', 'document'] : definition.id === 'audio.stems' ? ['audio', 'audio', 'audio', 'audio'] : definition.id === 'image.cutout' ? ['image', 'image'] : definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id === 'video.trim' ? 'video' : definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
   }
   async function resolveRequest(id, request) {
     const definition = registry.get(id);
@@ -390,6 +420,12 @@
     } else if (id === 'video.trim') {
       if (parameters.end <= parameters.start || parameters.end - parameters.start > 30) throw error('Choose a positive range up to 30 seconds.');
       result.outputs = [{ name: outputName(input, 'trim', 'webm', resolved.project), mime: 'video/webm', encoding: 'VP8/Opus transcode' }];
+      result.warnings.push(resolved.definition.note);
+    } else if (id === 'audio.transcribe') {
+      result.outputs = [['transcript', 'txt', 'text/plain'], ['captions', 'srt', 'application/x-subrip'], ['captions', 'vtt', 'text/vtt'], ['captions', 'captions.json', 'application/vnd.hole.captions+json']].map(([role, extension, mime]) => ({ role, name: outputName(input, role, extension, resolved.project), mime, encoding: 'UTF-8' }));
+      result.warnings.push(resolved.definition.note);
+    } else if (id === 'audio.stems') {
+      result.outputs = ['drums', 'bass', 'other', 'vocals'].map(role => ({ role, name: outputName(input, role, 'wav', resolved.project), mime: 'audio/wav', encoding: '44.1kHz stereo16-bit PCM WAV' }));
       result.warnings.push(resolved.definition.note);
     } else if (id === 'audio.tempo') {
       result.outputs = [{ name: outputName(input, 'tempo-estimate', 'json', resolved.project), mime: 'application/json', encoding: 'UTF-8 JSON' }];

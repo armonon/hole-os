@@ -184,7 +184,7 @@ test('Flow persists versioned recipe snapshot and concrete output references per
   assert.equal((await env.store.get('jobs', result.stepStates[1].jobId)).inputs[0].versionId, result.stepStates[0].outputs[0].versionId);
   assert.equal(env.commitCount, 2);
   const replay = await env.api.retryFlow(result.id); assert.equal(replay.status, 'completed'); assert.equal(env.commitCount, 2);
-  await assert.rejects(env.api.saveRecipe({ name: 'Invalid', steps: [{ id: 'a', actionId: 'audio.stems' }] }), /supported action/);
+  await assert.rejects(env.api.saveRecipe({ name: 'Invalid', steps: [{ id: 'a', actionId: 'audio.unknown' }] }), /supported action/);
 });
 
 async function realEnvironment() {
@@ -497,4 +497,26 @@ test('cutout previews two PNGs and atomically saves model lineage; cancelled inf
   env.context.HoleCutout.run = async (...args) => { const result = await previous(...args); await env.api.cancel(currentJob); return result; };
   await assert.rejects(env.api.run('image.cutout', { ...request, onJob: job => { currentJob = job.id; } }), { code: 'CANCELLED' });
   assert.equal(env.commitCount, 1);
+});
+
+test('stems exposes four audio outputs but missing local model cannot create assets', async () => {
+  const env = environment(); await env.seed(); env.context.Worker = class {}; env.context.AudioContext = class {};
+  env.context.HoleStems = { separate() { throw new Error('Inference must not start without a model.'); } }; env.context.HoleStemModel = { status: async () => ({ installed: false }) };
+  await env.store.put('assets', { id: 'stem-source', name: 'source.wav', mime: 'audio/wav', state: 'active', headVersionId: 'stem-v' });
+  await env.store.put('versions', { id: 'stem-v', assetId: 'stem-source', mime: 'audio/wav' }); env.blobs.set('stem-v', new Blob(['source'], { type: 'audio/wav' }));
+  const request = { inputs: [{ assetId: 'stem-source' }] }, preview = await env.api.preview('audio.stems', request);
+  assert.equal(preview.outputs.length, 4); assert.deepEqual(plain(preview.action.outputSchema.contents), ['audio','audio','audio','audio']);
+  await assert.rejects(env.api.run('audio.stems', request), { code: 'MODEL_MISSING' }); assert.equal(env.commitCount, 0);
+});
+
+test('transcription action persists native caption source, model identity and subtitle descriptors', async () => {
+  const env = environment(); await env.seed(); env.context.Worker = class {}; env.context.AudioContext = class {};
+  for (const file of ['vendor/transcription/captions.js','transcription-cues.js']) vm.runInContext(await readFile(new URL('../src/'+file, import.meta.url),'utf8'), env.context);
+  env.context.HoleTranscription = { run: async () => ({ text:'Fixture words.',chunks:[{text:'Fixture words.',start:.2,end:1.2}],timed:[{text:'Fixture words.',start:.2,end:1.2}],duration:2,model:'fixture-model',revision:'fixture-revision',modelFiles:[{id:'fixture',sha256:'a'.repeat(64),bytes:10}] }) };
+  await env.store.put('assets', { id:'speech-source',name:'speech.wav',mime:'audio/wav',state:'active',headVersionId:'speech-v' });
+  await env.store.put('versions', { id:'speech-v',assetId:'speech-source',mime:'audio/wav' }); env.blobs.set('speech-v',new Blob(['source'],{type:'audio/wav'}));
+  const request={inputs:[{assetId:'speech-source',versionId:'speech-v'}]}, preview=await env.api.preview('audio.transcribe',request);
+  assert.equal(preview.outputs[3].mime,'application/vnd.hole.captions+json');
+  const done=await env.api.run('audio.transcribe',request); assert.equal(done.outputs.length,4); assert.equal(env.commitCount,1);
+  const doc=JSON.parse(await env.blobs.get(done.outputs[3].version.id).text());assert.equal(doc.source.versionId,'speech-v');assert.equal(doc.cues[0].start,.2);assert.equal(done.outputs[0].version.provenance.modelRevision,'fixture-revision');
 });

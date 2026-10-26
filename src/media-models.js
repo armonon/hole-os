@@ -1,0 +1,24 @@
+/* Deliberate local model provisioning; inference never fetches a remote model. */
+(()=>{'use strict';
+async function stems(record,ctx,runJob){
+ const d=ctx.modal('Separate four stems','Creates drums, bass, other and vocals locally. Separation is imperfect; listen to each result. Up to 15 seconds, mono or stereo, 16 MiB input. One job at a time with a three-minute limit.');
+ const model=HoleStemModel.manifest;d.append(ctx.el('p','hc-subtitle','The optional 172 MiB model is stored separately from your workspace backup. Download it deliberately, then choose the file here. Your audio is never uploaded.'));
+ const link=ctx.el('a','hc-button','Download pinned HTDemucs model');link.href='https://huggingface.co/timcsy/demucs-web-onnx/resolve/92e33df61cfc9eb820272aaa62d2ef6dcf4d950d/htdemucs_embedded.onnx';link.target='_blank';link.rel='noopener noreferrer';d.append(link);
+ const details=ctx.el('details');details.append(ctx.el('summary','','Model integrity'));details.append(ctx.el('p','hc-subtitle',`${model.bytes} bytes · SHA-256 ${model.sha256}`));d.append(details);
+ const label=ctx.el('label','hc-label','Install downloaded model'),file=ctx.el('input','hc-input');file.type='file';file.accept='.onnx';label.append(file);d.append(label);const feedback=ctx.status('',false,d);
+ const run=ctx.button('Separate selected audio','audio-lines',async()=>{run.disabled=true;try{await runJob('audio.stems',{inputs:[{assetId:record.asset.id,versionId:record.version.id}],projectId:record.asset.projectId||ctx.navigation.projectId,parameters:{timeoutMs:180000}},feedback);}finally{run.disabled=false;}});run.disabled=true;
+ const refresh=async()=>{const state=await HoleStemModel.status();run.disabled=!state.installed;feedback.textContent=state.installed?'Pinned model installed. It is verified again before inference.':'Model not installed. Choose the exact downloaded ONNX file.';};
+ file.onchange=async()=>{const blob=file.files?.[0];if(!blob)return;file.disabled=true;run.disabled=true;feedback.textContent='Verifying and storing model locally…';try{await HoleStemModel.install(blob);await refresh();}catch(error){feedback.textContent=error.message;feedback.dataset.error='true';}finally{file.disabled=false;file.value='';}};
+ d.append(run,ctx.button('Remove installed model','trash-2',async()=>{await HoleStemModel.remove();await refresh();}),ctx.button('Close','x',()=>d.close()));await refresh();
+}
+async function transcription(record,ctx,runJob){
+ const d=ctx.modal('Transcribe and review captions','English speech, up to 60 seconds and 20 MiB. Runs locally using Whisper tiny.en. Review model text and timing before using the generated subtitles. Your audio is never uploaded.');
+ d.append(ctx.el('p','hc-subtitle','Download both pinned model files, then select them together. They use about 39 MiB in a separate local model cache, outside workspace backups.'));
+ for(const f of HoleTranscriptionModel.files){const link=ctx.el('a','hc-button','Download '+f.filename);link.href='https://huggingface.co/Xenova/whisper-tiny.en/resolve/'+HoleTranscriptionModel.revision+'/onnx/'+f.filename;link.target='_blank';link.rel='noopener noreferrer';d.append(link);}
+ const label=ctx.el('label','hc-label','Install both downloaded speech models'),file=ctx.el('input','hc-input');file.type='file';file.accept='.onnx';file.multiple=true;label.append(file);d.append(label);const feedback=ctx.status('',false,d);
+ const run=ctx.button('Transcribe selected audio','captions',async()=>{run.disabled=true;try{const result=await runJob('audio.transcribe',{inputs:[{assetId:record.asset.id,versionId:record.version.id}],projectId:record.asset.projectId||ctx.navigation.projectId,parameters:{}},feedback);const output=result.outputs?.find(r=>r.asset?.mime==='application/vnd.hole.captions+json');if(output)d.append(ctx.button('Review generated captions','captions',async()=>{d.close();await ctx.open('projects',{assetId:output.asset.id});}));}finally{run.disabled=false;}});run.disabled=true;
+ const refresh=async()=>{const state=await HoleTranscriptionModel.status();run.disabled=!state.installed;feedback.textContent=state.installed?'Both pinned models installed; inference checks their bytes again.':'Choose both exact pinned ONNX files to enable transcription.';};
+ file.onchange=async()=>{if(!file.files?.length)return;file.disabled=true;run.disabled=true;feedback.textContent='Verifying speech models…';try{await HoleTranscriptionModel.install([...file.files]);await refresh();}catch(error){feedback.textContent=error.message;}finally{file.disabled=false;file.value='';}};
+ d.append(run,ctx.button('Remove speech models','trash-2',async()=>{await HoleTranscriptionModel.remove();await refresh();}),ctx.button('Close','x',()=>d.close()));await refresh();
+}
+globalThis.HoleMediaModels=Object.freeze({stems,transcription});})();

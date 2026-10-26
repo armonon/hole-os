@@ -51,11 +51,11 @@
   const dispose = () => { controller?.abort(); controller = null; window.speechSynthesis?.cancel(); };
   function link(ctx, text, href) { const anchor = ctx.el('a', 'hc-button', text); anchor.href = href; anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; return anchor; }
   async function atlas(ctx) {
-    ctx.title('Places and plans', 'Atlas', 'Keep a private itinerary with real coordinates, dates, and related files. Open a map only when you choose.');
+    ctx.title('Places and plans', 'Atlas', 'Keep a private itinerary with saved coordinates and an offline world map. External maps open only when you choose.');
     const all = (await ctx.C.list('links')).filter(item => item.kind === 'atlas-place' && (!ctx.navigation.projectId || item.projectId === ctx.navigation.projectId)).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.name.localeCompare(b.name));
     const tools = ctx.el('div', 'hc-row'); ctx.main.append(tools);
     async function edit(existing) {
-      const dialog = ctx.modal(existing ? 'Edit place' : 'Save a place', 'Coordinates stay local. Opening the OpenStreetMap link sends only the chosen coordinates to that site. Maps need connectivity; no location permission is requested.');
+      const dialog = ctx.modal(existing ? 'Edit place' : 'Save a place', 'Coordinates stay local. Opening the OpenStreetMap link sends only the chosen coordinates to that site. The coarse offline map needs no location permission. External OpenStreetMap needs connectivity.');
       const name = ctx.input('Place name', 'text', existing?.name || ''), lat = ctx.input('Latitude', 'number', existing?.latitude ?? ''), lon = ctx.input('Longitude', 'number', existing?.longitude ?? ''), date = ctx.input('Visit date', 'date', existing?.date || ''), zone = ctx.input('Time zone', 'text', existing?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone), notes = ctx.input('Notes', 'textarea', existing?.notes || '');
       lat.input.step = 'any'; lon.input.step = 'any';
       const related = ctx.el('select', 'hc-input'); related.setAttribute('aria-label', 'Linked file'); related.append(new Option('No linked file', ''));
@@ -67,8 +67,22 @@
       }), ctx.button('Cancel', 'x', () => dialog.close())); ctx.H.icons();
     }
     tools.append(ctx.button('Save a place', 'map-pin', () => edit()), ctx.button('Export private itinerary', 'download', () => ctx.download(new Blob([JSON.stringify({ schema: 'hole.atlas/1', places: all }, null, 2)], { type: 'application/json' }), 'itinerary.hole.json')));
+    if (globalThis.HoleAtlasMap) {
+      tools.append(ctx.button('Review shared trip export','share',()=>{
+        const dialog=ctx.modal('Export a trip copy','Review the details before saving a shareable file. Nothing is published or sent. Coordinates, dates and time zones are always included.');
+        const notes=ctx.el('input'),references=ctx.el('input');notes.type=references.type='checkbox';
+        const notesLabel=ctx.el('label','hc-label','Include private notes'),referenceLabel=ctx.el('label','hc-label','Include source reference IDs (files are not included)');notesLabel.append(notes);referenceLabel.append(references);
+        const feedback=ctx.el('p');feedback.setAttribute('role','status');dialog.append(notesLabel,referenceLabel,feedback,ctx.button('Export reviewed trip JSON','download',async()=>{try{const value=HoleAtlasMapModel.exportTrip(all,{includeNotes:notes.checked,includeReferences:references.checked});await ctx.download(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),'shared-trip.hole.json');feedback.textContent='Trip file exported. Nothing was sent.';}catch(error){feedback.textContent=error.message;}}),ctx.button('Close trip export','x',()=>dialog.close()));
+      }));
+      const upload=ctx.el('input');upload.type='file';upload.accept='.json,application/json';upload.hidden=true;upload.setAttribute('aria-label','Import Atlas trip JSON');tools.append(upload,ctx.button('Import a trip copy','upload',()=>upload.click()));
+      upload.onchange=async()=>{const file=upload.files[0];if(!file)return;const dialog=ctx.modal('Review trip import','Imports create local places in the selected project. Source file references remain unresolved labels; no foreign file is opened. Nothing is published.');const feedback=ctx.el('p');feedback.setAttribute('role','status');dialog.append(feedback,ctx.button('Cancel trip import','x',()=>dialog.close()));
+        try {if(file.size>2*1024*1024)throw fail('Trip file exceeds 2 MiB.');const value=JSON.parse(await file.text()),places=HoleAtlasMapModel.trip(value);feedback.textContent=places.length+' validated places. '+places.filter(place=>place.notes).length+' include notes. '+places.filter(place=>place.importedReferences).length+' include unresolved source references.';const commit=ctx.button('Import reviewed trip','check',async()=>{commit.disabled=true;try{const result=await HoleAtlasMapModel.importTrip(ctx.C,value,{projectId:ctx.navigation.projectId||null});dialog.close();await ctx.render();ctx.notify(result.alreadyImported?'This trip copy was already imported; no duplicates created.':result.count+' places imported locally.');}catch(error){feedback.textContent=error.message;commit.disabled=false;}});dialog.append(commit);}catch(error){feedback.textContent=error.message;}upload.value='';
+      };
+      await HoleAtlasMap.mount({ctx,host:ctx.main,places:all});
+    }
     for (const item of all) {
       const card = ctx.section(item.name); card.append(ctx.el('p', 'hc-subtitle', `${item.date || 'Unscheduled'} · ${item.timeZone} · ${item.latitude}, ${item.longitude}`), ctx.el('p', '', item.notes), link(ctx, 'Open OpenStreetMap', mapURL(item)), ctx.button('Edit', 'pencil', () => edit(item)));
+      if (item.importedReferences) card.append(ctx.el('p','hc-subtitle','Imported source references retained, not connected: '+JSON.stringify(item.importedReferences)));
       if (item.linkedAssetId) card.append(ctx.button('Open related file', 'file', () => ctx.navigate({ view: 'projects', projectId: item.projectId, assetId: item.linkedAssetId })));
       card.append(ctx.button('Add to Day', 'calendar-plus', () => {
         const dialog = ctx.modal('Schedule this visit', `Time zone: ${item.timeZone}. Day validates ambiguous or nonexistent local times.`), start = ctx.input('Start', 'datetime-local', `${item.date || new Date().toISOString().slice(0, 10)}T09:00`), end = ctx.input('End', 'datetime-local', `${item.date || new Date().toISOString().slice(0, 10)}T10:00`), feedback = ctx.el('p');
@@ -78,7 +92,7 @@
       }));
     }
     if (!all.length) ctx.main.append(ctx.empty('Save a place to begin your itinerary.'));
-    ctx.main.append(link(ctx, 'OpenStreetMap contributors · map data and license', 'https://www.openstreetmap.org/copyright'), ctx.el('p', 'hc-subtitle', 'Atlas currently links to OpenStreetMap. Embedded tiles, geocoding, offline map packages and Circle trip publishing are not connected. Private notes and related files are not included in map links.'));
+    ctx.main.append(link(ctx, 'OpenStreetMap contributors · map data and license', 'https://www.openstreetmap.org/copyright'), ctx.el('p', 'hc-subtitle', 'The bundled Natural Earth map is a coarse offline land reference. OpenStreetMap links need connectivity; they include only coordinates. Roads, routes, geocoding and Circle trip publishing are not connected.'));
   }
   async function tongue(ctx) {
     ctx.title('Language and practice', 'Tongue', 'Build a phrase collection, practice exact written answers, and hear available local voices. Translation uses a real browser engine when available.');

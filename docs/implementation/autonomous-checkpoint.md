@@ -17,16 +17,18 @@ Implementation is in progress. The master brief is **not complete**. Preserve th
 
 `79b8656` is pushed (433/433 tests). Third increment: portable StemDeck v2–6 with retained embedded audio and real instrument C4 WAV audition; original experimental tempo Action with ambiguity/coverage report; public form schema publication/guest submission/owner export/revocation; bounded local static GLB geometry preview. Full suite 433/433 passes; build and browser qualification passed; review delivery remains the named47eb263 deployment above. Three.js MIT engine is local, no URLs/textures/extension loaders. GLB cardinality/cycle admission and concurrent-open cleanup hardened after independent review. Native Sattari GPL analysis was not copied or relicensed; key analysis remains open.
 
-## Fourth increment at release boundary
+## Delivered fourth increment and active fifth increment
 
-Video trim, actual pinned MODNet cutout/mask, studio geometry/minimized continuity, real browser-zoom fixes and native arrangement content safety.Final settled suite444/444 passes; actual Glyph snapshot regression passes: latest committed content and live draft preserved, old recovery/snapshot untouched, geometry/minimized restored. Source ownership frozen for checkpoint. Upcoming stems/transcription model provisioning is separate: no automatic remote model requests; weights will stay outsideGit and be explicitly installed to a verified model cache. Native Sattari GPL analysis remains uncopied.
+`a59f70a` pushed with444/444 tests and settled build. Review https://6adfb70c0b7b80a132947f74--hole-os-armonon.netlify.app :320files byte-matched and strictcutout-worker CSP header verified; receipt `docs/evidence/review-a59f70a.json`. Includes real cutout/video trim, studio geometry, actual100/200/400% zoom fix and current-content/live-draft-preserving arrangement restore. Production unchanged.
+
+Fifth increment in progress: local explicit model cache, real four-stem separation (172MiB optional verified model outsideGit), Whisper tiny.en transcription (twooptionalfiles~39MiB outsideGit), editable captions/draftrecovery and actualofflineAtlasmap/sharedtrip imports. Stem actualbuiltUI+strictCSP+four WAVs/original/lineage/reload/cancel passed17.827seconds. Whisper realspokenfixture inference passes; nativecaption edit/save/reopen/draftrecovery and pinned-original preservation passed. Atlas two-profile actualbrowsermap/export/import passes; actual service-worker offline reload passed. Do not commit upcomingexperimentalkey work into this boundary. Model weights for QA are in `/tmp/hole-stems-qa` and `/tmp/hole-transcription-models`; do not addthemtoGit.
 
 ## Ownership and active work
 
 - Coordinator: shell/build integration, `continuity.js`, Carry, History diff, cross-Space project placements, Search, arrangement restore, Universe lazy previews, release verification and this checkpoint.
-- Luma worker: Glyph/Form/ScenePilot native adapters and actual-shell qualification; no build or commits.
-- Flow worker: Smart/Crew and semantic zoom completed locally; independent review; next actual Sattari BPM/key engine feasibility and bounded implementation in isolated analysis module/actions/tests.
-- Relay worker: Photos/Locker and package/WebLab integration qualification; fixes from independent review; next local public-form service and guest/owner/revoke proof.
+- Luma worker: transcription/captions runtime, cue persistence/validation, actual spoken Action/UI proof; no build or commits.
+- Flow worker: generic verified model cache/stems/Actions ready; original non-GPL key estimator implementation in new audio-key modules; exclude from fifth release.
+- Relay worker: Atlas complete for bounded scope; next explicit selected-layout Relay transfer in isolated relay-layout module; existing community source gates remain explicit.
 
 
 All workers share this checkout. They do not commit, push, rebuild public output, or overwrite coordinator-owned files. Never reset uncommitted work.
@@ -41,7 +43,7 @@ All workers share this checkout. They do not commit, push, rebuild public output
 
 ## Verification so far
 
-- Latest integrated full suite: 388 passing tests, zero failures (`npm test`, ephemeral log `/tmp/hole-full-tests.log`). Final source changes are rechecked before commit.
+- Latest integrated full suite: 456 passing tests, zero failures (`npm test`, ephemeral log `/tmp/hole-full-tests.log`). Final source changes are rechecked before commit.
 - Carry/diff + existing Core regression suite: 20 passing.
 - Universe existing regression suite after lazy-preview/visible-holder changes: 12 passing. Actual Chrome 200-item mount measured 33–40ms on Apple M4; <=30 spatial holders and list access to all 200 passed.
 - Flow worker: actual PNG dimensions, archive CRC and original audio equality; two-step author/review/run/reopen; cancellation/retry recovery tested.
@@ -61,3 +63,5 @@ All workers share this checkout. They do not commit, push, rebuild public output
 ## Genuine external qualification gates
 
 These are still gates, not excuses to skip independent implementation: real human research participants, physical touch/audio/mic/assistive-technology hardware qualification, independent security review and key-lifecycle design before Vault credential storage, real authorized NOW/Circle providers/source discovery, and production Node service hosting/TLS/operations. No paid services, public customer data, invented outcomes or implied browser native AU/VST support.
+
+Fifth release boundary:456/456 tests; optional-model/caption/Atlas browser checks pass. Next key/Relay source is separate and must not leak into this generated build.

@@ -1,6 +1,14 @@
 # Current continuation qualification
 
-Latest pushed implementation: `79b8656` (433 passing tests). Latest byte-verified review: `47eb263`, [288-file review](https://6adfb27e5b4039d3bfa95aa6--hole-os-armonon.netlify.app), receipt `review-47eb263.json`. Further qualified work below is awaiting its next coherent push. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `a59f70a` (444 passing tests). Latest byte-verified review: [320-file review](https://6adfb70c0b7b80a132947f74--hole-os-armonon.netlify.app), receipt `review-a59f70a.json`, including strict cutout-worker CSP. Production remains unchanged; the master brief is not complete.
+
+## Fifth increment
+
+Explicit model-file installation verifies pinned sizes and SHA-256 before local caching, separately from workspace backups; workers verify bytes again before inference. Optional HTDemucs and Whisper weights are not bundled or committed. Four-stem separation passed the real built install/run UI with distinct nonzero one-second stereo WAVs, retained exact originals, lineage, reload and cancellation/deadline zero-output checks. CPU fixture observation: 17.827 seconds; this is not a music-quality benchmark.
+
+Whisper tiny.en transcribes a synthetic spoken English fixture locally. Native caption review supports corrected text/times, add/delete, version save and durable draft recovery while preserving raw inference. A real save/reopen check caught a stale-record callback; reopening now reads the current head, and pinned objects explicitly offer Edit latest captions. Imported caption source/model metadata is validated before mounting. Separate source and built-shell tests exercise actual model inference, strict worker CSP, missing-model refusal and no remote audio/model requests during inference. See transcription evidence for exact scope.
+
+Atlas has actual offline vector cartography, saved accessible pan/zoom and privacy-reviewed trip copying. Two persistent profiles exercise exports/imports, foreign inert references and duplicate refusal; actual service-worker offline reload restores the map. Roads, geocoding and Circle publication are not implied.
 
 ## Fourth increment
 
