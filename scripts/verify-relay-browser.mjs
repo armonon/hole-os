@@ -96,7 +96,33 @@ try {
   await reopened.getByRole('button', { name: 'Revoke guest Browser evidence', exact: true }).click();
   await reopened.getByRole('button', { name: 'Revoke guest Browser evidence', exact: true }).waitFor({ state: 'detached' });
   assert.equal((await guestRead()).status, 404);
-  console.log(JSON.stringify({ browser: await reopened.evaluate(() => navigator.userAgent), profiles: 2, verified: ['Core IndexedDB queue', 'real browser offline failure', 'profile close/reopen', 'conflict preservation', 'explicit resolution', 'other-profile pull', 'mounted Relay review dialog and keep-remote control', 'guest preview UI creation and review', 'anonymous pinned bytes exclude private future version', 'guest revocation blocks subsequent download'], limits: 'Actual browser transport and mounted Relay review UI; full shell navigation, Safari and physical devices not exercised.' }, null, 2));
+  await reopened.getByRole('button', { name: 'Review public World publication', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Publish selected versions', exact: true }).click();
+  await reopened.getByRole('heading', { name: 'Published selection', exact: true }).waitFor();
+  await reopened.getByRole('button', { name: 'Close preview', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Discover public Worlds', exact: true }).click();
+  await reopened.getByRole('dialog').getByRole('button', { name: 'Browser evidence', exact: true }).click();
+  await reopened.getByRole('heading', { name: 'Public World preview', exact: true }).waitFor();
+  await reopened.getByRole('button', { name: 'Close preview', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Close discovery', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Unpublish Browser evidence', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Unpublish Browser evidence', exact: true }).waitFor({ state: 'detached' });
+  assert.equal(await second.evaluate(async endpoint => (await (await fetch(endpoint + '/worlds', { credentials: 'omit' })).json()).worlds.length, endpoint), 0);
+  const newOwner = await second.evaluate(async () => { await relay.signOut(); return relay.register({ name: 'Successor', email: 'successor@example.test', password: 'disposable successor password' }); });
+  const invitation = await reopened.evaluate(async ({ id, userId, asset }) => { const current = await relay.pull(id); return relay.request(`/projects/${id}/invitations`, { method: 'POST', body: { role: 'viewer', recipientId: userId, resources: [{ assetId: asset.assetId, versionIds: [asset.versionId] }], expectedRevision: current.project.revision } }); }, { id: project.id, userId: newOwner.user.id, asset: sharedAsset });
+  await second.evaluate(token => relay.request(`/invitations/${token}/accept`, { method: 'POST' }), invitation.invitationToken);
+  await reopened.getByLabel('Remote project', { exact: true }).selectOption(''); await reopened.getByLabel('Remote project', { exact: true }).selectOption(project.id);
+  await reopened.getByRole('button', { name: 'Review access for Successor', exact: true }).click();
+  await reopened.getByLabel('Member role', { exact: true }).selectOption('editor');
+  await reopened.getByRole('button', { name: 'Apply role and selected version scope', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Transfer ownership to Successor', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Confirm ownership transfer', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Leave this shared project', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Leave project', exact: true }).click();
+  await reopened.getByRole('button', { name: 'Leave this shared project', exact: true }).waitFor({ state: 'detached' });
+  assert.equal(await second.evaluate(async id => (await relay.pull(id)).project.role, project.id), 'owner');
+  assert.equal(await reopened.evaluate(async id => { try { await relay.pull(id); return 'allowed'; } catch (error) { return error.code; } }, project.id), 'NOT_FOUND');
+  console.log(JSON.stringify({ browser: await reopened.evaluate(() => navigator.userAgent), profiles: 2, verified: ['Core IndexedDB queue', 'real browser offline failure', 'profile close/reopen', 'conflict preservation', 'explicit resolution', 'other-profile pull', 'mounted Relay review dialog and keep-remote control', 'guest preview UI creation and review', 'anonymous pinned bytes exclude private future version', 'guest revocation blocks subsequent download', 'public publish/discovery/preview/unpublish UI', 'member audience edit/ownership transfer/leave UI'], limits: 'Actual browser transport and mounted Relay review UI; full shell navigation, Safari and physical devices not exercised.' }, null, 2));
 } finally {
   await Promise.allSettled(contexts.map(context => context.close())); await service.close(); await new Promise(resolve => web.close(resolve)); await rm(directory, { recursive: true, force: true });
 }

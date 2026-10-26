@@ -1,3 +1,15 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';const ctx={};vm.runInNewContext(fs.readFileSync(new URL('../src/spatial-surface.js',import.meta.url),'utf8'),ctx);const M=ctx.HoleSpatialModel;
 test('canvas zoom preserves the content under the chosen anchor and clamps extremes',()=>{const camera={x:20,y:-10,scale:.8},anchor={x:200,y:120},next=M.zoom(camera,1.3,anchor);assert.ok(Math.abs((anchor.x-camera.x)/camera.scale-(anchor.x-next.x)/next.scale)<1e-9);assert.ok(Math.abs((anchor.y-camera.y)/camera.scale-(anchor.y-next.y)/next.scale)<1e-9);assert.equal(M.zoom(camera,100,anchor).scale,2.4);});
 test('Smart Screen proposes positions without touching identity, pin policy, or caller records',()=>{const source=[{id:'p1',resourceId:'a',policy:'pinned',versionId:'v1',revision:4,x:55,y:88,depth:-10},{id:'p2',resourceId:'a',policy:'latest',revision:2,x:2,y:3}];const before=JSON.stringify(source);const output=M.proposal(source,'compare');assert.equal(JSON.stringify(source),before);assert.equal(output[0].versionId,'v1');assert.equal(output[1].resourceId,'a');assert.equal(output[1].x,300);assert.equal(output[0].revision,4);});
+test('semantic zoom uses dwell plus distinct rearm thresholds, avoiding boundary oscillation',()=>{
+ let state={enterArmed:true,exitArmed:true};let result=M.semantic(state,{scale:1.9,direction:1,hasAnchor:true,now:100});assert.equal(result.transition,null);result=M.semantic(result.state,{scale:1.91,direction:1,hasAnchor:true,now:500});assert.equal(result.transition,'object');
+ result=M.semantic(result.state,{scale:1.89,direction:1,hasAnchor:true,now:1000});assert.equal(result.transition,null);assert.equal(result.state.enterArmed,false);
+ result=M.semantic(result.state,{scale:1.5,direction:-1,hasAnchor:true,now:1100});assert.equal(result.state.enterArmed,true);
+ result=M.semantic(result.state,{scale:.35,direction:-1,hasAnchor:true,now:1200});assert.equal(result.transition,null);result=M.semantic(result.state,{scale:.34,direction:-1,hasAnchor:true,now:1600});assert.equal(result.transition,'space');
+ result=M.semantic(result.state,{scale:.3,direction:-1,hasAnchor:true,now:2200});assert.equal(result.transition,null);result=M.semantic(result.state,{scale:.56,direction:1,hasAnchor:true,now:2300});assert.equal(result.state.exitArmed,true);
+});
+test('semantic zoom never enters an unanchored object and resets interrupted boundary dwell',()=>{
+ let result=M.semantic({enterArmed:true,exitArmed:true},{scale:2,direction:1,hasAnchor:false,now:10});assert.equal(result.transition,null);
+ result=M.semantic(result.state,{scale:2,direction:1,hasAnchor:true,now:20});result=M.semantic(result.state,{scale:1.8,direction:-1,hasAnchor:true,now:300});assert.equal(result.state.candidate,null);
+ result=M.semantic(result.state,{scale:2,direction:1,hasAnchor:true,now:400});assert.equal(result.transition,null);result=M.semantic(result.state,{scale:2,direction:1,hasAnchor:true,now:751});assert.equal(result.transition,'object');
+});

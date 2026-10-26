@@ -11,6 +11,7 @@
   const date = at => new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const kindIcon = a => ({ text: 'file-text', image: 'image', audio: 'audio-lines', video: 'film', link: 'link' }[a.kind] || 'file');
   let navigation = { scope: 'WORLD', spaceId: 'desk', projectId: null, assetId: null, view: 'projects', presentation: 'flat' };
+  let renderQueue=Promise.resolve();
   let navRecord, renderEpoch = 0, urls = [], editor = null, navigationQueue = Promise.resolve(), persistQueue = Promise.resolve(), toastTimer, lastFocus, restored = false, modalClosing = Promise.resolve(), renderRequested = false, projectNames = new Map();
   const surface = el('section', 'hc-workspace'); surface.hidden = true; surface.setAttribute('aria-label', 'Your Hole workspace');
   const header = el('header', 'hc-header'); const brand = el('div', 'hc-wordmark'); brand.append(el('span', 'hc-emblem', '◎'), el('span', '', 'Make yourself at home.'));
@@ -22,7 +23,7 @@
   const toast = el('div', 'hc-toast'); toast.hidden = true; toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite'); H.os.append(toast);
   const carryBar = el('aside', 'hc-carry'); carryBar.setAttribute('aria-label', 'Carry shelf'); carryBar.append(button('Carry', 'archive', () => open('carry')), el('span', 'hc-carry-count', '0')); H.field.append(carryBar);
   const toolbar = el('div', 'hc-toolbar'); toolbar.setAttribute('aria-label', 'System tools'); toolbar.append(button('Your work', 'orbit', () => open('projects')), button('Capture', 'plus', () => capture()), button('Actions', 'wand-sparkles', () => open('actions')), button('History', 'history', () => open('history')), button('Find', 'search', showSearch)); H.root.querySelector('.hf-controls').append(toolbar);
-  const entries = [['projects', 'Your spaces', 'orbit'], ['day', 'Day', 'sun'], ['capture', 'Capture', 'plus-circle'], ['paperwork', 'Paperwork', 'files'], ['carry', 'Carry', 'archive'], ['actions', 'Actions', 'workflow'], ['history', 'History', 'history'], ['create', 'Create', 'blocks'], ['weblab', 'WebLab projects', 'code-2'], ['lab', 'Lab', 'flask-conical'], ['rack', 'Rack prototype', 'sliders-horizontal'], ['atlas', 'Atlas', 'map'], ['tongue', 'Tongue', 'languages'], ['crew', 'Crew', 'workflow'], ['momentous', 'Momentous', 'package'], ['publish', 'Publish', 'package'], ['relay', 'Shared spaces', 'radio'], ['settings', 'Storage & recovery', 'hard-drive'], ['catalog', 'App catalog', 'grid-2x2']];
+  const entries = [['projects', 'Your spaces', 'orbit'], ['day', 'Day', 'sun'], ['capture', 'Capture', 'plus-circle'], ['paperwork', 'Paperwork', 'files'], ['bounce','Bounce listening','headphones'], ['librarian','Librarian reading','book-open'], ['carry', 'Carry', 'archive'], ['actions', 'Actions', 'workflow'], ['history', 'History', 'history'], ['create', 'Create', 'blocks'], ['weblab', 'WebLab projects', 'code-2'], ['lab', 'Lab', 'flask-conical'], ['rack', 'Rack prototype', 'sliders-horizontal'], ['atlas', 'Atlas', 'map'], ['tongue', 'Tongue', 'languages'], ['crew', 'Crew', 'workflow'], ['momentous', 'Momentous', 'package'], ['publish', 'Publish', 'package'], ['relay', 'Shared spaces', 'radio'], ['settings', 'Storage & recovery', 'hard-drive'], ['catalog', 'App catalog', 'grid-2x2']];
   entries.forEach(([view, label, glyph], index) => { if (index === 5) sidebar.append(el('div', 'hc-nav-group', 'Throughout Hole')); const n = button(label, glyph, () => open(view)); n.className = 'hc-nav'; n.dataset.view = view; n.title = label; sidebar.append(n); });
   sidebar.append(el('div', 'hc-sidebar-foot', 'Your work stays here.\nSaved locally in this browser.'));
 
@@ -79,17 +80,20 @@
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
   function modal(name, description) { const d = el('dialog', 'hc-dialog'); d.setAttribute('aria-label', name); d.append(el('h2', '', name)); if (description) d.append(el('p', '', description)); const origin = document.activeElement; H.os.append(d); const nativeClose = d.close.bind(d); let finishClose; d.close = (...args) => { if (d.open) modalClosing = new Promise(resolve => { finishClose = resolve; }); nativeClose(...args); }; d.addEventListener('close', () => { setTimeout(() => { d.remove(); if (origin?.isConnected) origin.focus({ preventScroll: true }); finishClose?.(); if (renderRequested) { renderRequested = false; render().catch(fail); } }, 0); }); d.addEventListener('keydown', e => e.stopPropagation()); d.showModal(); return d; }
   function breadcrumbs() { const n = el('nav', 'hc-breadcrumbs'); n.setAttribute('aria-label', 'Current visit path'); n.append(button('Your spaces', null, () => navigate({ view: 'projects', scope: 'WORLD', spaceId: 'overview', projectId: null, assetId: null }))); if (navigation.spaceId && navigation.spaceId !== 'overview') n.append(el('span', '', '/'), button(H.state.projects?.find(s => s.id === navigation.spaceId)?.name || ({ desk: 'My desk', studio: 'Studio', life: 'Life' }[navigation.spaceId] || 'Space'), null, () => navigate({ scope: 'SPACE', projectId: null, assetId: null, view: 'projects' }))); if (navigation.projectId) n.append(el('span', '', '/'), button(projectNames.get(navigation.projectId) || 'Project', null, () => navigate({ scope: 'PROJECT', assetId: null, view: 'projects' }))); if (navigation.assetId && ['projects','history'].includes(navigation.view)) n.append(el('span', '', 'Object')); main.append(n); }
-  async function render() {
+  function render() { const next=renderQueue.catch(()=>{}).then(performRender);renderQueue=next;return next; }
+  async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
     await window.HoleExtensions?.beforeLeave?.();
-    const epoch = ++renderEpoch; window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
+    const epoch = ++renderEpoch; await window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
       if (navigation.assetId && navigation.view === 'projects') await renderObject(epoch);
       else if (navigation.view === 'projects') await renderProjects(epoch);
       else if (navigation.view === 'capture') await renderCapture();
       else if (navigation.view === 'paperwork') await renderPaperwork();
+      else if (navigation.view === 'bounce') await HoleLibraries.listening(context());
+      else if (navigation.view === 'librarian') await HoleLibraries.reading(context(),navigation.assetId ? {assetId:navigation.assetId,versionId:navigation.versionId} : null);
       else if (navigation.view === 'day') await renderDay();
       else if (navigation.view === 'carry') await renderCarry();
       else if (navigation.view === 'history') await renderHistory();
@@ -181,25 +185,47 @@
     else if (asset.mime?.startsWith('audio/') || asset.mime?.startsWith('video/')) { main.append(empty('Listen or watch while moving between projects.', button('Open persistent player', 'play', () => openMedia(record)))); actions.append(button('Media tools', 'sliders-horizontal', () => mediaTools(record))); }
     else { main.append(empty(`${record.version.mime} · ${(record.blob.size / 1024).toFixed(1)} KB`, button('Download original', 'download', () => download(record.blob, asset.name)))); }
     if (asset.mime === 'image/png' || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
+    if (/\.(glyph(?:\.json)?|lumaglyph\.json)$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Glyph' : 'Open in Glyph','type',()=>openStudio(record,{},'hole.glyph'),'hc-primary'));
+    if (/\.form$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Form' : 'Open in Form','box',()=>openStudio(record,{},'hole.form'),'hc-primary'));
+    if (/\.(cut|scenepilot\.json)$/i.test(asset.name)) actions.append(button('Open in ScenePilot','film',()=>linkScenePilot(record),'hc-primary'));
     actions.append(button('Carry', 'archive', () => addCarry(asset)), button('History', 'history', () => open('history', { assetId: asset.id })), button('Export', 'download', () => download(record.blob, asset.name))); main.append(actions);
     const drafts = (await C.list('drafts')).filter(d => d.assetId === asset.id); if (drafts.length) { const note = el('div', 'hc-note', 'A durable draft is waiting. The committed version above has not changed.'); note.append(button('Recover draft', 'pencil', () => editText(record))); main.append(note); }
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
   const studios = new Map();
   async function showStudios() { const d = modal('Running studios', 'Editors keep their state while you move through your workspace.'); for (const entry of studios.values()) d.append(button(entry.name, 'palette', () => { d.close(); entry.host.hidden = false; entry.host.querySelector('button')?.focus(); })); if (!studios.size) d.append(el('p', '', 'Open a PNG or Luma project, then choose Open in Luma.')); d.append(button('Close', 'x', () => d.close())); }
-  async function openLuma(record, restore = {}) {
-    if (!window.HoleLuma) throw new Error('Luma is unavailable in this build.');
-    const key = record.asset.id + ':' + record.version.id, existing = studios.get(key);
+  async function linkScenePilot(record) {
+    if (record.blob.size > 32*1024*1024) throw new Error('Connected cuts must fit within 32 MiB.');
+    const raw=JSON.parse(await record.blob.text());
+    const sources=[...(raw.mainAsset?[{...raw.mainAsset,id:'__main__'}]:[]),...(Array.isArray(raw.assets)?raw.assets:[])];
+    if(sources.length>63) throw new Error('This cut has more than 63 media sources. Open it in the full studio.');
+    const d=modal('Link ScenePilot media','Select original media already in Files. Each selection grants read access to that exact version. Unlinked media remains missing; native edits can still be saved.');
+    const assets=(await C.list('assets')).filter(a=>a.state==='active');const choices=[];
+    for(const source of sources){
+      const label=el('label','hc-label',String(source.name||source.id));const select=el('select','hc-input');select.setAttribute('aria-label','Media for '+String(source.name||source.id));const missing=el('option','','Leave missing');missing.value='';select.append(missing);
+      for(const asset of assets.filter(a=>['image','video','audio'].includes(source.kind)&&a.mime?.startsWith(source.kind+'/'))){const option=el('option','',asset.name);option.value=asset.id;select.append(option);}
+      label.append(select);d.append(label);choices.push({source,select});
+    }
+    d.append(button('Open native cut','film',async()=>{const mediaLinks=[];for(const {source,select} of choices){if(!select.value)continue;const selected=await C.readAsset(select.value);if(source.size!==undefined&&selected.blob.size!==source.size)throw new Error('Selected bytes do not match '+String(source.name||source.id)+'. Choose its original media.');mediaLinks.push({sourceId:String(source.id),assetId:selected.asset.id,versionId:selected.version.id});}d.close();await openStudio(record,{editorState:{mediaLinks}},'hole.scenepilot');}),button('Cancel','x',()=>d.close()));
+  }
+  async function openLuma(record,restore={}) { return openStudio(record,restore,'hole.luma'); }
+  async function openStudio(record, restore = {}, appId = 'hole.luma') {
+    const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot'})[appId] || 'Luma';
+    if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
+    const key = appId + ':' + record.asset.id + ':' + record.version.id, existing = studios.get(key);
     if (existing) { existing.host.hidden = false; return; }
-    const host = el('section', 'hc-studio-host'); host.setAttribute('aria-label', 'Luma: ' + record.asset.name); const controls = el('div', 'hc-row'), root = el('div', 'hc-studio-content'); host.append(controls, root); H.os.append(host);
+    const host = el('section', 'hc-studio-host'); host.setAttribute('aria-label', studioName + ': ' + record.asset.name); const controls = el('div', 'hc-row'), root = el('div', 'hc-studio-content'); host.append(controls, root); H.os.append(host);
     let instance;
     try {
-      instance = await HoleRuntime.open('hole.luma', { ...restore, root, assetId: record.asset.id, versionId: record.version.id, projectId: record.asset.projectId || navigation.projectId, presentation: 'window' });
+      instance = await HoleRuntime.open(appId, { ...restore, root, assetId: record.asset.id, versionId: record.version.id, projectId: record.asset.projectId || navigation.projectId, presentation: 'window' });
       studios.set(key, { host, name: record.asset.name, instanceId: instance.id });
-      controls.append(el('strong', '', record.asset.name), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); host.hidden = true; }), button('Close Luma', 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
+      controls.append(el('strong', '', record.asset.name), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); host.hidden = true; }), button('Close '+studioName, 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
     } catch (error) { host.remove(); throw error; }
   }
   if (window.HoleLuma) HoleRuntime.register('hole.luma', HoleLuma.create({ core: C }));
+  if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleGlyph.create({ core:C }));
+  if (window.HoleScenePilot) HoleRuntime.register('hole.scenepilot', HoleScenePilot.create({core:C}));
+  if (window.HoleForm) HoleRuntime.register('hole.form', HoleForm.create({core:C}));
   async function editText(record) {
     if (editor && !await finishEditing()) return;
     const draft = (await C.list('drafts')).filter(d => d.assetId === record.asset.id).sort((a, b) => b.updatedAt - a.updatedAt)[0];
@@ -286,7 +312,7 @@
       if (!saved.context?.assetId) continue;
       try {
         const current = await C.readAsset(saved.context.assetId); if (current.asset.state !== 'active') throw new Error('In Trash');
-        if (saved.appId === 'hole.luma') { const base = saved.editorState?.versionId ? await C.readAsset(saved.context.assetId,saved.editorState.versionId) : current; await openLuma(base,{instanceId:saved.id,editorState:saved.editorState}); }
+        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot'].includes(saved.appId)) { const base = saved.editorState?.versionId ? await C.readAsset(saved.context.assetId,saved.editorState.versionId) : current; await openStudio(base,{instanceId:saved.id,editorState:saved.editorState},saved.appId); }
         else if (saved.appId === 'hole.media') await openMedia(current);
         else if (saved.appId !== 'hole.paper-text') unavailable.push(saved.appId);
       } catch (error) { unavailable.push(saved.appId + ': ' + error.message); }
@@ -407,7 +433,7 @@
   surface.addEventListener('keydown', event => { event.stopPropagation(); if (event.key === 'Escape' && !event.target.closest('textarea,input,[contenteditable]')) { event.preventDefault(); if (navigation.assetId) navigate({ assetId: null }).catch(fail); else close().catch(fail); } });
   window.addEventListener('hole:storage-status', event => { if (['failed', 'conflict', 'blocked'].includes(event.detail.state)) notify(event.detail.message || 'Storage could not save that change. Keep your work open and export a copy.'); });
   H.root.addEventListener('hole:space-change', event => { if (!surface.hidden && !editor && navigation.view === 'projects') navigate({ spaceId: event.detail.space, scope: event.detail.space === 'overview' ? 'WORLD' : 'SPACE', projectId: null, assetId: null }).catch(fail); });
-  const appViews = { Projects: 'projects', Day: 'day', Capture: 'capture', Paperwork: 'paperwork', Actions: 'actions', History: 'history', Create: 'create', Publish: 'publish', WebLab: 'weblab', Lab: 'lab', Atlas: 'atlas', Tongue: 'tongue', Crew: 'crew', Momentous: 'momentous', Relay: 'relay', Rack: 'rack' };
+  const appViews = { Projects: 'projects', Day: 'day', Capture: 'capture', Paperwork: 'paperwork', Actions: 'actions', History: 'history', Create: 'create', Publish: 'publish', Bounce:'bounce', Librarian:'librarian', WebLab: 'weblab', Lab: 'lab', Atlas: 'atlas', Tongue: 'tongue', Crew: 'crew', Momentous: 'momentous', Relay: 'relay', Rack: 'rack' };
   H.root.addEventListener('hole:window-change', event => { const { type, rec } = event.detail || {}; if (type !== 'open' || !appViews[rec?.app.name]) return; rec.el.hidden = true; rec.minimized = true; open(appViews[rec.app.name]).catch(fail); });
   HoleRuntime.register('hole.paper-text', { mount(instance, root) {
     const area = root.querySelector('textarea');

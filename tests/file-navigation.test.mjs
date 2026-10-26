@@ -65,11 +65,11 @@ function fixture({ library = [original, edited], load, persist, nextId = 'duplic
   const os = node('main'), background = node('section'), layer = node('div'); body.append(os); os.append(background, layer);
   const add = button('Import', '', () => {}), create = button('New text', '', () => {}), list = node('div'), preview = node('section');
   background.append(add, create, list, preview);
-  const mount = { body: background, list, preview, add, create };
+  const mount = { body: background, list, preview, add, create, view: node('select'), lockerHelp: node('div'), note: node('p'), input: node('input') };
   const announcements = [], writes = [];
   const context = {
     ...model, Blob, document, node, button, os, layer, mount,
-    files: structuredClone(library), selectedId: null, db: true, dbError: '', busy: false, previewEpoch: 0,
+    URL, galleryURLs: new Set(), galleryEpoch: 0, libraryMode: 'all', files: structuredClone(library), selectedId: null, db: true, dbError: '', busy: false, previewEpoch: 0,
     uid: () => nextId, history: (type, detail) => ({ type, detail }),
     fileIcon: () => 'file-text', icon: name => node('i', '', name), dateLabel: String, RASTER_TYPES: new Set(),
     api: { openApp() {}, windows: new Map() }, window: {}, performance: { now: () => 1000 },
@@ -84,6 +84,7 @@ function fixture({ library = [original, edited], load, persist, nextId = 'duplic
   };
   vm.runInNewContext(`
     let overlay = null, overlayReturn = null, overlayCloseRequest = null, inertRecords = [], quick = null, quickReturn = null;
+    ${section('    function clearGallery()', '    const downloadURLs')}
     const getRecent = () => [...files].sort((a, b) => b.modifiedAt - a.modifiedAt);
     ${section('    function closeQuick(', '    function openTools(')}
     ${section('    function openOverlay(', '    function showActivity(')}

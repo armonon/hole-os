@@ -786,7 +786,18 @@
     setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);save();lastSetupImport=plan.report;return true;
   }
 
-  window.HoleOS={root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
+  async function createSpaceFromTemplate({name,zones=[]}={}){
+    if(typeof name!=='string'||!name.trim()||name.trim().length>40)throw new Error('Use a Space name of 1–40 characters.');
+    if(state.projects.length>=12)throw new Error('You can keep up to 12 custom spaces in this browser.');
+    if(!Array.isArray(zones)||zones.length>20||zones.some(z=>typeof z.name!=='string'||!z.name.trim()||z.name.length>80||!Number.isFinite(z.x)||!Number.isFinite(z.y)||Math.abs(z.x)>6000||Math.abs(z.y)>6000))throw new Error('Invalid Space template zones.');
+    await window.HolePersistence?.ready;const id='space-'+crypto.randomUUID(),space={id,name:name.trim()};state.projects.push(space);spaces[id]={x:0,y:0,name:space.name};
+    try{save();await window.HolePersistence.flush();}catch(error){state.projects=state.projects.filter(p=>p.id!==id);delete spaces[id];throw error;}
+    renderSpaces();
+    if(zones.length)await window.HoleCore.put('scenes',{id:'space-template:'+id,spaceId:id,name:space.name,zones:zones.map(z=>({name:z.name.trim(),x:z.x,y:z.y})),schemaVersion:1});
+    return id;
+  }
+
+  window.HoleOS={createSpaceFromTemplate,root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
   const previousSession=state.session.map(r=>({...r})),previousSpace=state.desk.view;document.addEventListener('DOMContentLoaded',()=>{for(const entry of previousSession){visitSpace(entry.space,false);openApp(entry.name);const rec=windows.get(entry.name);rec.animation?.cancel();rec.minimized=entry.minimized;rec.el.hidden=entry.minimized;}visitSpace(previousSpace,false);save();},{once:true});
   renderSpaces();
   new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();

@@ -7,12 +7,23 @@ Starting revision for this continuation: `fee8a5f91b68edbc3c98c9a0018cc23dc75599
 
 Implementation is in progress. The master brief is **not complete**. Preserve the existing acceptance ledger and original studio routes. No production promotion has been performed in this continuation. No scheduled background automation was enabled.
 
+## Delivered increment
+
+`a70520d` is pushed to origin and PR #1. Review only: https://6adfae64edd42e93b11bc9c4--hole-os-armonon.netlify.app . All 262 public files matched deployed bytes; receipt `docs/evidence/review-a70520d.json`. Production unchanged.
+
+## Current second increment (not yet delivered)
+
+Glyph/Form actual native adapters, ScenePilot native titles/ordinary trims and explicit pinned media links; Bounce local persistent queue and Librarian PDF/text reader; Smart study/listening/travel, bounded Crew runner; Photos/Locker provenance; package kinds/compositions/WebLab diagnostics; semantic zoom anchors. Shared render queue now serializes restoration/navigation to prevent duplicate asynchronous controls. Await spatial cleanup before rebuilding views.
+
+Observed: libraries real-browser PDF/bookmark/note/reload and WAV playback/playhead/reload passed; semantic zoom actual browser passed; Smart/Crew and Files/package source browser tests passed. Glyph/Form native isolated browser tests passed; actual shell Glyph/Form/ScenePilot native edit/save/export/reopen and explicit missing-media paths now pass. Latest full suite: 418/418 passing after fixing source-extraction and gallery closure test harnesses. The earlier 52-failure run is retained in conversation history as diagnosed harness failures, not passed evidence. ScenePilot conflicting-version grant rejection regression passes; final suite 418/418 and settled build pass.
+
 ## Ownership and active work
 
 - Coordinator: shell/build integration, `continuity.js`, Carry, History diff, cross-Space project placements, Search, arrangement restore, Universe lazy previews, release verification and this checkpoint.
-- Luma worker: actual retained-engine sandbox adapter, bridge recovery contract, PNG/native project browser evidence; then Glyph source integration when Luma is stable.
-- Flow worker: registry/Flow/Release Pack, then editable Lab and optional scoped memory.
-- Relay worker: service/Relay conflict resolution and private record adapters, Day/Browser, then guest/publication controls.
+- Luma worker: Glyph/Form/ScenePilot native adapters and actual-shell qualification; no build or commits.
+- Flow worker: Smart/Crew and semantic zoom completed locally; independent review; next actual Sattari BPM/key engine feasibility and bounded implementation in isolated analysis module/actions/tests.
+- Relay worker: Photos/Locker and package/WebLab integration qualification; fixes from independent review; next local public-form service and guest/owner/revoke proof.
+
 
 All workers share this checkout. They do not commit, push, rebuild public output, or overwrite coordinator-owned files. Never reset uncommitted work.
 

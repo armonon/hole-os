@@ -408,6 +408,8 @@
         abortCheck(controller.signal);
         const fresh = await store.get('jobs', job.id);
         if (fresh.status === 'cancelled') throw error('Action cancelled.', 'CANCELLED');
+        if (request.beforeCommit) await request.beforeCommit({ jobId: job.id, outputs: outputs.map(output => ({ name: output.name, mime: output.blob.type, bytes: output.blob.size })) });
+        abortCheck(controller.signal);
         const result = await store.commitJobOutputs({ jobId: job.id, idempotencyKey, outputs });
         emit('hole:action-progress', { jobId: job.id, status: 'completed', progress: 100, message: 'Saved', outputs: result.outputs });
         return { ...result, jobId: job.id };

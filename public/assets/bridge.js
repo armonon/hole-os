@@ -31,6 +31,17 @@
     assert(new TextEncoder().encode(JSON.stringify(result)).length <= MAX_JSON, 'PAYLOAD_TOO_LARGE', 'Bridge metadata exceeds 64 KiB.');
     return result;
   }
+  function recoveryHex(bytes) {
+    const chunks = [];
+    for (let offset = 0; offset < bytes.length; offset += 16384) chunks.push(Array.from(bytes.subarray(offset, offset + 16384), byte => byte.toString(16).padStart(2, '0')).join(''));
+    return chunks.join('');
+  }
+  function recoveryBlob(record) {
+    assert(typeof record.hex === 'string' && record.hex.length <= MAX_BINARY * 2 && record.hex.length % 2 === 0 && /^[0-9a-f]*$/.test(record.hex), 'INVALID_STATE', 'The native recovery checkpoint is invalid.');
+    const bytes = new Uint8Array(record.hex.length / 2);
+    for (let index = 0; index < bytes.length; index++) bytes[index] = parseInt(record.hex.slice(index * 2, index * 2 + 2), 16);
+    return new Blob([bytes], { type: record.mime });
+  }
   function originOf(value) {
     let url;
     try { url = new URL(value); } catch { throw fail('INVALID_ORIGIN', 'A bridge requires an exact HTTP origin.'); }
@@ -202,7 +213,7 @@
       if (operation === 'state.save') {
         const state = metadata(payload.state);
         // JSON-safe native recovery survives Core backup/export, unlike a Blob in a record.
-        const recovery = payload.recovery == null ? null : { mime: binary(payload.recovery).type, hex: Array.from(new Uint8Array(await binary(payload.recovery).arrayBuffer()), byte => byte.toString(16).padStart(2, '0')).join('') };
+        const recovery = payload.recovery == null ? null : { mime: binary(payload.recovery).type, hex: recoveryHex(new Uint8Array(await binary(payload.recovery).arrayBuffer())) };
         if (payload.expectedRevision !== undefined) assert(Number.isSafeInteger(payload.expectedRevision) && payload.expectedRevision > 0, 'INVALID_MESSAGE', 'Invalid state revision.');
         check(); work.committing = true;
         const result = await db.put('settings', { id: `bridge-state:${session.instanceId}`, state, recovery, projectId: session.projectId, inputs: [...session.resources.values()].map(resource => ({ assetId: resource.assetId, versionId: [...resource.versions].at(-1) })) }, payload.expectedRevision !== undefined ? { expectedRevision: payload.expectedRevision } : {});
@@ -212,7 +223,7 @@
         const result = await db.get('settings', `bridge-state:${session.instanceId}`); check();
         assert(!result || result.projectId === session.projectId, 'STATE_CONTEXT_CONFLICT', 'This instance checkpoint belongs to another project.');
         assert(!result || (result.inputs || []).every(input => session.resources.get(input.assetId)?.versions.has(input.versionId)), 'STATE_CONTEXT_CONFLICT', 'Restore this checkpoint with its original authorized resources.');
-        return result ? { state: metadata(result.state), recovery: result.recovery ? new Blob([Uint8Array.from(result.recovery.hex.match(/../g) || [], pair => parseInt(pair, 16))], { type: result.recovery.mime }) : null, revision: result.revision, inputs: result.inputs } : null;
+        return result ? { state: metadata(result.state), recovery: result.recovery ? recoveryBlob(result.recovery) : null, revision: result.revision, inputs: result.inputs } : null;
       }
       if (operation === 'activity.report') {
         assert(identifier(payload.jobId) && typeof payload.label === 'string' && payload.label.length > 0 && payload.label.length <= 160 && ['running', 'failed', 'cancelled'].includes(payload.state), 'INVALID_MESSAGE', 'Report an actual running, failed, or cancelled external job. Save operations report committed completion.');

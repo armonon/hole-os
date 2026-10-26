@@ -27,7 +27,18 @@
       missingOriginal: rootId !== file.id && !library.some(item => item.id === rootId),
       family: library.filter(item => (item.rootId || item.id) === rootId).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id)) };
   }
-  const model = Object.freeze({ cleanName, derivativeName, formatBytes, inferType, duplicateRecord, lineage });
+  const LOCKER_ORIGIN = 'https://thecreatingco.com';
+  function lockerRecord(entry, { id = uid(), now = Date.now(), sourceOrigin = LOCKER_ORIGIN } = {}) {
+    if (sourceOrigin !== LOCKER_ORIGIN) throw new Error('Locker records must identify the original thecreatingco.com origin.');
+    if (!entry || !(entry.blob instanceof Blob) || typeof entry.id !== 'string' || !entry.id || entry.blob.size > MAX_IMPORT_BYTES) throw new Error('Choose a Locker record with its original Blob, ID and supported size.');
+    if (entry.size !== undefined && entry.size !== entry.blob.size) throw new Error('Locker metadata and original bytes disagree.');
+    const meta = JSON.stringify(entry.meta || {}); if (meta.length > 65536) throw new Error('Locker metadata exceeds 64 KB.');
+    const name = cleanName(entry.name), type = entry.type || entry.blob.type || 'application/octet-stream';
+    if (typeof type !== 'string' || !/^[\w.+-]+\/[\w.+-]+$/.test(type)) throw new Error('Locker MIME type is invalid.');
+    return { id, name, type, size: entry.blob.size, createdAt: now, modifiedAt: now, rootId: id, parentId: null, operation: 'Imported Locker original', provenance: { app: 'Locker', mode: 'manual-import', locker: { origin: sourceOrigin, id: entry.id, app: String(entry.app || 'unknown'), created: entry.created || null, updated: entry.updated || entry.created || null, meta: JSON.parse(meta), sourceVerification: 'supplied-record' } }, history: [{ id: uid(), type: 'import', detail: 'Copied original Locker bytes; source preserved', at: now }] };
+  }
+  function libraryView(library, view = 'all') { return library.filter(file => file.state !== 'trashed' && (view === 'photos' ? file.type.startsWith('image/') : view === 'locker' ? !!file.provenance?.locker : true)); }
+  const model = Object.freeze({ cleanName, derivativeName, formatBytes, inferType, duplicateRecord, lineage, lockerRecord, libraryView, LOCKER_ORIGIN });
   if (typeof document === 'undefined') { globalThis.HoleFileModel = model; return; }
 
   let initialized = false;
@@ -38,7 +49,9 @@
     const { root, os } = api;
     let db, dbError = '', files = [], jobs = [], selectedId = null, mount = null, previewEpoch = 0;
     let quick = null, overlay = null, overlayReturn = null, quickReturn = null, inertRecords = [], busy = false, overlayCloseRequest = null;
-    let processing = false, pending = [], previewURLs = [], toastTimer = 0;
+    let processing = false, pending = [], previewURLs = [], toastTimer = 0, libraryMode = 'all', galleryEpoch = 0;
+    const galleryURLs = new Set();
+    function clearGallery() { galleryEpoch++; for (const url of galleryURLs) URL.revokeObjectURL(url); galleryURLs.clear(); }
     const downloadURLs = new Map();
     const sessionId = uid();
     const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('hole-file-library-v1') : null;
@@ -262,14 +275,14 @@
         const item = node('div', 'hfiles-route'); item.append(node('strong', '', `${app.name} · ${app.label}`), node('p', 'hfiles-muted', app.description)); content.append(item);
       }
     }
-    async function importFiles(list) {
+    async function importFiles(list, { fromLocker = false } = {}) {
       if (!list?.length || busy) return;
       busy = true; renderFiles(); let imported = 0, failed = 0;
       for (const file of list) {
         try {
           if (file.size > MAX_IMPORT_BYTES) throw new Error(`${cleanName(file.name)} is larger than this library’s 150 MB per-file limit.`);
           const now = Date.now(), id = uid(), name = cleanName(file.name);
-          await saveFile({ id, name, type: inferType(file), size: file.size, createdAt: now, modifiedAt: now, rootId: id, parentId: null, operation: 'Imported original', space: api.state?.desk?.view === 'overview' ? 'desk' : api.state?.desk?.view || 'desk', history: [history('import', 'Original imported from your device')] }, file);
+          await saveFile({ id, name, type: inferType(file), size: file.size, createdAt: now, modifiedAt: now, rootId: id, parentId: null, operation: 'Imported original', space: api.state?.desk?.view === 'overview' ? 'desk' : api.state?.desk?.view || 'desk', history: [history('import', fromLocker ? 'Original downloaded from Locker and selected by user' : 'Original imported from your device')], ...(fromLocker ? { provenance: { app: 'Locker', mode: 'manual-import', locker: { origin: LOCKER_ORIGIN, originalName: file.name, sourceVerification: 'user-declared-download' } } } : {}) }, file);
           selectedId = id; imported++;
         } catch (error) { failed++; announce(storageError(error)); }
       }
@@ -463,20 +476,25 @@
       const shell = node('div', 'hfiles-app'), head = node('div', 'hfiles-head'), title = node('div');
       title.append(node('p', 'hfiles-eyebrow', 'YOUR LOCAL LIBRARY'), node('h2', '', 'Make room for ideas.'));
       const input = node('input', 'hfiles-input-file'); input.type = 'file'; input.multiple = true; input.tabIndex = -1; input.setAttribute('aria-label', 'Import files from your device');
-      const add = button('Import', 'plus', () => input.click(), 'hfiles-primary'); input.addEventListener('change', () => { importFiles([...input.files]); input.value = ''; });
+      const add = button('Import', 'plus', () => input.click(), 'hfiles-primary'); input.addEventListener('change', () => { importFiles([...input.files], { fromLocker: libraryMode === 'locker' }); input.value = ''; });
       head.append(title, add, input);
       const toolbar = node('div', 'hfiles-action-row');
       const create = button('New text', 'file-plus', () => textEditor(), 'hfiles-primary');
       toolbar.append(create, button('Trash', 'trash-2', showTrash), button('App capabilities', 'info', showCapabilities));
+      const view = node('select', 'hfiles-input'); view.setAttribute('aria-label', 'Library view'); view.append(new Option('All files', 'all'), new Option('Photos', 'photos'), new Option('Imported Locker files', 'locker')); view.value = libraryMode;
+      view.addEventListener('change', () => { libraryMode = view.value; selectedId = null; renderFiles(); }); toolbar.prepend(view);
+      const lockerHelp = node('div', 'hfiles-route');
+      lockerHelp.append(node('p', 'hfiles-muted', 'Locker keeps files on thecreatingco.com in this browser. Open the original Locker, download selected originals, then import them here. Other-origin storage cannot be read here. These are separate copies; the original route and its data stay intact.'));
+      const lockerLink = node('a', 'hfiles-button', 'Open original Locker'); lockerLink.href = LOCKER_ORIGIN + '/locker/'; lockerLink.target = '_blank'; lockerLink.rel = 'noopener noreferrer'; lockerHelp.append(lockerLink);
       const note = node('p', 'hfiles-local-note', 'Stored in this browser · download important originals to keep a backup.');
       const work = node('div', 'hfiles-work'), list = node('div', 'hfiles-list'), preview = node('section', 'hfiles-preview'); list.setAttribute('aria-label', 'Your imported files'); preview.setAttribute('aria-label', 'File preview');
-      work.append(list, preview); shell.append(head, toolbar, note, work); body.append(shell);
-      mount = { body, shell, list, preview, add, input, create };
+      work.append(list, preview); shell.append(head, toolbar, note, lockerHelp, work); body.append(shell);
+      mount = { body, shell, list, preview, add, input, create, view, lockerHelp, note };
       let dragDepth = 0;
       shell.addEventListener('dragenter', event => { if ([...event.dataTransfer?.types || []].includes('Files')) { event.preventDefault(); dragDepth++; shell.classList.add('is-dropping'); } });
       shell.addEventListener('dragover', event => { if ([...event.dataTransfer?.types || []].includes('Files')) { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; } });
       shell.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; shell.classList.remove('is-dropping'); } });
-      shell.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; shell.classList.remove('is-dropping'); importFiles([...event.dataTransfer.files]); });
+      shell.addEventListener('drop', event => { event.preventDefault(); dragDepth = 0; shell.classList.remove('is-dropping'); importFiles([...event.dataTransfer.files], { fromLocker: libraryMode === 'locker' }); });
       renderFiles();
     }
     function fileControl(id, action = 'open') {
@@ -489,19 +507,29 @@
       const quickId = quickReturn && mount.body.contains(quickReturn) ? quickReturn.dataset.fileId : null, quickAction = quickReturn?.dataset.fileAction;
       mount.add.disabled = busy || !db; mount.add.querySelector('span').textContent = busy ? 'Importing…' : 'Import';
       mount.create.disabled = !db;
+      clearGallery(); const currentGallery = galleryEpoch;
+      const visibleFiles = libraryView(getRecent(files.length), libraryMode);
+      mount.view.value = libraryMode; mount.lockerHelp.hidden = libraryMode !== 'locker';
+      mount.note.textContent = `${visibleFiles.length} ${libraryMode === 'photos' ? 'photos' : libraryMode === 'locker' ? 'imported Locker files' : 'files'} · Stored in this browser · download originals to keep a backup.`;
+      mount.input.accept = libraryMode === 'photos' ? 'image/*' : '';
       mount.list.replaceChildren();
-      if (!files.length) {
+      if (selectedId && !visibleFiles.some(file => file.id === selectedId)) selectedId = null;
+      if (!visibleFiles.length) {
         const empty = node('div', 'hfiles-empty'); empty.append(icon('folder-plus'), node('h3', '', dbError ? 'Your library needs attention' : 'Your first idea belongs here.'), node('p', 'hfiles-muted', dbError || 'Import images, audio, text, and other files. Drop them here or use Import.'));
         mount.list.append(empty);
       } else {
         if (selectedId && !files.some(f => f.id === selectedId)) selectedId = null;
-        getRecent(files.length).forEach(file => {
+        visibleFiles.forEach((file, index) => {
           const row = node('div', `hfiles-row${file.id === selectedId ? ' is-selected' : ''}`), open = button(file.name, fileIcon(file), () => { if (performance.now() < suppressClickUntil) return; selectedId = file.id; renderFiles(); }, 'hfiles-file-open');
           open.setAttribute('aria-label', `Open ${file.name}`); open.setAttribute('aria-pressed', String(file.id === selectedId));
           open.dataset.fileId = file.id; open.dataset.fileAction = 'open';
           const meta = node('small', 'hfiles-file-meta', `${formatBytes(file.size)} · ${file.parentId ? 'Version' : 'Original'}`); open.querySelector('span').append(meta);
           const more = button('Quick tools', 'ellipsis', event => { const r = event.currentTarget.getBoundingClientRect(); openTools({ element: open, file, x: r.right, y: r.bottom }); }, 'hfiles-more'); more.setAttribute('aria-label', `Quick tools for ${file.name}`);
           more.dataset.fileId = file.id; more.dataset.fileAction = 'tools';
+          if (libraryMode === 'photos' && RASTER_TYPES.has(file.type) && index < 60) {
+            const thumb = node('img'); thumb.alt = ''; thumb.loading = 'lazy'; thumb.width = 64; thumb.height = 64; thumb.style.objectFit = 'cover'; thumb.style.borderRadius = '8px'; thumb.addEventListener('error', () => thumb.remove(), { once: true }); open.prepend(thumb);
+            void blobFor(file.id).then(blob => { if (galleryEpoch !== currentGallery || !thumb.isConnected) return; const url = URL.createObjectURL(blob); galleryURLs.add(url); thumb.src = url; }).catch(() => { thumb.remove(); });
+          }
           row.append(open, more); installToolsGesture(open, file); mount.list.append(row);
         });
       }
@@ -522,6 +550,7 @@
         const origin = parent.missingSource ? `Source no longer in this library${parent.sourceName ? ': ' + parent.sourceName : ''}` : parent.source ? `From ${parent.source.name}` : 'Saved locally';
         panel.append(node('p', 'hfiles-muted', `${file.operation === 'Duplicate' ? 'Files' : file.provenance?.app || 'Files'} · ${origin} · ${file.operation}`));
       }
+      if (file.provenance?.locker) panel.append(node('p', 'hfiles-muted', `Locker source: ${file.provenance.locker.origin} · ${file.provenance.locker.sourceVerification === 'user-declared-download' ? 'download selected by you; original Locker ID unavailable' : 'supplied record ' + file.provenance.locker.id}. This copy does not synchronize with the original.`));
       const contents = blobFor(file.id);
       const actions = node('div', 'hfiles-action-row'); actions.append(downloadLink(file, contents));
       const addAction = (label, glyph, action, key) => { const control = button(label, glyph, action); control.dataset.fileId = file.id; control.dataset.fileAction = key; actions.append(control); };
@@ -534,7 +563,7 @@
       try {
         const blob = await contents; if (epoch !== previewEpoch || !panel.isConnected) return; media.replaceChildren();
         if (RASTER_TYPES.has(file.type)) {
-          const img = node('img', 'hfiles-image'); img.alt = file.name; img.src = objectURL(blob); media.append(img);
+          const img = node('img', 'hfiles-image'); img.alt = file.name; img.addEventListener('error', () => { if (epoch === previewEpoch) media.replaceChildren(node('p', 'hfiles-muted', 'This image cannot be decoded for preview. Its original bytes are retained; use Download to open it in another app.')); }, { once: true }); img.src = objectURL(blob); media.append(img);
         } else if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
           const player = node(file.type.startsWith('audio/') ? 'audio' : 'video', 'hfiles-player'); player.controls = true; player.preload = 'metadata'; player.src = objectURL(blob); player.setAttribute('aria-label', file.name); media.append(player);
         } else if (file.type.startsWith('text/') || ['application/json', 'application/xml'].includes(file.type)) {
@@ -544,7 +573,7 @@
       } catch (error) { if (epoch === previewEpoch) media.replaceChildren(node('p', 'hfiles-muted', storageError(error))); }
     }
     function openFiles(id) {
-      if (typeof id === 'string') selectedId = id;
+      if (typeof id === 'string') { selectedId = id; libraryMode = 'all'; }
       closeQuick(false); api.openApp('Files'); const rec = api.windows?.get('Files'); if (rec) mountFiles(rec); renderFiles();
       if (typeof id === 'string' && !overlay) fileControl(id)?.focus({ preventScroll: true });
     }
@@ -642,7 +671,7 @@
       const { rec, type } = event.detail || {};
       if (rec?.app?.name === 'Notes' && type !== 'close') mountNotes(rec);
       if (rec?.app?.name !== 'Files') return;
-      if (type === 'close') { ++previewEpoch; revokePreview(); mount = null; } else mountFiles(rec);
+      if (type === 'close') { ++previewEpoch; revokePreview(); clearGallery(); mount = null; } else mountFiles(rec);
     });
     root.addEventListener('pointerdown', event => { if (quick && !quick.contains(event.target)) closeQuick(false); }, true);
     root.addEventListener('keydown', event => {
@@ -654,7 +683,9 @@
     }, true);
     window.addEventListener('resize', () => closeQuick(false));
     root.addEventListener('hole:space-change', () => closeQuick(false));
-    window.HoleFiles = { openTools, closeTools: closeQuick, openFiles, showActivity, showCapabilities, getRecent, getJobs, importFiles, model, ready: null };
+    window.HoleFiles = { openView(view) { if (!['all', 'photos', 'locker'].includes(view)) throw new Error('Unknown library view.'); libraryMode = view; selectedId = null; openFiles(); },
+      async importLockerRecords(records) { await window.HoleFiles.ready; const planned = records.map(entry => ({ entry, record: lockerRecord(entry) })), imported = []; for (const { entry, record } of planned) { await saveFile(record, entry.blob, true); imported.push(record.id); } return imported; },
+      openTools, closeTools: closeQuick, openFiles, showActivity, showCapabilities, getRecent, getJobs, importFiles, model, ready: null };
     window.HoleFiles.ready = loadStorage();
     api.windows?.forEach(rec => { if (rec.app?.name === 'Files') mountFiles(rec); if (rec.app?.name === 'Notes') mountNotes(rec); });
     paintIcons();

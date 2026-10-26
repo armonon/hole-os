@@ -1,0 +1,5 @@
+/* Explicit refresh from the retained owned ScenePilot document and timeline modules. */
+import path from 'node:path';import {pathToFileURL,fileURLToPath} from 'node:url';
+const source=path.resolve(process.argv[2]||'../tcc-operations/repos/scenepilot-studio-badass');
+const {build}=await import(pathToFileURL(path.resolve('../tcc-operations/repos/luma-studio/node_modules/esbuild/lib/main.js')));
+await build({stdin:{contents:`export {parseCutFile,diagnoseCutFile,DEFAULT_EFFECTS,CURRENT_CUT_FILE_VERSION} from './lib/project-store.ts';export {TITLE_DEFAULTS,titleAppearance} from './lib/titles.ts';export {trimVideoTrackClip} from './lib/video-track-edit.ts';export {toUnifiedTimeline,splitUnifiedTimeline} from './lib/video-timeline.ts';export {buildMediaRelinkMap} from './lib/media-link.ts';`,resolveDir:source,loader:'ts'},outfile:path.join(fileURLToPath(new URL('../',import.meta.url)),'src/vendor/scenepilot/engine.js'),bundle:true,format:'iife',globalName:'ScenePilotEngine',platform:'browser',minify:true,legalComments:'eof'});

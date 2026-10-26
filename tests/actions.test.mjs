@@ -444,3 +444,26 @@ test('ZIP cancellation yields while computing CRC of larger original audio', asy
   setTimeout(() => controller.abort(), 0);
   await assert.rejects(task, cause => cause.code === 'CANCELLED');
 });
+
+async function crewEnvironment(options={}) {const env=await realEnvironment();vm.runInContext(await readFile(new URL('../src/crew-runner.js',import.meta.url),'utf8'),env.context);env.crew=env.context.HoleCrew.create(env.store,env.api,options);return env;}
+test('Crew preflight bounds inputs/steps and output budget rejects actual bytes before atomic commit',async()=>{
+ const env=await crewEnvironment(),recipe={name:'Bounded image',steps:[{id:'image',actionId:'image.convert',parameters:{format:'png'}}]},request={inputs:[{assetId:env.source.asset.id}],projectId:env.project.id};
+ await assert.rejects(env.crew.preview(recipe,request,{inputBytes:1}),/input budget/);
+ const plan=await env.crew.preview(recipe,request,{outputBytes:1});const record=await env.crew.approve(plan);await assert.rejects(env.crew.run(record.crewId),e=>e.code==='OUTPUT_BUDGET');
+ assert.equal((await env.store.list('versions')).length,1);const saved=await env.crew.get(record.crewId);assert.equal(saved.status,'failed');assert.equal(saved.outputBytes,0);assert.equal((await env.store.list('jobs'))[0].status,'failed');env.store.close();
+});
+test('Crew checkpoints completed steps and resumes failed step without duplicate commits',async()=>{
+ const env=await crewEnvironment(),Canvas=env.context.OffscreenCanvas,original=Canvas.prototype.convertToBlob;let fail=true;Canvas.prototype.convertToBlob=async function(options){if(options.type==='image/webp'&&fail)throw new Error('Temporary encoder failure');return original.call(this,options);};
+ const plan=await env.crew.preview({name:'Checkpoint',steps:[{id:'one',actionId:'image.convert',parameters:{format:'png'}},{id:'two',actionId:'image.convert',from:'one',parameters:{format:'webp'}}]},{inputs:[{assetId:env.source.asset.id}],projectId:env.project.id});const approved=await env.crew.approve(plan);await assert.rejects(env.crew.run(approved.crewId),/Temporary/);const stopped=await env.crew.get(approved.crewId);assert.equal(stopped.checkpoint,1);const firstJob=stopped.stepStates[0].jobId;fail=false;
+ const recreated=env.context.HoleCrew.create(env.store,env.api),complete=await recreated.run(approved.crewId);assert.equal(complete.status,'completed');assert.equal(complete.checkpoint,2);assert.equal((await env.store.get('jobs',firstJob)).attempt,1);assert.equal((await env.store.list('versions')).length,3);assert.equal(complete.outputs.length,2);assert.equal((await recreated.run(approved.crewId)).outputBytes,complete.outputBytes);env.store.close();
+});
+test('Crew checks deadlines at output commit and revocation permanently removes action grants',async()=>{
+ let now=100;const env=await crewEnvironment({now:()=>now}),recipe={name:'Time bound',steps:[{id:'one',actionId:'image.convert',parameters:{format:'png'}}]},request={inputs:[{assetId:env.source.asset.id}],projectId:env.project.id};
+ const plan=await env.crew.preview(recipe,request,{maxMs:100});const record=await env.crew.approve(plan);env.context.OffscreenCanvas.prototype.convertToBlob=async()=>{now=10000;return new Blob(['actual output'],{type:'image/png'});};await assert.rejects(env.crew.run(record.crewId),e=>e.code==='TIME_BUDGET');assert.equal((await env.store.list('versions')).length,1);
+ const other=await env.crew.approve(plan);await env.crew.revoke(other.crewId);await assert.rejects(env.crew.run(other.crewId),e=>e.code==='GRANT_REVOKED');assert.equal((await env.crew.get(other.crewId)).grants.length,0);env.store.close();
+});
+test('Crew revocation during an active encoder aborts the ordinary job without outputs',async()=>{
+ const env=await crewEnvironment(),plan=await env.crew.preview({name:'Revoke live',steps:[{id:'one',actionId:'image.convert',parameters:{format:'png'}}]},{inputs:[{assetId:env.source.asset.id}],projectId:env.project.id}),record=await env.crew.approve(plan);
+ env.context.OffscreenCanvas.prototype.convertToBlob=async()=>{const other=env.context.HoleCrew.create(env.store,env.api);await other.revoke(record.crewId);return new Blob(['output'],{type:'image/png'});};
+ await assert.rejects(env.crew.run(record.crewId),e=>e.code==='CANCELLED'||e.code==='GRANT_REVOKED');assert.equal((await env.crew.get(record.crewId)).status,'revoked');assert.equal((await env.store.list('versions')).length,1);assert.equal((await env.store.list('jobs'))[0].status,'cancelled');env.store.close();
+});

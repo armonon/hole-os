@@ -1,0 +1,9 @@
+# Retained Form native project and Fabric engine
+
+Owned source: `tcc-operations/repos/form-studio` at `cb4a698b2a9aa63c943495c2600e88ed993342cc`. The bundle contains unchanged native container validation/checksum/migration, ProjectSaveSession tickets/history, Fabric pattern geometry and the actual tiled-PDF/DXF writers. Refresh explicitly with `node scripts/vendor-form.mjs /absolute/path/to/form-studio`. Normal builds copy these committed bytes. This selected source graph has no third-party runtime imports.
+
+The bounded surface edits unlocked native scene positions and Fabric point coordinates/curve handles/seam allowances. Other scene, CAD, Fabric, relationship, asset and extension records remain preserved in the native container. It is not the retained complete 3D/CAD/cloth studio. No cloth simulation, fitting certification, external asset fetch or Ghost reconstruction is implied. The full original route remains available. The connected transport supports at most 32 MiB, below Form's standalone 64 MiB input admission; exports are limited to a conservative 256 tiled PDF pages.
+
+Ghost source `ghost-garment-studio` at `0b74fbbc30a2abbb8088c48bc65529ec19340865` was inspected read-only through AGENTS, PRODUCT, HANDOFF, FORM_STUDIO_INTEGRATION and dist/project.js. Its native .ghost v5 preserves original photos/settings and reconstructs inferred visual drape. The documented Form boundary is GLB plus metadata, not manufactured .form patterns. That geometry bridge remains unimplemented here; no format conversion or consolidation claim is made.
+
+Run `node scripts/verify-form-browser.mjs` for actual native edit/recovery/save/reopen and PDF/DXF browser transport checks. Tests/form-adapter.test.mjs additionally checks native-ticket ambiguous retries, checksum admission, unchanged CAD/extensions, point edits and native undo.

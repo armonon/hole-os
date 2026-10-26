@@ -81,3 +81,10 @@ Local evidence on macOS arm64 Apple M4, installed Chrome 155.0.8059.85:
 - `tests/verify-everyday-browser.mjs`: actual event create/delete/reload/restore, contact delete, exported recovery bytes, actual query URL and saved project Trail. External search response intercepted; no assertion about the provider's response.
 
 Browser scripts use disposable localhost fixtures; no actual user data is sent or published. Set `HOLE_PLAYWRIGHT_MODULE` to an installed Playwright module for general scripts; Luma scripts document their tooling environment variables. Full Node suite count is recorded in the checkpoint. Remaining production/provider, studio-parity, physical Safari/touch/audio/assistive-technology and human-research gates remain open. The latest review deployment must be recorded separately from local verification.
+
+
+## Second continuation integration — 26 October 2026
+
+Based on pushed `a70520d`, this working increment has 418 passing tests after correcting legacy test-harness extraction for new gallery and Space-template hooks. Actual Chrome 155 shell journeys now cover Glyph/Form/ScenePilot native save/reopen and real TTF/OTF/PDF/DXF bytes; explicit ScenePilot media links, missing dependencies and preserved originals; libraries PDF pages/bookmarks/notes and audio playback/playhead recovery; semantic zoom anchors/hysteresis/input exemptions; package themes Apply/Undo, new Space-template identity/zones/provenance/reload, and explicit workflow review before outputs. Relevant scripts are `verify-studios-shell-browser`, `verify-libraries-browser`, `verify-semantic-browser`, `verify-smart-crew-browser` and `verify-package-shell-browser` under scripts/. Files and package sandbox harnesses are in tests/. All use disposable stores.
+
+This is bounded local Chrome evidence on the existing Apple M4/macOS environment. Full studio parity, hard hostile-code CPU isolation, native audio parity, physical touch/audio/assistive technology, independent Vault review, formative participants and production backend remain open. No production promotion. The exact second increment delivery receipt follows only after its release build is verified.
