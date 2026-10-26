@@ -15,7 +15,11 @@ Implementation is in progress. The master brief is **not complete**. Preserve th
 
 `47eb263` pushed with 418/418 tests passing. Review https://6adfb27e5b4039d3bfa95aa6--hole-os-armonon.netlify.app has all 288 files matched; `docs/evidence/review-47eb263.json`. Includes Glyph/Form/ScenePilot native bounded editors, reading/listening, packages, Smart/Crew, Photos/Locker and semantic zoom. Actual shell checks passed. Production unchanged.
 
-Third increment: portable StemDeck v2–6 with retained embedded audio and real instrument C4 WAV audition; original experimental tempo Action with ambiguity/coverage report; public form schema publication/guest submission/owner export/revocation; bounded local static GLB geometry preview. Full suite 433/433 passes; final build/browser qualification in progress. Three.js MIT engine is local, no URLs/textures/extension loaders. GLB cardinality/cycle admission and concurrent-open cleanup hardened after independent review. Native Sattari GPL analysis was not copied or relicensed; key analysis remains open.
+`79b8656` is pushed (433/433 tests). Third increment: portable StemDeck v2–6 with retained embedded audio and real instrument C4 WAV audition; original experimental tempo Action with ambiguity/coverage report; public form schema publication/guest submission/owner export/revocation; bounded local static GLB geometry preview. Full suite 433/433 passes; build and browser qualification passed; review delivery remains the named47eb263 deployment above. Three.js MIT engine is local, no URLs/textures/extension loaders. GLB cardinality/cycle admission and concurrent-open cleanup hardened after independent review. Native Sattari GPL analysis was not copied or relicensed; key analysis remains open.
+
+## Fourth increment at release boundary
+
+Video trim, actual pinned MODNet cutout/mask, studio geometry/minimized continuity, real browser-zoom fixes and native arrangement content safety.Final settled suite444/444 passes; actual Glyph snapshot regression passes: latest committed content and live draft preserved, old recovery/snapshot untouched, geometry/minimized restored. Source ownership frozen for checkpoint. Upcoming stems/transcription model provisioning is separate: no automatic remote model requests; weights will stay outsideGit and be explicitly installed to a verified model cache. Native Sattari GPL analysis remains uncopied.
 
 ## Ownership and active work
 

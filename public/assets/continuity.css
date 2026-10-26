@@ -145,7 +145,7 @@
 .hc-diff-text { white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
 .hc-table tr[data-change="added"] { background: #2f775522; }
 .hc-table tr[data-change="removed"] { background: #b8545422; }
-.hc-studio-host { position:fixed; inset:8% 5% 12%; z-index:160; background:var(--hc-bg,#191d24); border:1px solid #738196; border-radius:14px; padding:12px; overflow:auto; resize:both; min-width:260px; min-height:300px; }
+.hc-studio-host { position:fixed; inset:8% 5% 12%; z-index:160; background:var(--hc-bg,#191d24); border:1px solid #738196; border-radius:14px; padding:12px; overflow:auto; resize:both; min-width:min(260px,100vw); min-height:min(300px,100dvh); }
 .hc-studio-host[hidden] { display:none; }
 .hc-studio-content { height:calc(100% - 48px); }
 .hc-studio-host { color:#edf0f6; }

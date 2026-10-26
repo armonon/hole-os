@@ -176,6 +176,22 @@
       return outputs;
     } finally { image.close?.(); }
   };
+  const cutoutHandler = async context => {
+    if (!globalThis.HoleCutout?.run) throw error('Local cutout engine is unavailable.', 'ENGINE_UNAVAILABLE');
+    const { inputs: [input], parameters, signal } = context;
+    let queue = Promise.resolve(), progressError;
+    const result = await HoleCutout.run(input.blob, { signal, timeoutMs: parameters.timeoutMs, onProgress: stage => { queue = queue.then(() => context.progress(.5, String(stage))).catch(cause => { progressError = cause; }); } });
+    await queue; if (progressError) throw progressError; abortCheck(signal);
+    if (![result.cutout, result.alpha].every(blob => blob instanceof Blob && blob.type === 'image/png' && blob.size > 0)) throw error('Cutout engine did not return two valid PNG outputs.', 'OUTPUT_VALIDATION');
+    return [['cutout', result.cutout], ['alpha-mask', result.alpha]].map(([role, blob]) => ({ name: outputName(input, role, 'png', context.project), blob, kind: 'image', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), role, model: result.model, modelRevision: result.revision, modelSHA256: result.sha256, width: result.width, height: result.height } }));
+  };
+  const videoTrimHandler = async context => {
+    if (!globalThis.HoleVideoTrim) throw error('Local video trim engine is unavailable.', 'ENGINE_UNAVAILABLE');
+    const { inputs: [input], parameters, signal } = context;
+    const result = await HoleVideoTrim.trim(input.blob, { ...parameters, signal, onProgress: value => context.progress(value * .9, 'Transcoding selected video range') });
+    abortCheck(signal);
+    return [{ name: outputName(input, 'trim', 'webm', context.project), blob: result.blob, kind: 'video', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), ...result.report } }];
+  };
   const tempoHandler = async context => {
     if (!globalThis.HoleTempo) throw error('Local tempo analysis module is unavailable.', 'ENGINE_UNAVAILABLE');
     const { inputs: [input], parameters, signal } = context;
@@ -248,6 +264,7 @@
   const defs = [
     { id: 'text.save', label: 'Save text version', acceptedTypes: ['text/plain', 'text/markdown'], outputPolicy: 'version', parameterSchema: { text: 'string, up to 1 MiB UTF-8' }, handler: textHandler },
     { id: 'text.branch', label: 'Branch text', acceptedTypes: ['text/plain', 'text/markdown'], outputPolicy: 'derived-assets', parameterSchema: { name: 'string?' }, handler: textHandler },
+    { id: 'image.cutout', label: 'Create cutout and alpha mask', acceptedTypes: imageTypes, outputPolicy: 'derived-assets', parameterSchema: { timeoutMs: '1..90000 ms (default 90000)' }, handler: cutoutHandler, note: 'Local MODNet portrait segmentation. Saves transparent PNG plus alpha mask; inspect edges before reuse. Up to30 MiB,2048 input edge,4:1 aspect ratio; output preserves input dimensions. Model bias and non-portrait limitations apply.' },
     { id: 'image.crop', label: 'Crop image', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { width: 'integer?', height: 'integer?', crop: '{x,y,width,height}?', focalPoint: '{x:0..1,y:0..1}?', format: 'png|webp', allowUpscale: 'boolean' }, handler: imageHandler },
     { id: 'image.resize', label: 'Resize image', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { width: 'integer?', height: 'integer?', format: 'png|webp', allowUpscale: 'boolean' }, handler: imageHandler },
     { id: 'image.convert', label: 'Convert to PNG / WebP', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { format: 'png|webp', quality: '0..1 (WebP)' }, handler: imageHandler },
@@ -256,6 +273,7 @@
     { id: 'audio.trim', label: 'Trim to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { start: 'seconds >=0', end: 'seconds >start' }, handler: audioHandler, note: 'Browser-decodable audio, up to ten minutes. Output is 16-bit PCM WAV at the decoder sample rate.' },
     { id: 'audio.normalize', label: 'Peak normalize to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { peakDb: '-24..0 dBFS (default -1)' }, handler: audioHandler, note: 'Peak normalization, not loudness mastering. Browser-decodable audio, up to ten minutes; 16-bit PCM WAV output.' },
     { id: 'audio.wav', label: 'Convert to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: {}, handler: audioHandler, note: 'Browser-decodable audio only; up to ten minutes. Produces 16-bit PCM WAV at the decoder sample rate.' },
+    { id: 'video.trim', label: 'Trim video to WebM', acceptedTypes: videoTypes, outputPolicy: 'derived-assets', parameterSchema: { start: 'seconds >=0', end: 'seconds >start, range <=30', budgetMs: '1..120000 ms (default 60000)' }, handler: videoTrimHandler, note: 'Local WebCodecs VP8/Opus transcode, up to 30 seconds from 64 MiB/10 minute source. Preserves one video and optional audio track; validates duration within 0.25s. Not lossless or frame-exact.' },
     { id: 'video.thumbnail', label: 'Extract video frame', acceptedTypes: videoTypes, outputPolicy: 'derived-assets', parameterSchema: { time: 'seconds (default 0)', width: 'integer?', height: 'integer?', format: 'png|webp', quality: '0..1 (WebP)', allowUpscale: 'boolean' }, handler: videoHandler, note: 'Seekable video decoded by this browser, up to 64 MiB. Produces a real still image without modifying the video.' },
     { id: 'video.audio', label: 'Extract video audio to WAV', acceptedTypes: videoTypes, outputPolicy: 'derived-assets', parameterSchema: {}, handler: audioHandler, note: 'Requires a video container/audio track that this browser’s audio decoder can read. Up to 64 MiB and ten minutes. Produces 16-bit PCM WAV; unsupported or silent videos fail explicitly.' },
     { id: 'rack.render', label: 'Render Rack instrument to WAV', acceptedTypes: ['application/vnd.hole.rack+json'], outputPolicy: 'derived-assets', parameterSchema: {}, handler: rackHandler, note: 'Renders the saved Hole Rack oscillator/filter/delay instrument through OfflineAudioContext. Stereo 44.1 kHz 16-bit PCM WAV; no native plug-in hosting.' }
@@ -271,6 +289,7 @@
     'image.crop': { properties: { ...imageParameters, width: pixel, height: pixel, crop, focalPoint: focal, allowUpscale: { type: 'boolean', default: false } } },
     'image.resize': { properties: { ...imageParameters, width: pixel, height: pixel, allowUpscale: { type: 'boolean', default: false } } },
     'image.convert': { properties: imageParameters },
+    'image.cutout': { properties: { timeoutMs: { ...number(1, 90000), default: 90000 } } },
     'release.asset-pack': { required: ['focalPoint'], properties: { ...imageParameters, focalPoint: focal, allowUpscale: { type: 'boolean', default: false } } },
     'audio.trim': { required: ['start', 'end'], properties: { start: number(0, 600), end: number(0, 600) } },
     'audio.normalize': { properties: { peakDb: { ...number(-24, 0), default: -1 } } },
@@ -278,6 +297,7 @@
     'audio.tempo': { properties: { maxSeconds: { ...number(8, 120), default: 60 }, budgetMs: { ...number(1, 30000), default: 10000 } } },
     'video.thumbnail': { properties: { ...imageParameters, time: { ...number(0, 86400), default: 0 }, width: pixel, height: pixel, allowUpscale: { type: 'boolean', default: false } } },
     'video.audio': { properties: {} },
+    'video.trim': { required: ['start', 'end'], properties: { start: number(0, 600), end: number(0, 600), budgetMs: { ...number(1, 120000), default: 60000 } } },
     'rack.render': { properties: {} }
   };
   for (const definition of defs) {
@@ -302,13 +322,15 @@
   function available(definition) {
     if (definition.id.startsWith('text.')) return true;
     if (definition.id === 'rack.render') return !!(globalThis.HoleRack && (globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext));
+    if (definition.id === 'image.cutout') return !!(globalThis.HoleCutout?.run && globalThis.Worker);
+    if (definition.id === 'video.trim') return !!(globalThis.HoleVideoTrim && globalThis.Worker && globalThis.VideoEncoder && globalThis.VideoDecoder);
     if (definition.id === 'audio.tempo' && !globalThis.HoleTempo) return false;
     return isAudioAction(definition.id) ? !!(globalThis.AudioContext || globalThis.webkitAudioContext) : definition.id === 'video.thumbnail' ? !!globalThis.document?.createElement : !!(globalThis.OffscreenCanvas || globalThis.document?.createElement);
   }
   function describe(definition) {
     if (!definition) return null;
     const { handler, ...publicDefinition } = definition;
-    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
+    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id === 'image.cutout' ? 'local.modnet-worker' : definition.id === 'video.trim' ? 'browser.webcodecs-worker' : definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'image.cutout' ? ['image', 'image'] : definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id === 'video.trim' ? 'video' : definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
   }
   async function resolveRequest(id, request) {
     const definition = registry.get(id);
@@ -334,7 +356,18 @@
   async function preview(id, request = {}) {
     const resolved = await resolveRequest(id, request), input = resolved.inputs[0], parameters = resolved.parameters;
     const result = { action: describe(resolved.definition), ...resolved.bound, input: { name: input.asset.name, mime: input.blob.type, bytes: input.blob.size }, outputs: [], warnings: [] };
-    if (id.startsWith('image.') || id === 'release.asset-pack') {
+    if (id === 'image.cutout') {
+      if (input.blob.size > 30 * 1024 * 1024) throw error('Cutout inputs must fit within 30 MiB.', 'RESOURCE_LIMIT');
+      const image = await decodeImage(input.blob);
+      try {
+        const width = image.width, height = image.height;
+        if (Math.max(width, height) > 2048) throw error('Cutout inputs must have edges no larger than 2048 pixels.', 'RESOURCE_LIMIT');
+        if (Math.max(width / height, height / width) > 4) throw error('Cutout supports image aspect ratios up to 4:1.');
+        Object.assign(result.input, { width, height });
+        result.outputs = ['cutout', 'alpha-mask'].map(role => ({ role, name: outputName(input, role, 'png', resolved.project), mime: 'image/png', width, height }));
+        result.warnings.push(resolved.definition.note);
+      } finally { image.close?.(); }
+    } else if (id.startsWith('image.') || id === 'release.asset-pack') {
       const image = await decodeImage(input.blob);
       try {
         const output = format(parameters);
@@ -354,6 +387,10 @@
         result.requiresUpscaleConsent = geometry.needsUpscale && parameters.allowUpscale !== true;
         result.warnings.push(resolved.definition.note); if (geometry.needsUpscale) result.warnings.push('This size requires explicit upscaling consent.');
       } finally { frame.close(); }
+    } else if (id === 'video.trim') {
+      if (parameters.end <= parameters.start || parameters.end - parameters.start > 30) throw error('Choose a positive range up to 30 seconds.');
+      result.outputs = [{ name: outputName(input, 'trim', 'webm', resolved.project), mime: 'video/webm', encoding: 'VP8/Opus transcode' }];
+      result.warnings.push(resolved.definition.note);
     } else if (id === 'audio.tempo') {
       result.outputs = [{ name: outputName(input, 'tempo-estimate', 'json', resolved.project), mime: 'application/json', encoding: 'UTF-8 JSON' }];
       result.warnings.push(resolved.definition.note);
@@ -500,7 +537,7 @@
         const kind = earlier.action.outputSchema.contents[slot];
         if (!kind) throw error(`Step ${step.id} selects an output that ${step.from} does not produce.`, 'MISSING_STEP_OUTPUT');
         const expected = action.acceptedTypes;
-        const compatible = kind === 'image' ? expected.some(type => type.startsWith('image/')) : kind === 'audio' ? expected.some(type => type.startsWith('audio/')) : kind === 'text' ? expected.some(type => type.startsWith('text/')) : false;
+        const compatible = kind === 'image' ? expected.some(type => type.startsWith('image/')) : kind === 'audio' ? expected.some(type => type.startsWith('audio/')) : kind === 'text' ? expected.some(type => type.startsWith('text/')) : kind === 'video' ? expected.some(type => type.startsWith('video/')) : false;
         if (!compatible) throw error(`Step ${step.id} cannot use the ${kind} output from ${step.from}.`, 'UNSUPPORTED_INPUT');
       }
       steps.push({ ...copy(step), action, preview: !step.from || step.from === 'inputs' ? await preview(step.actionId, { inputs: step.actionId === 'release.asset-pack' ? boundInputs : [boundInputs[step.inputIndex || 0]], parameters: step.parameters || {}, projectId: request.projectId }) : null, inputDescription: step.from && step.from !== 'inputs' ? `Output ${step.outputIndex ?? 0} from ${step.from}; concrete dimensions will be checked before this step.` : originals[step.inputIndex || 0].asset.name });

@@ -181,7 +181,7 @@
     if (await window.HoleExtensions?.openAsset?.(record, context())) return;
     const actions = el('div', 'hc-row');
     if (asset.mime?.startsWith('text/')) { const text = await record.blob.text(); main.append(el('div', 'hc-preview', text || 'An empty thought, ready when you are.')); actions.append(button(pinned ? 'Edit latest' : 'Edit', 'pencil', async () => { if (pinned) { navigation.placementId = null; navigation.versionId = null; await persistNavigation(); } await editText(await C.readAsset(asset.id)); }, 'hc-primary')); if (pinned) actions.append(button('Branch this version', 'git-branch', async () => { const result = await C.branchAsset(asset.id, record.version.id); await navigate({ assetId: result.asset.id, placementId: null }); })); }
-    else if (asset.kind === 'image' || asset.mime?.startsWith('image/')) { const img = el('img', 'hc-media'); img.alt = asset.name; img.src = objectURL(record.blob); main.append(img); actions.append(button('Crop & resize', 'crop', () => imageTools(record), 'hc-primary')); }
+    else if (asset.kind === 'image' || asset.mime?.startsWith('image/')) { const img = el('img', 'hc-media'); img.alt = asset.name; img.src = objectURL(record.blob); main.append(img); actions.append(button('Crop & resize', 'crop', () => imageTools(record), 'hc-primary'),button('Remove background','scissors',()=>cutoutTools(record))); }
     else if (asset.mime?.startsWith('audio/') || asset.mime?.startsWith('video/')) { main.append(empty('Listen or watch while moving between projects.', button('Open persistent player', 'play', () => openMedia(record)))); actions.append(button('Media tools', 'sliders-horizontal', () => mediaTools(record))); }
     else { main.append(empty(`${record.version.mime} · ${(record.blob.size / 1024).toFixed(1)} KB`, button('Download original', 'download', () => download(record.blob, asset.name)))); }
     if (asset.mime === 'image/png' || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
@@ -195,7 +195,7 @@
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
   const studios = new Map();
-  async function showStudios() { const d = modal('Running studios', 'Editors keep their state while you move through your workspace.'); for (const entry of studios.values()) d.append(button(entry.name, 'palette', () => { d.close(); entry.host.hidden = false; entry.host.querySelector('button')?.focus(); })); if (!studios.size) d.append(el('p', '', 'Open a PNG or Luma project, then choose Open in Luma.')); d.append(button('Close', 'x', () => d.close())); }
+  async function showStudios() { const d = modal('Running studios', 'Editors keep their state while you move through your workspace.'); for (const entry of studios.values()) d.append(button(entry.name, 'palette', async () => { d.close(); await HoleRuntime.present(entry.instanceId,'window'); entry.host.querySelector('button')?.focus(); })); if (!studios.size) d.append(el('p', '', 'Open a PNG or Luma project, then choose Open in Luma.')); d.append(button('Close', 'x', () => d.close())); }
   async function linkScenePilot(record) {
     if (record.blob.size > 32*1024*1024) throw new Error('Connected cuts must fit within 32 MiB.');
     const raw=JSON.parse(await record.blob.text());
@@ -215,20 +215,20 @@
     const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck'})[appId] || 'Luma';
     if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot','hole.stemdeck':'HoleStemDeck'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
     const key = appId + ':' + record.asset.id + ':' + record.version.id, existing = studios.get(key);
-    if (existing) { existing.host.hidden = false; return; }
+    if (existing) { await HoleRuntime.present(existing.instanceId,'window'); return; }
     const host = el('section', 'hc-studio-host'); host.setAttribute('aria-label', studioName + ': ' + record.asset.name); const controls = el('div', 'hc-row'), root = el('div', 'hc-studio-content'); host.append(controls, root); H.os.append(host);
     let instance;
     try {
       instance = await HoleRuntime.open(appId, { ...restore, root, assetId: record.asset.id, versionId: record.version.id, projectId: record.asset.projectId || navigation.projectId, presentation: 'window' });
       studios.set(key, { host, name: record.asset.name, instanceId: instance.id });
-      controls.append(el('strong', '', record.asset.name), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); host.hidden = true; }), button('Close '+studioName, 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
+      controls.append(el('strong', '', record.asset.name), button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); await HoleRuntime.present(instance.id,'minimized'); }), button('Close '+studioName, 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
     } catch (error) { host.remove(); throw error; }
   }
-  if (window.HoleLuma) HoleRuntime.register('hole.luma', HoleLuma.create({ core: C }));
-  if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleGlyph.create({ core:C }));
-  if (window.HoleStemDeck) HoleRuntime.register('hole.stemdeck',HoleStemDeck.create({core:C}));
-  if (window.HoleScenePilot) HoleRuntime.register('hole.scenepilot', HoleScenePilot.create({core:C}));
-  if (window.HoleForm) HoleRuntime.register('hole.form', HoleForm.create({core:C}));
+  if (window.HoleLuma) HoleRuntime.register('hole.luma', HoleStudioWindow.wrap(HoleLuma.create({ core: C })));
+  if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleStudioWindow.wrap(HoleGlyph.create({ core:C })));
+  if (window.HoleStemDeck) HoleRuntime.register('hole.stemdeck',HoleStudioWindow.wrap(HoleStemDeck.create({core:C})));
+  if (window.HoleScenePilot) HoleRuntime.register('hole.scenepilot', HoleStudioWindow.wrap(HoleScenePilot.create({core:C})));
+  if (window.HoleForm) HoleRuntime.register('hole.form', HoleStudioWindow.wrap(HoleForm.create({core:C})));
   async function editText(record) {
     if (editor && !await finishEditing()) return;
     const draft = (await C.list('drafts')).filter(d => d.assetId === record.asset.id).sort((a, b) => b.updatedAt - a.updatedAt)[0];
@@ -302,7 +302,7 @@
   }
   async function snapshot() { if (editor) await flushDraft(); const runtime = []; for (const instance of HoleRuntime.list()) runtime.push(await HoleRuntime.serialize(instance.id)); const placements = (await C.list('placements')).filter(p => !navigation.projectId || p.sceneId === navigation.projectId); const project = navigation.projectId ? await C.get('projects', navigation.projectId) : null; await put('snapshots', { id: uid(), name: `${project?.name || 'Workspace'} · ${date(Date.now())}`, projectId: navigation.projectId, navigation: { ...navigation, assetId: null, scope: navigation.projectId ? 'PROJECT' : 'WORLD' }, placements, windows: [...H.windows.values()].map(r => ({ app: r.app.name, space: r.space, x: r.x, y: r.y, w: r.w, h: r.h, minimized: r.minimized })), runtime, deviceLayout: H.state.layout, schemaVersion: 2 }); notify('Arrangement saved. File contents stay independent.'); }
   async function restoreArrangement(snap) {
-    const unavailable = [];
+    const unavailable = [], recoveryRetained = [], liveRetained = [];
     if (['desktop','pocket'].includes(snap.deviceLayout)) H.setLayout(snap.deviceLayout);
     for (const saved of snap.windows || []) {
       if (!H.byName.has(saved.app)) { unavailable.push(saved.app); continue; }
@@ -315,13 +315,34 @@
       if (!saved.context?.assetId) continue;
       try {
         const current = await C.readAsset(saved.context.assetId); if (current.asset.state !== 'active') throw new Error('In Trash');
-        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot','hole.stemdeck'].includes(saved.appId)) { const base = saved.editorState?.versionId ? await C.readAsset(saved.context.assetId,saved.editorState.versionId) : current; await openStudio(base,{instanceId:saved.id,editorState:saved.editorState},saved.appId); }
+        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot','hole.stemdeck'].includes(saved.appId)) {
+          // Arrangements restore views. Existing editors and historical recovery have separate lifetimes.
+          const candidates = HoleRuntime.list().filter(instance => instance.appId === saved.appId && instance.context.assetId === current.asset.id && instance.status === 'running');
+          let instance = candidates.find(instance => instance.id === saved.id) || candidates[0];
+          if (instance) liveRetained.push(current.asset.name);
+          else {
+            const editorState = { hostGeometry: saved.editorState?.hostGeometry };
+            if (saved.appId === 'hole.scenepilot' && Array.isArray(saved.editorState?.mediaLinks)) editorState.mediaLinks = saved.editorState.mediaLinks;
+            // A new runtime ID avoids implicitly loading bridge-state:<saved.id> into the current head.
+            await openStudio(current, { editorState }, saved.appId);
+            instance = HoleRuntime.list().find(value => value.appId === saved.appId && value.context.assetId === current.asset.id && value.status === 'running');
+          }
+          if (!instance) throw new Error('Studio did not open.');
+          const entry = [...studios.values()].find(value => value.instanceId === instance.id);
+          if (entry && saved.editorState?.hostGeometry) HoleStudioWindow.apply(entry.host, saved.editorState.hostGeometry);
+          await HoleRuntime.present(instance.id, saved.presentation === 'minimized' ? 'minimized' : 'window');
+          if (saved.editorState?.checkpointId || saved.editorState?.versionId) recoveryRetained.push(current.asset.name);
+        }
         else if (saved.appId === 'hole.media') await openMedia(current);
         else if (saved.appId !== 'hole.paper-text') unavailable.push(saved.appId);
       } catch (error) { unavailable.push(saved.appId + ': ' + error.message); }
     }
     H.save(); await navigate({ ...snap.navigation, view:'projects' });
-    notify(unavailable.length ? 'Arrangement restored; unavailable: '+unavailable.join(', ') : 'Arrangement restored with current content. Drafts remain available for recovery.');
+    const report = ['Arrangement restored with current committed content.'];
+    if (liveRetained.length) report.push('Live editors and their unsaved work preserved: '+liveRetained.join(', ')+'.');
+    if (recoveryRetained.length) report.push('Saved editor recovery was not applied; original checkpoints retained: '+recoveryRetained.join(', ')+'.');
+    if (unavailable.length) report.push('Unavailable: '+unavailable.join(', ')+'.');
+    notify(report.join(' '));
   }
   async function renderHistory() {
     title('HISTORY · EXPLICIT VIEW', 'A little room to look back.', 'Inspect earlier work. Restoring creates a new version and keeps the record.', [button('Return to live work', 'arrow-left', () => open('projects')), button('Save arrangement', 'bookmark', snapshot)]);
@@ -342,6 +363,7 @@
       d.append(el('div', 'hc-history-label', `HISTORY · ${date(snap.createdAt)} · ${snap.placements?.length || 0} placements`)); const list = el('ul'); for (const p of snap.placements || []) list.append(el('li', '', `${p.resourceType}: ${p.resourceId.slice(0, 12)} · position ${p.x || 0}, ${p.y || 0} · ${p.policy}`)); d.append(list, button('Restore positions', 'rotate-ccw', async () => { for (const p of snap.placements || []) { const live = await C.get('placements', p.id); if (live) await put('placements', { ...live, x: p.x, y: p.y, depth: p.depth, rotation: p.rotation, scale: p.scale }); } d.close(); await restoreArrangement(snap); }, 'hc-primary'), button('Return to live work', 'x', () => d.close())); H.icons();
     })); area.append(row); } if (!snapshots.length) area.append(empty('Save an arrangement from a project to return to it later.'));
   }
+  async function cutoutTools(record){const d=modal('Remove background','Runs the bundled MODNet model locally. Best suited to portraits; inspect the mask because segmentation can be imperfect. Saves a transparent image and a separate alpha mask, retaining your original. Maximum 2048 pixels per edge and 30 MiB.');const feedback=status('',false,d);d.append(button('Create cutout and mask','scissors',()=>runJob('image.cutout',{inputs:[{assetId:record.asset.id,versionId:record.version.id}],projectId:navigation.projectId,parameters:{}},feedback)),button('Close','x',()=>d.close()));}
   async function imageTools(record) {
     if (!window.HoleActions) throw new Error('Image actions are still opening.'); const d = modal('Image tools', 'Create a new version. The original remains in History.'); const w = input('Output width', 'number', '1200'), h = input('Output height', 'number', '1200'); w.input.min = h.input.min = '1'; w.input.max = h.input.max = '8192'; const format = el('select', 'hc-input'); for (const type of ['png', 'webp']) { const o = el('option', '', type.toUpperCase()); o.value = type; format.append(o); } const mode = el('select', 'hc-input'); for (const [value, text] of [['cover', 'Crop to fill'], ['contain', 'Fit inside']]) { const o = el('option', '', text); o.value = value; mode.append(o); } const up = el('label', 'hc-label'); const checkbox = el('input'); checkbox.type = 'checkbox'; up.append(checkbox, el('span', '', 'Allow upscaling if the source is smaller')); const fx = input('Focal point X (0–1)', 'number', '.5'), fy = input('Focal point Y (0–1)', 'number', '.5'); for (const field of [fx.input, fy.input]) { field.min = '0'; field.max = '1'; field.step = '.05'; }
     d.append(w.wrap, h.wrap, el('p', '', 'Framing'), mode, el('p', '', 'Format'), format, fx.wrap, fy.wrap, up); const feedback = status('', false, d); let request;
@@ -353,8 +375,8 @@
   }
   async function mediaTools(record) {
     const video = record.asset.mime.startsWith('video/'); const d = modal(video ? 'Video tools' : 'Audio tools', 'Your browser processes the selected version. Actual outputs save alongside the original. Codec support depends on this browser.'); const feedback = status('', false, d); const request = parameters => ({ inputs: [{ assetId: record.asset.id, versionId: record.version.id }], projectId: navigation.projectId, parameters });
-    if (video) { const time = input('Thumbnail time (seconds)', 'number', '.75'), width = input('Thumbnail width', 'number', '160'); d.append(time.wrap, width.wrap, button('Create thumbnail', 'image', () => runJob('video.thumbnail', request({ time: Number(time.input.value), width: Number(width.input.value), format: 'png' }), feedback)), button('Extract decodable audio to WAV', 'audio-lines', () => runJob('video.audio', request({}), feedback))); }
-    else { const start = input('Start time (seconds)', 'number', '0'), end = input('End time (seconds)', 'number', '10'); d.append(start.wrap, end.wrap, button('Trim to WAV', 'scissors', () => runJob('audio.trim', request({ start: Number(start.input.value), end: Number(end.input.value) }), feedback)), button('Normalize to WAV', 'audio-lines', () => runJob('audio.normalize', request({}), feedback))); }
+    if (video) { const start=input('Video start (seconds)','number','0'),end=input('Video end (seconds)','number','1');d.append(start.wrap,end.wrap,button('Trim video to WebM','scissors',()=>runJob('video.trim',request({start:Number(start.input.value),end:Number(end.input.value)}),feedback))); const time = input('Thumbnail time (seconds)', 'number', '.75'), width = input('Thumbnail width', 'number', '160'); d.append(time.wrap, width.wrap, button('Create thumbnail', 'image', () => runJob('video.thumbnail', request({ time: Number(time.input.value), width: Number(width.input.value), format: 'png' }), feedback)), button('Extract decodable audio to WAV', 'audio-lines', () => runJob('video.audio', request({}), feedback))); }
+    else { d.append(button('Estimate tempo','activity',()=>runJob('audio.tempo',request({maxSeconds:60,budgetMs:10000}),feedback))); const start = input('Start time (seconds)', 'number', '0'), end = input('End time (seconds)', 'number', '10'); d.append(start.wrap, end.wrap, button('Trim to WAV', 'scissors', () => runJob('audio.trim', request({ start: Number(start.input.value), end: Number(end.input.value) }), feedback)), button('Normalize to WAV', 'audio-lines', () => runJob('audio.normalize', request({}), feedback))); }
     d.append(button('Close', 'x', () => d.close())); H.icons();
   }
   async function runJob(id, request, feedback) { const promise = HoleActions.run(id, request); const cancel = button('Cancel operation', 'x', () => HoleActions.cancel(promise.jobId)); feedback.after(cancel); const onProgress = event => { if (event.detail.jobId === promise.jobId) feedback.textContent = `${event.detail.message || event.detail.status} · ${Math.round(event.detail.progress || 0)}%`; }; window.addEventListener('hole:action-progress', onProgress); try { const result = await promise; feedback.textContent = 'Completed · outputs saved locally'; notify('Completed. Your result is saved in the project.'); return result; } catch (error) { feedback.textContent = error.message; feedback.dataset.error = 'true'; throw error; } finally { window.removeEventListener('hole:action-progress', onProgress); cancel.remove(); } }

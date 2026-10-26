@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#151820">
   <meta name="description" content="Your personal browser workspace. A fluid desktop, familiar apps, and a little room for your ideas.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Hole OS</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/assets/standalone.css">
@@ -42,6 +42,8 @@
   <script src="/assets/welcome.js"></script>
   <script src="/assets/actions-codecs.js"></script>
   <script src="/assets/tempo-analysis.js"></script>
+  <script src="/assets/video-trim.js"></script>
+  <script src="/assets/cutout.js"></script>
   <script src="/assets/actions.js"></script>
   <script src="/assets/crew-runner.js"></script>
   <script src="/assets/flow-authoring.js"></script>
@@ -71,6 +73,7 @@
   <script src="/assets/libraries.js"></script>
   <script src="/assets/model-preview-model.js"></script>
   <script src="/assets/model-preview.js"></script>
+  <script src="/assets/studio-window.js"></script>
   <script src="/assets/continuity.js"></script>
   <script src="/assets/offline.js"></script>
   <noscript>This workspace needs JavaScript enabled to open apps and save your changes.</noscript>

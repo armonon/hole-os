@@ -1,3 +1,19 @@
+# Current continuation qualification
+
+Latest pushed implementation: `79b8656` (433 passing tests). Latest byte-verified review: `47eb263`, [288-file review](https://6adfb27e5b4039d3bfa95aa6--hole-os-armonon.netlify.app), receipt `review-47eb263.json`. Further qualified work below is awaiting its next coherent push. Production remains unchanged; the master brief is not complete.
+
+## Fourth increment
+
+Settled suite:444/444 passing; serial build excludes unfinished next-wave model provisioning.
+
+Real Mediabunny/WebCodecs video trimming preserves selected picture/audio, validates tracks/duration and publishes no output after cancellation/deadline. Actual built Media tools UI passed. MODNet runs pinned local licensed weights in a terminable same-origin Worker; actual shell produces cutout+mask PNGs with model SHA/revision and exact source lineage. The synthetic fixture verifies inference/soft alpha/opaque RGB retention, not portrait-quality accuracy. Worker CSP permits only self scripts/connections and WebAssembly compilation; no remote model/runtime fallback. Input edge >2048 is rejected; browser image decode allocation precedes dimension admission. Model/runtime files total40,243,725bytes; offline cache must have capacity and retains the prior complete release on failed installation.
+
+Studio geometry now has accessible keyboard controls, independent bounds/checkpoints and accurate minimized presentation. Real100/200/400% browser-zoom testing found and fixed a minimum-height overflow at320×225 CSS pixels.21 view/zoom cases pass, including focus containment/ESC return and reduced motion. Safari26.0.1 remote automation is disabled; no setting was changed and no Safari pass is claimed. Physical devices, assistive technology and human research remain gates.
+
+The earlier release records below retain their original dates/revisions and scope; their older counts do not describe the current head.
+
+---
+
 # Hole OS overhaul — review build qualification
 
 26 October 2026. Source branch: `codex/hole-os-overhaul`; verified base: `7d98b7251718b5615196bad2c793554f8573b6b1`. The final commit is the branch revision containing this record. This is a substantial review build, not completion of the full master program. The [program ledger](../implementation/backlog.md) preserves required unfinished scope.
@@ -93,3 +109,5 @@ This is bounded local Chrome evidence on the existing Apple M4/macOS environment
 ## Third continuation integration
 
 433/433 integrated tests pass. StemDeck actual shell and isolated browser demonstrate native archive save/recovery/reopen with embedded audio retained and a real non-silent PCM24 C4 audition export; not full arrangement rendering. Tempo actual shell decodes a known WAV and writes a pinned-lineage JSON estimate with alternative/ambiguity and partial coverage; cancel/budget paths publish no output. Public forms actual Chrome against local HTTP service demonstrates reviewed schema-only publication, separate guest response/receipt, failed-submit retry, owner JSON export and revoke. Static GLB actual Chrome (software WebGL flag in headless test) renders a real triangle, keyboard rotation, cleanup, original retention/reopen and 320px layout. This is not hardware-GPU performance evidence. Admission rejects URLs/textures/extensions, cycles and excessive allocations. Exact delivery follows the settled build.
+
+Native arrangement regression (Chrome155): older snapshot/recovery never replaced a newer committed Glyph version. Restore created a fresh instance at current head; a subsequent restore preserved the live dirty instance, restored geometry/minimized state, and left historical recovery/snapshot records byte-equivalent. Two focused tests and actual browser pass.

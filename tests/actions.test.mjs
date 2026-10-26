@@ -481,3 +481,20 @@ test('tempo action describes and previews JSON, rejects unavailable module and i
   assert.deepEqual(plain(preview.action.outputSchema.contents), ['document']);
   await assert.rejects(env.api.preview('audio.tempo', { inputs: [{ assetId: 'tempo-source' }], parameters: { maxSeconds: 121 } }), { code: 'INVALID_PARAMETERS' });
 });
+
+test('cutout previews two PNGs and atomically saves model lineage; cancelled inference cannot commit', async () => {
+  const env = environment(); await env.seed();
+  env.context.Worker = class {};
+  env.context.createImageBitmap = async () => ({ width: 2048, height: 1536, close() {} });
+  env.context.HoleCutout = { run: async (_blob, { onProgress }) => { onProgress('Inference'); return { cutout: new Blob(['cutout'], { type: 'image/png' }), alpha: new Blob(['alpha'], { type: 'image/png' }), width: 2048, height: 1536, model: 'test-model', revision: 'pinned-revision', sha256: 'fixture-hash' }; } };
+  const request = { inputs: [{ assetId: 'cover', versionId: 'original' }] };
+  const preview = await env.api.preview('image.cutout', request);
+  assert.equal(preview.outputs.length, 2); assert.equal(preview.outputs[0].width, 2048); assert.deepEqual(plain(preview.action.outputSchema.contents), ['image', 'image']);
+  const done = await env.api.run('image.cutout', request);
+  assert.equal(done.outputs.length, 2); assert.equal(env.commitCount, 1);
+  assert.equal(done.outputs[0].version.provenance.sourceVersionId, 'original'); assert.equal(done.outputs[1].version.provenance.modelRevision, 'pinned-revision');
+  const previous = env.context.HoleCutout.run; let currentJob;
+  env.context.HoleCutout.run = async (...args) => { const result = await previous(...args); await env.api.cancel(currentJob); return result; };
+  await assert.rejects(env.api.run('image.cutout', { ...request, onJob: job => { currentJob = job.id; } }), { code: 'CANCELLED' });
+  assert.equal(env.commitCount, 1);
+});
