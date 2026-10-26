@@ -18,7 +18,7 @@ export async function openStore(directory) {
     try {
       if ((await stat(file)).size > MAX_STORE_BYTES) throw new Error('The service store exceeds its configured limit.');
       state = JSON.parse(await readFile(file, 'utf8'));
-      if (state.schema !== 1 || !['users', 'sessions', 'projects', 'assets', 'versions', 'invitations', 'guests', 'worlds', 'records', 'journal'].every(key => state[key] && typeof state[key] === 'object' && !Array.isArray(state[key]))) throw new Error('Unsupported or corrupt service state. Preserve this directory for recovery.');
+      if ((state.forms !== undefined && (!state.forms || typeof state.forms !== 'object' || Array.isArray(state.forms))) || state.schema !== 1 || !['users', 'sessions', 'projects', 'assets', 'versions', 'invitations', 'guests', 'worlds', 'records', 'journal'].every(key => state[key] && typeof state[key] === 'object' && !Array.isArray(state[key]))) throw new Error('Unsupported or corrupt service state. Preserve this directory for recovery.');
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       state = { schema: 1, users: {}, sessions: {}, projects: {}, assets: {}, versions: {}, invitations: {}, guests: {}, worlds: {}, records: {}, journal: {} };

@@ -11,11 +11,11 @@ Implementation is in progress. The master brief is **not complete**. Preserve th
 
 `a70520d` is pushed to origin and PR #1. Review only: https://6adfae64edd42e93b11bc9c4--hole-os-armonon.netlify.app . All 262 public files matched deployed bytes; receipt `docs/evidence/review-a70520d.json`. Production unchanged.
 
-## Current second increment (not yet delivered)
+## Delivered second increment and current third increment
 
-Glyph/Form actual native adapters, ScenePilot native titles/ordinary trims and explicit pinned media links; Bounce local persistent queue and Librarian PDF/text reader; Smart study/listening/travel, bounded Crew runner; Photos/Locker provenance; package kinds/compositions/WebLab diagnostics; semantic zoom anchors. Shared render queue now serializes restoration/navigation to prevent duplicate asynchronous controls. Await spatial cleanup before rebuilding views.
+`47eb263` pushed with 418/418 tests passing. Review https://6adfb27e5b4039d3bfa95aa6--hole-os-armonon.netlify.app has all 288 files matched; `docs/evidence/review-47eb263.json`. Includes Glyph/Form/ScenePilot native bounded editors, reading/listening, packages, Smart/Crew, Photos/Locker and semantic zoom. Actual shell checks passed. Production unchanged.
 
-Observed: libraries real-browser PDF/bookmark/note/reload and WAV playback/playhead/reload passed; semantic zoom actual browser passed; Smart/Crew and Files/package source browser tests passed. Glyph/Form native isolated browser tests passed; actual shell Glyph/Form/ScenePilot native edit/save/export/reopen and explicit missing-media paths now pass. Latest full suite: 418/418 passing after fixing source-extraction and gallery closure test harnesses. The earlier 52-failure run is retained in conversation history as diagnosed harness failures, not passed evidence. ScenePilot conflicting-version grant rejection regression passes; final suite 418/418 and settled build pass.
+Third increment: portable StemDeck v2–6 with retained embedded audio and real instrument C4 WAV audition; original experimental tempo Action with ambiguity/coverage report; public form schema publication/guest submission/owner export/revocation; bounded local static GLB geometry preview. Full suite 433/433 passes; final build/browser qualification in progress. Three.js MIT engine is local, no URLs/textures/extension loaders. GLB cardinality/cycle admission and concurrent-open cleanup hardened after independent review. Native Sattari GPL analysis was not copied or relicensed; key analysis remains open.
 
 ## Ownership and active work
 

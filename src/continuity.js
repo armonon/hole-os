@@ -186,6 +186,8 @@
     else { main.append(empty(`${record.version.mime} · ${(record.blob.size / 1024).toFixed(1)} KB`, button('Download original', 'download', () => download(record.blob, asset.name)))); }
     if (asset.mime === 'image/png' || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
     if (/\.(glyph(?:\.json)?|lumaglyph\.json)$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Glyph' : 'Open in Glyph','type',()=>openStudio(record,{},'hole.glyph'),'hc-primary'));
+    if (/\.sattari$/i.test(asset.name)) actions.append(button('Open in StemDeck','audio-lines',()=>openStudio(record,{},'hole.stemdeck'),'hc-primary'));
+    if (/\.glb$/i.test(asset.name)) actions.append(button('Preview 3D geometry','box',()=>HoleModelPreview.open(record,context())));
     if (/\.form$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Form' : 'Open in Form','box',()=>openStudio(record,{},'hole.form'),'hc-primary'));
     if (/\.(cut|scenepilot\.json)$/i.test(asset.name)) actions.append(button('Open in ScenePilot','film',()=>linkScenePilot(record),'hc-primary'));
     actions.append(button('Carry', 'archive', () => addCarry(asset)), button('History', 'history', () => open('history', { assetId: asset.id })), button('Export', 'download', () => download(record.blob, asset.name))); main.append(actions);
@@ -210,8 +212,8 @@
   }
   async function openLuma(record,restore={}) { return openStudio(record,restore,'hole.luma'); }
   async function openStudio(record, restore = {}, appId = 'hole.luma') {
-    const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot'})[appId] || 'Luma';
-    if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
+    const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck'})[appId] || 'Luma';
+    if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot','hole.stemdeck':'HoleStemDeck'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
     const key = appId + ':' + record.asset.id + ':' + record.version.id, existing = studios.get(key);
     if (existing) { existing.host.hidden = false; return; }
     const host = el('section', 'hc-studio-host'); host.setAttribute('aria-label', studioName + ': ' + record.asset.name); const controls = el('div', 'hc-row'), root = el('div', 'hc-studio-content'); host.append(controls, root); H.os.append(host);
@@ -224,6 +226,7 @@
   }
   if (window.HoleLuma) HoleRuntime.register('hole.luma', HoleLuma.create({ core: C }));
   if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleGlyph.create({ core:C }));
+  if (window.HoleStemDeck) HoleRuntime.register('hole.stemdeck',HoleStemDeck.create({core:C}));
   if (window.HoleScenePilot) HoleRuntime.register('hole.scenepilot', HoleScenePilot.create({core:C}));
   if (window.HoleForm) HoleRuntime.register('hole.form', HoleForm.create({core:C}));
   async function editText(record) {
@@ -312,7 +315,7 @@
       if (!saved.context?.assetId) continue;
       try {
         const current = await C.readAsset(saved.context.assetId); if (current.asset.state !== 'active') throw new Error('In Trash');
-        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot'].includes(saved.appId)) { const base = saved.editorState?.versionId ? await C.readAsset(saved.context.assetId,saved.editorState.versionId) : current; await openStudio(base,{instanceId:saved.id,editorState:saved.editorState},saved.appId); }
+        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot','hole.stemdeck'].includes(saved.appId)) { const base = saved.editorState?.versionId ? await C.readAsset(saved.context.assetId,saved.editorState.versionId) : current; await openStudio(base,{instanceId:saved.id,editorState:saved.editorState},saved.appId); }
         else if (saved.appId === 'hole.media') await openMedia(current);
         else if (saved.appId !== 'hole.paper-text') unavailable.push(saved.appId);
       } catch (error) { unavailable.push(saved.appId + ': ' + error.message); }

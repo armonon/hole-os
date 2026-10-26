@@ -467,3 +467,17 @@ test('Crew revocation during an active encoder aborts the ordinary job without o
  env.context.OffscreenCanvas.prototype.convertToBlob=async()=>{const other=env.context.HoleCrew.create(env.store,env.api);await other.revoke(record.crewId);return new Blob(['output'],{type:'image/png'});};
  await assert.rejects(env.crew.run(record.crewId),e=>e.code==='CANCELLED'||e.code==='GRANT_REVOKED');assert.equal((await env.crew.get(record.crewId)).status,'revoked');assert.equal((await env.store.list('versions')).length,1);assert.equal((await env.store.list('jobs'))[0].status,'cancelled');env.store.close();
 });
+
+test('tempo action describes and previews JSON, rejects unavailable module and invalid limits', async () => {
+  const env = environment(); await env.seed();
+  env.context.AudioContext = class {};
+  assert.equal(env.api.get('audio.tempo').available, false);
+  vm.runInContext(await readFile(new URL('../src/tempo-analysis.js', import.meta.url), 'utf8'), env.context);
+  await env.store.put('assets', { id: 'tempo-source', name: 'pulse.wav', mime: 'audio/wav', state: 'active', headVersionId: 'tempo-v' });
+  await env.store.put('versions', { id: 'tempo-v', assetId: 'tempo-source', mime: 'audio/wav' });
+  env.blobs.set('tempo-v', new Blob(['fixture'], { type: 'audio/wav' }));
+  const preview = await env.api.preview('audio.tempo', { inputs: [{ assetId: 'tempo-source' }] });
+  assert.equal(preview.outputs[0].mime, 'application/json');
+  assert.deepEqual(plain(preview.action.outputSchema.contents), ['document']);
+  await assert.rejects(env.api.preview('audio.tempo', { inputs: [{ assetId: 'tempo-source' }], parameters: { maxSeconds: 121 } }), { code: 'INVALID_PARAMETERS' });
+});

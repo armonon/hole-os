@@ -268,3 +268,31 @@ test('local memory revocation after queueing prevents transfer and retains revie
   assert.equal((await client.pending(f.project.id))[0].error.code, 'MEMORY_PERMISSION');
   assert.equal((await client.pull(f.project.id)).records.length, 0);
 });
+
+test('public forms pin only schema, accept durable guest submissions, restrict responses and revoke', async t => {
+  const f = await setup(t);
+  const form = { version: 1, fields: [{ id: 'email', label: 'Email', type: 'email', required: true }], responses: [{ email: 'private@example.test' }] };
+  const created = await f.sync(f.owner, [{ id: 'create:form', type: 'asset.create', data: { name: 'Contact.form', mime: 'application/vnd.hole.form+json', bytes: Buffer.from(JSON.stringify(form)).toString('base64') } }]);
+  const asset = created.value.results[0].result;
+  const project = (await f.request(`/projects/${f.project.id}`, { token: f.owner.token })).value;
+  const published = await f.request(`/projects/${f.project.id}/forms`, { method: 'POST', token: f.owner.token, body: { name: 'Contact', assetId: asset.assetId, versionId: asset.versionId, expectedRevision: project.revision } });
+  assert.equal(published.status, 201); const id = published.value.id;
+  const visible = await f.request(`/forms/${id}`); assert.equal(visible.status, 200);
+  assert.deepEqual(Object.keys(visible.value).sort(), ['expiresAt', 'fields', 'id', 'name', 'version']);
+  assert.ok(!JSON.stringify(visible.value).includes('private'));
+  const body = { submissionId: 'response:one', values: { email: 'guest@example.test' } };
+  const receipt = await f.request(`/forms/${id}/submissions`, { method: 'POST', body }); assert.equal(receipt.status, 201);
+  await f.restart();
+  assert.deepEqual((await f.request(`/forms/${id}/submissions`, { method: 'POST', body })).value, receipt.value);
+  const responses = `/projects/${f.project.id}/forms/${id}/responses`;
+  assert.equal((await f.request(responses)).status, 401);
+  assert.equal((await f.request(responses, { token: f.viewer.token })).status, 404);
+  const exported = (await f.request(responses, { token: f.owner.token })).value;
+  assert.equal(exported.responses.length, 1); assert.equal(exported.responses[0].values.email, 'guest@example.test');
+  assert.ok(!JSON.stringify(exported).includes('Hash'));
+  assert.equal((await f.request(`/forms/${id}/submissions`, { method: 'POST', body: { submissionId: 'large', values: { email: 'x'.repeat(70000) } } })).status, 413);
+  await f.request(`/projects/${f.project.id}/forms/${id}`, { method: 'DELETE', token: f.owner.token });
+  assert.equal((await f.request(`/forms/${id}`)).status, 404);
+  assert.equal((await f.request(`/forms/${id}/submissions`, { method: 'POST', body })).status, 404);
+  assert.equal((await f.request(responses, { token: f.owner.token })).value.responses.length, 1);
+});

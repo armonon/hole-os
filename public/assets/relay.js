@@ -160,6 +160,7 @@
       accountArea.append(button('Discover public Worlds', 'globe', run(discovery)));
       const guestToken = input('Guest preview token', 'password', '');
       accountArea.append(guestToken.wrap, button('Preview guest selection', 'eye', run(async () => { const token = guestToken.input.value.trim(); if (!token) throw fail('NO_TOKEN', 'Enter a guest preview token.'); await previewPublication(`/guest/${encodeURIComponent(token)}`, 'Guest selection preview'); guestToken.input.value = ''; })));
+      globalThis.HolePublicForms?.entry({ client: connection, ctx, host: accountArea });
       const user = connection.getUser();
       if (user) {
         accountArea.append(el('h3', '', `Signed in as ${user.name}`), el('p', 'muted', `Account ID: ${user.id}. Email is not verified by this local service.`), button('Sign out', 'log-out', run(async () => { await connection.signOut(); selectedRemote = null; await showAccount(); report('Signed out of the service. Your local files and queue remain on this device.'); })));
@@ -303,6 +304,7 @@
             dialog.append(button('Leave project', 'log-out', run(async () => { await connection.request(`/projects/${remoteId}/membership`, { method: 'DELETE' }); dialog.close(); selectedRemote = null; await showProjects(); report('You left the project. Existing local copies remain local.'); })), button('Cancel', 'x', () => dialog.close()));
           })));
           if (snapshot.project.role === 'owner') {
+            await globalThis.HolePublicForms?.manage({ client: connection, ctx, host: detail, projectId: remoteId, snapshot, refresh: showRemote });
             const publicationName = input('Shared selection name', 'text', snapshot.project.name);
             detail.append(publicationName.wrap, el('p', 'muted', 'Audience choices: an invited viewer/editor gets selected versions; a guest token permits anyone holding it for 24 hours; a Public World appears in service discovery. Review your selection before publishing.'));
             for (const kind of ['guests', 'worlds']) detail.append(button(kind === 'guests' ? 'Review guest preview link' : 'Review public World publication', 'share', run(async () => {

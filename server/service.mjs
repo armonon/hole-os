@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { FORM_BODY_LIMIT, publishForm, listForms, publicForm, revokeForm, formResponses, submitForm } from './forms.mjs';
 import { randomBytes, randomUUID, createHash, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import { openStore, serviceError } from './store.mjs';
@@ -176,10 +177,10 @@ export async function createService({ directory, origins = ['http://127.0.0.1:51
     else { current.count++; assert(current.count <= authAttempts, 429, 'RATE_LIMIT', 'Too many attempts. Wait one minute and retry.'); }
     if (attempts.size > 10000) for (const [entry, value] of attempts) if (value.until <= now()) attempts.delete(entry);
   };
-  async function body(req) {
+  async function body(req, maximum = MAX_BYTES) {
     assert((req.headers['content-type'] || '').split(';')[0] === 'application/json', 415, 'CONTENT_TYPE', 'Send JSON.');
     let total = 0; const chunks = [];
-    for await (const chunk of req) { total += chunk.length; assert(total <= MAX_BYTES, 413, 'BODY_LIMIT', 'The request exceeds 24 MiB.'); chunks.push(chunk); }
+    for await (const chunk of req) { total += chunk.length; assert(total <= maximum, 413, 'BODY_LIMIT', 'The request exceeds its size limit.'); chunks.push(chunk); }
     try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw serviceError(400, 'INVALID_JSON', 'Invalid JSON.'); }
   }
   function respond(res, status, value, headers = {}) {
@@ -253,6 +254,14 @@ export async function createService({ directory, origins = ['http://127.0.0.1:51
           return bytes(res, state.versions[parts[5]], guest.names[parts[3]]);
         }
       }
+      if (parts[0] === 'forms') {
+        if (parts.length === 2 && req.method === 'GET') return respond(res, 200, publicForm(await store.read(), parts[1], stamp));
+        if (parts.length === 3 && parts[2] === 'submissions' && req.method === 'POST') {
+          const input = await body(req, FORM_BODY_LIMIT);
+          const receipt = await store.transact(state => submitForm(state, parts[1], input, now(), req.socket.remoteAddress));
+          return respond(res, 201, receipt);
+        }
+      }
       const current = await store.read(), user = auth(current, secret, stamp);
       if (req.method === 'GET' && url.pathname === '/session') return respond(res, 200, { user: userView(user), expiresAt: current.sessions[hash(secret)].expiresAt });
       if (req.method === 'DELETE' && url.pathname === '/session') { await store.transact(state => { delete state.sessions[hash(secret)]; }); for (const [key, value] of presence) if (value.sessionHash === hash(secret)) presence.delete(key); return respond(res, 200, { signedOut: true }, { 'Set-Cookie': cookie('') }); }
@@ -301,6 +310,15 @@ export async function createService({ directory, origins = ['http://127.0.0.1:51
       }
       if (parts[0] === 'projects' && parts[1]) {
         const projectId = parts[1];
+        if (parts[2] === 'forms') {
+          if (parts.length === 3 && req.method === 'GET') return respond(res, 200, { forms: listForms(current, user, projectId) });
+          if (parts.length === 3 && req.method === 'POST') {
+            const input = await body(req, FORM_BODY_LIMIT);
+            return respond(res, 201, await store.transact(state => publishForm(state, auth(state, secret, now()), projectId, input, now())));
+          }
+          if (parts.length === 4 && req.method === 'DELETE') return respond(res, 200, await store.transact(state => revokeForm(state, auth(state, secret, now()), projectId, parts[3], now())));
+          if (parts.length === 5 && parts[4] === 'responses' && req.method === 'GET') return respond(res, 200, { responses: formResponses(current, user, projectId, parts[3]) });
+        }
         if (parts.length === 2 && req.method === 'GET') { const { project } = member(current, user, projectId); return respond(res, 200, projectView(current, user, project)); }
         if (parts[2] === 'publications' && parts.length === 3 && req.method === 'GET') {
           owner(current, user, projectId);

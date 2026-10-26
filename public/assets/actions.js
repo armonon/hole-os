@@ -176,6 +176,16 @@
       return outputs;
     } finally { image.close?.(); }
   };
+  const tempoHandler = async context => {
+    if (!globalThis.HoleTempo) throw error('Local tempo analysis module is unavailable.', 'ENGINE_UNAVAILABLE');
+    const { inputs: [input], parameters, signal } = context;
+    await context.progress(.1, 'Decoding audio for experimental tempo estimate');
+    const buffer = await decodeAudio(input.blob, signal);
+    const report = await HoleTempo.analyze(Array.from({ length: buffer.numberOfChannels }, (_, i) => buffer.getChannelData(i)), buffer.sampleRate, { ...parameters, signal });
+    report.source = { assetId: input.asset.id, versionId: input.version.id, name: input.asset.name };
+    abortCheck(signal);
+    return [{ name: outputName(input, 'tempo-estimate', 'json', context.project), blob: new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }), kind: 'document', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), engine: report.engine, experimental: true, coverage: report.coverage } }];
+  };
   const audioHandler = async context => {
     const { inputs: [input], parameters, signal, progress, id } = context;
     await progress(.1, 'Decoding audio (browser codec support applies)');
@@ -242,6 +252,7 @@
     { id: 'image.resize', label: 'Resize image', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { width: 'integer?', height: 'integer?', format: 'png|webp', allowUpscale: 'boolean' }, handler: imageHandler },
     { id: 'image.convert', label: 'Convert to PNG / WebP', acceptedTypes: imageTypes, outputPolicy: 'version', parameterSchema: { format: 'png|webp', quality: '0..1 (WebP)' }, handler: imageHandler },
     { id: 'release.asset-pack', label: 'Release Asset Pack', acceptedTypes: imageTypes, outputPolicy: 'derived-assets', parameterSchema: { focalPoint: '{x:0..1,y:0..1} required', allowUpscale: 'boolean', format: 'png|webp', quality: '0..1 (WebP)' }, handler: releaseHandler },
+    { id: 'audio.tempo', label: 'Estimate tempo (experimental)', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { maxSeconds: '8..120 seconds from start (default 60)', budgetMs: '1..30000 ms analysis budget (default 10000)' }, handler: tempoHandler, note: 'Local energy/onset estimate, 50–200 BPM. Saves JSON with source coverage and competing periods; no key estimate or calibrated confidence.' },
     { id: 'audio.trim', label: 'Trim to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { start: 'seconds >=0', end: 'seconds >start' }, handler: audioHandler, note: 'Browser-decodable audio, up to ten minutes. Output is 16-bit PCM WAV at the decoder sample rate.' },
     { id: 'audio.normalize', label: 'Peak normalize to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { peakDb: '-24..0 dBFS (default -1)' }, handler: audioHandler, note: 'Peak normalization, not loudness mastering. Browser-decodable audio, up to ten minutes; 16-bit PCM WAV output.' },
     { id: 'audio.wav', label: 'Convert to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: {}, handler: audioHandler, note: 'Browser-decodable audio only; up to ten minutes. Produces 16-bit PCM WAV at the decoder sample rate.' },
@@ -264,6 +275,7 @@
     'audio.trim': { required: ['start', 'end'], properties: { start: number(0, 600), end: number(0, 600) } },
     'audio.normalize': { properties: { peakDb: { ...number(-24, 0), default: -1 } } },
     'audio.wav': { properties: {} },
+    'audio.tempo': { properties: { maxSeconds: { ...number(8, 120), default: 60 }, budgetMs: { ...number(1, 30000), default: 10000 } } },
     'video.thumbnail': { properties: { ...imageParameters, time: { ...number(0, 86400), default: 0 }, width: pixel, height: pixel, allowUpscale: { type: 'boolean', default: false } } },
     'video.audio': { properties: {} },
     'rack.render': { properties: {} }
@@ -290,12 +302,13 @@
   function available(definition) {
     if (definition.id.startsWith('text.')) return true;
     if (definition.id === 'rack.render') return !!(globalThis.HoleRack && (globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext));
+    if (definition.id === 'audio.tempo' && !globalThis.HoleTempo) return false;
     return isAudioAction(definition.id) ? !!(globalThis.AudioContext || globalThis.webkitAudioContext) : definition.id === 'video.thumbnail' ? !!globalThis.document?.createElement : !!(globalThis.OffscreenCanvas || globalThis.document?.createElement);
   }
   function describe(definition) {
     if (!definition) return null;
     const { handler, ...publicDefinition } = definition;
-    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id.startsWith('text.') ? 'text' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
+    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
   }
   async function resolveRequest(id, request) {
     const definition = registry.get(id);
@@ -341,6 +354,9 @@
         result.requiresUpscaleConsent = geometry.needsUpscale && parameters.allowUpscale !== true;
         result.warnings.push(resolved.definition.note); if (geometry.needsUpscale) result.warnings.push('This size requires explicit upscaling consent.');
       } finally { frame.close(); }
+    } else if (id === 'audio.tempo') {
+      result.outputs = [{ name: outputName(input, 'tempo-estimate', 'json', resolved.project), mime: 'application/json', encoding: 'UTF-8 JSON' }];
+      result.warnings.push(resolved.definition.note);
     } else if (isAudioAction(id)) {
       result.outputs = [{ name: outputName(input, id.split('.')[1], 'wav', resolved.project), mime: 'audio/wav', encoding: '16-bit PCM WAV' }];
       result.warnings.push(resolved.definition.note);
