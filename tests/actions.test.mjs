@@ -520,3 +520,13 @@ test('transcription action persists native caption source, model identity and su
   const done=await env.api.run('audio.transcribe',request); assert.equal(done.outputs.length,4); assert.equal(env.commitCount,1);
   const doc=JSON.parse(await env.blobs.get(done.outputs[3].version.id).text());assert.equal(doc.source.versionId,'speech-v');assert.equal(doc.cues[0].start,.2);assert.equal(done.outputs[0].version.provenance.modelRevision,'fixture-revision');
 });
+
+test('experimental key action advertises a document and checks bounded parameters', async () => {
+  const env=environment();await env.seed();env.context.AudioContext=class{};env.context.Worker=class{};
+  assert.equal(env.api.get('audio.key').available,false);env.context.HoleAudioKey={analyze(){}};
+  await env.store.put('assets',{id:'key-source',name:'key.wav',mime:'audio/wav',state:'active',headVersionId:'key-v'});
+  await env.store.put('versions',{id:'key-v',assetId:'key-source',mime:'audio/wav'});env.blobs.set('key-v',new Blob(['fixture'],{type:'audio/wav'}));
+  const request={inputs:[{assetId:'key-source'}]},preview=await env.api.preview('audio.key',request);
+  assert.equal(preview.outputs[0].mime,'application/json');assert.deepEqual(plain(preview.action.outputSchema.contents),['document']);assert.equal(preview.action.available,true);
+  await assert.rejects(env.api.preview('audio.key',{...request,parameters:{maxSeconds:61}}),{code:'INVALID_PARAMETERS'});
+});

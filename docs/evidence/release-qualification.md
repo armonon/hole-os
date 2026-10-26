@@ -1,6 +1,14 @@
 # Current continuation qualification
 
-Latest pushed implementation: `a59f70a` (444 passing tests). Latest byte-verified review: [320-file review](https://6adfb70c0b7b80a132947f74--hole-os-armonon.netlify.app), receipt `review-a59f70a.json`, including strict cutout-worker CSP. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `fe528a4` (456 passing tests). Latest byte-verified review: [364-file review](https://6adfb9fa6416f81d7f1bc297--hole-os-armonon.netlify.app), receipt `review-fe528a4.json`, including strict speech/stem-worker CSP. Production remains unchanged; the master brief is not complete.
+
+## Sixth increment
+
+473 tests pass after independent review. Original experimental FFT/chroma key analysis returns ranked major/minor hypotheses and relative ambiguity with explicit evidence gates; actual browser WAV decode, partial coverage, JSON lineage/reload and cancellation/timeout pass. It is not calibrated confidence or corpus-tested music accuracy.
+
+On-demand local text search includes separate earlier-version/draft opt-ins, exact pinned history opening and current-version selection. Real browser save/reload and four model tests pass; search attempts/bytes/results are bounded and exclusions are visible. See `content-search.md` and `experimental-key.md`.
+
+Explicit Relay material-position transfer uses private geometry-only records and deliberate local mapping. Independent review caught mutable review metadata being used for writes; apply now reconstructs original metadata from revision-checked Core records. Regression proves tampered policy/version/resource/target fields cannot rewrite local pins or redirect writes. Application journals preserve partial/uncertain writes; undo refuses newer local changes. Final integrated browser evidence is in the layout compatibility record.
 
 ## Fifth increment
 

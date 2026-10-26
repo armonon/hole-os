@@ -216,6 +216,17 @@
     abortCheck(signal);
     return [{ name: outputName(input, 'trim', 'webm', context.project), blob: result.blob, kind: 'video', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), ...result.report } }];
   };
+  const keyHandler = async context => {
+    if (!globalThis.HoleAudioKey) throw error('Local key analysis module is unavailable.', 'ENGINE_UNAVAILABLE');
+    const { inputs: [input], parameters, signal } = context;
+    await context.progress(.1, 'Decoding audio for experimental key estimate');
+    const buffer = await decodeAudio(input.blob, signal, 22050);
+    if (buffer.numberOfChannels > 2 || buffer.sampleRate !== 22050) throw error('Key analysis supports mono or stereo decoded at22.05kHz.', 'RESOURCE_LIMIT');
+    const report = await HoleAudioKey.analyze(Array.from({ length: buffer.numberOfChannels }, (_, i) => buffer.getChannelData(i)), buffer.sampleRate, { ...parameters, signal });
+    abortCheck(signal);
+    report.source = { assetId: input.asset.id, versionId: input.version.id, name: input.asset.name };
+    return [{ name: outputName(input, 'key-estimate', 'json', context.project), blob: new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }), kind: 'document', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), engine: report.engine, experimental: true, coverage: report.coverage } }];
+  };
   const tempoHandler = async context => {
     if (!globalThis.HoleTempo) throw error('Local tempo analysis module is unavailable.', 'ENGINE_UNAVAILABLE');
     const { inputs: [input], parameters, signal } = context;
@@ -295,6 +306,7 @@
     { id: 'release.asset-pack', label: 'Release Asset Pack', acceptedTypes: imageTypes, outputPolicy: 'derived-assets', parameterSchema: { focalPoint: '{x:0..1,y:0..1} required', allowUpscale: 'boolean', format: 'png|webp', quality: '0..1 (WebP)' }, handler: releaseHandler },
     { id: 'audio.transcribe', label: 'Transcribe locally to captions', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { timeoutMs: '1..180000 ms (default 180000)' }, handler: transcriptionHandler, note: 'Requires two explicitly installed pinned Whisper tiny.en model files. English audio up to60 seconds/20 MiB. Saves original inferred transcript, SRT, VTT and editable captions. Review text/timing; model errors and omissions are possible.' },
     { id: 'audio.stems', label: 'Separate four stems locally', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { timeoutMs: '1..180000 ms (default 180000)' }, handler: stemsHandler, note: 'Requires explicitly installed pinned HTDemucs model. Up to15 seconds/16 MiB mono or stereo; four44.1kHz stereo PCM WAV outputs. CPU inference may exceed the180s deadline. Learned separation has artifacts and leakage.' },
+    { id: 'audio.key', label: 'Estimate key (experimental)', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { maxSeconds: '6..60 seconds from start (default60)', budgetMs: '1..10000ms analysis budget (default10000)' }, handler: keyHandler, note: 'Original tonal-template heuristic for Western major/minor material. Saves JSON with ranked candidates, relative-key ambiguity and coverage. May decline weak evidence. Scores are not probabilities; review by listening.' },
     { id: 'audio.tempo', label: 'Estimate tempo (experimental)', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { maxSeconds: '8..120 seconds from start (default 60)', budgetMs: '1..30000 ms analysis budget (default 10000)' }, handler: tempoHandler, note: 'Local energy/onset estimate, 50–200 BPM. Saves JSON with source coverage and competing periods; no key estimate or calibrated confidence.' },
     { id: 'audio.trim', label: 'Trim to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { start: 'seconds >=0', end: 'seconds >start' }, handler: audioHandler, note: 'Browser-decodable audio, up to ten minutes. Output is 16-bit PCM WAV at the decoder sample rate.' },
     { id: 'audio.normalize', label: 'Peak normalize to WAV', acceptedTypes: audioTypes, outputPolicy: 'derived-assets', parameterSchema: { peakDb: '-24..0 dBFS (default -1)' }, handler: audioHandler, note: 'Peak normalization, not loudness mastering. Browser-decodable audio, up to ten minutes; 16-bit PCM WAV output.' },
@@ -320,6 +332,7 @@
     'audio.trim': { required: ['start', 'end'], properties: { start: number(0, 600), end: number(0, 600) } },
     'audio.normalize': { properties: { peakDb: { ...number(-24, 0), default: -1 } } },
     'audio.wav': { properties: {} },
+    'audio.key': { properties: { maxSeconds: { ...number(6, 60), default: 60 }, budgetMs: { ...number(1, 10000), default: 10000 } } },
     'audio.transcribe': { properties: { timeoutMs: { ...number(1, 180000), default: 180000 } } },
     'audio.stems': { properties: { timeoutMs: { ...number(1, 180000), default: 180000 } } },
     'audio.tempo': { properties: { maxSeconds: { ...number(8, 120), default: 60 }, budgetMs: { ...number(1, 30000), default: 10000 } } },
@@ -350,6 +363,7 @@
   function available(definition) {
     if (definition.id.startsWith('text.')) return true;
     if (definition.id === 'rack.render') return !!(globalThis.HoleRack && (globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext));
+    if (definition.id === 'audio.key' && !(globalThis.HoleAudioKey && globalThis.Worker)) return false;
     if (definition.id === 'audio.transcribe' && !(globalThis.HoleTranscription && globalThis.HoleTranscriptionCues && globalThis.Worker)) return false;
     if (definition.id === 'audio.stems' && !(globalThis.HoleStems && globalThis.HoleStemModel && globalThis.Worker)) return false;
     if (definition.id === 'image.cutout') return !!(globalThis.HoleCutout?.run && globalThis.Worker);
@@ -360,7 +374,7 @@
   function describe(definition) {
     if (!definition) return null;
     const { handler, ...publicDefinition } = definition;
-    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id === 'image.cutout' ? 'local.modnet-worker' : definition.id === 'video.trim' ? 'browser.webcodecs-worker' : definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'audio.transcribe' ? ['text', 'document', 'document', 'document'] : definition.id === 'audio.stems' ? ['audio', 'audio', 'audio', 'audio'] : definition.id === 'image.cutout' ? ['image', 'image'] : definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id === 'video.trim' ? 'video' : definition.id.startsWith('text.') ? 'text' : definition.id === 'audio.tempo' ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
+    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id === 'image.cutout' ? 'local.modnet-worker' : definition.id === 'video.trim' ? 'browser.webcodecs-worker' : definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'audio.transcribe' ? ['text', 'document', 'document', 'document'] : definition.id === 'audio.stems' ? ['audio', 'audio', 'audio', 'audio'] : definition.id === 'image.cutout' ? ['image', 'image'] : definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id === 'video.trim' ? 'video' : definition.id.startsWith('text.') ? 'text' : ['audio.tempo', 'audio.key'].includes(definition.id) ? 'document' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
   }
   async function resolveRequest(id, request) {
     const definition = registry.get(id);
@@ -426,6 +440,9 @@
       result.warnings.push(resolved.definition.note);
     } else if (id === 'audio.stems') {
       result.outputs = ['drums', 'bass', 'other', 'vocals'].map(role => ({ role, name: outputName(input, role, 'wav', resolved.project), mime: 'audio/wav', encoding: '44.1kHz stereo16-bit PCM WAV' }));
+      result.warnings.push(resolved.definition.note);
+    } else if (id === 'audio.key') {
+      result.outputs = [{ name: outputName(input, 'key-estimate', 'json', resolved.project), mime: 'application/json', encoding: 'UTF-8 JSON' }];
       result.warnings.push(resolved.definition.note);
     } else if (id === 'audio.tempo') {
       result.outputs = [{ name: outputName(input, 'tempo-estimate', 'json', resolved.project), mime: 'application/json', encoding: 'UTF-8 JSON' }];

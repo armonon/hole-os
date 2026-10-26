@@ -65,3 +65,15 @@ All workers share this checkout. They do not commit, push, rebuild public output
 These are still gates, not excuses to skip independent implementation: real human research participants, physical touch/audio/mic/assistive-technology hardware qualification, independent security review and key-lifecycle design before Vault credential storage, real authorized NOW/Circle providers/source discovery, and production Node service hosting/TLS/operations. No paid services, public customer data, invented outcomes or implied browser native AU/VST support.
 
 Fifth release boundary:456/456 tests; optional-model/caption/Atlas browser checks pass. Next key/Relay source is separate and must not leak into this generated build.
+
+## Fifth delivered; sixth in progress
+
+`fe528a4` pushed:456 passing tests; review https://6adfb9fa6416f81d7f1bc297--hole-os-armonon.netlify.app has364/364 exact files and verified speech/stem worker CSP (`docs/evidence/review-fe528a4.json`). PR1 updated. Production remains unchanged.
+
+Sixth work: original experimental key Action (real WAV/UI/cancel proof), on-demand bounded text/history/draft search (real pinned/current/draft navigation proof), explicit mapped material-position Relay exchange (two profiles/conflict/apply/undo proof; independent review found mutable-plan metadata issue, fix/regression pending). Root owns search/shell/docs; Flow key files frozen; Relay owns relay-layout and one relay.js mount. Latest broad run471tests passes before reviewer regression. Do not call this release settled until fix and final build pass.
+
+Seventh preparation: Luma worker inspecting retained owned Animate source at a189bc074f0c1c306d1029414d0c73d45f0a1b52 in /tmp/hole-animate-source; selected engine bundling/native cel editor/ScenePilot transfer approved, generated source temporarily held outside checkout through sixth release. No licensing assertion beyond source ownership; no third-party codecs copied. Keep native .animate and original route; actual frame/image .cut transfer must prove real compositor semantics and atomic lineage.
+
+Sixth validation update:472/472 tests; latest generated build includes key, search, Relay layout. Search actualbrowser passes on Chrome156.0.8078.48. Relay mutable-plan finding fixed by rebuilding metadata from fresh revision-checked Core,5 focused tests pass; final integrated browser rerun pending worker confirmation. Flow now researching bounded WebLab script execution (proposal only); Animate generation remains outside checkout until sixth commit. Existing public output must stay sixth-only.
+
+Sixth settled:473/473 tests and serial build pass. Key/search actualbrowser pass; sealed Relay review plan six regressions and actual integrated shell plus two-profile HTTP conflict/undo journey pass. Harness uses permitted free loopback8787; shell CSP unchanged. Ready coherent push, then allow Animate and QuickJS worker files into next build.

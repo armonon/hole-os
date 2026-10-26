@@ -236,6 +236,7 @@
             })));
           }
           detail.append(button('Send queued changes', 'refresh-cw', run(async () => { const sent = await connection.flush(remoteId); report(`${sent.results.filter(item => item.status === 'committed').length} changes acknowledged. Conflicts stay in the local queue.`); await showRemote(); })));
+          await globalThis.HoleRelayLayouts?.mount({ client: connection, ctx, host: detail, projectId: remoteId, snapshot, refresh: showRemote });
           const recordSelect = el('select', 'hc-input'); recordSelect.setAttribute('aria-label', 'Selected private record to sync');
           const choices = [];
           const actualPreferences = window.HoleWelcome?.preferences;
