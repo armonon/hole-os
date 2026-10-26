@@ -96,11 +96,13 @@
     function prepareSandbox(options) {
       const frame = options.frame;
       assert(frame && frame.contentWindow && frame.sandbox && frame.sandbox.contains('allow-scripts') && frame.sandbox.length === 1, 'UNSAFE_SANDBOX', 'Generated tools require sandbox="allow-scripts" only.');
-      assert(frame.hasAttribute('srcdoc'), 'UNSAFE_SANDBOX', 'Use a host-created srcdoc sandbox for this transport.');
+      assert(frame.hasAttribute('srcdoc') || typeof options.render === 'function', 'UNSAFE_SANDBOX', 'Use a host-created srcdoc sandbox for this transport.');
       const hostOrigin = originOf(host?.location?.origin);
       const session = makeSession(options, 'sandbox-port');
       Object.assign(session, { origin: 'null', source: frame.contentWindow });
-      return { ...describe(session), bootstrap: { channel: CHANNEL, version: VERSION, sessionId: session.id, nonce: session.nonce, hostOrigin } };
+      const bootstrap = { channel: CHANNEL, version: VERSION, sessionId: session.id, nonce: session.nonce, hostOrigin };
+      if (options.render) frame.srcdoc = options.render(bootstrap);
+      return { ...describe(session), bootstrap };
     }
     function envelope(session, data) {
       fields(data, ['channel', 'version', 'type', 'sessionId', 'nonce', 'grantId', 'requestId', 'operation', 'payload']);
@@ -114,7 +116,7 @@
         case 'resource.derive': fields(payload, ['assetId', 'versionId', 'outputs', 'operation', 'parameters'], ['assetId', 'versionId', 'outputs', 'operation']); break;
         case 'project.kit': fields(payload, ['projectId']); break;
         case 'state.read': fields(payload, []); break;
-        case 'state.save': fields(payload, ['state', 'expectedRevision'], ['state']); break;
+        case 'state.save': fields(payload, ['state', 'expectedRevision', 'recovery'], ['state']); break;
         case 'activity.report': fields(payload, ['jobId', 'label', 'state', 'progress', 'error'], ['jobId', 'label', 'state']); break;
         case 'request.cancel': fields(payload, ['requestId']); break;
       }
@@ -127,6 +129,7 @@
     async function fingerprint(operation, payload) {
       const normalized = { ...payload };
       const hash = async value => Array.from(new Uint8Array(await digest(await binary(value).arrayBuffer())), byte => byte.toString(16).padStart(2, '0')).join('');
+      if (Object.hasOwn(normalized, 'recovery')) normalized.recovery = normalized.recovery === null ? null : { hash: await hash(normalized.recovery), mime: normalized.recovery.type || '' };
       if (Object.hasOwn(normalized, 'blob')) normalized.blob = { hash: await hash(normalized.blob), mime: normalized.blob.type || '' };
       if (Object.hasOwn(normalized, 'outputs')) {
         assert(Array.isArray(normalized.outputs) && normalized.outputs.length >= 1 && normalized.outputs.length <= 8, 'INVALID_MESSAGE', 'Derive between one and eight files.');
@@ -198,16 +201,18 @@
       }
       if (operation === 'state.save') {
         const state = metadata(payload.state);
+        // JSON-safe native recovery survives Core backup/export, unlike a Blob in a record.
+        const recovery = payload.recovery == null ? null : { mime: binary(payload.recovery).type, hex: Array.from(new Uint8Array(await binary(payload.recovery).arrayBuffer()), byte => byte.toString(16).padStart(2, '0')).join('') };
         if (payload.expectedRevision !== undefined) assert(Number.isSafeInteger(payload.expectedRevision) && payload.expectedRevision > 0, 'INVALID_MESSAGE', 'Invalid state revision.');
         check(); work.committing = true;
-        const result = await db.put('settings', { id: `bridge-state:${session.instanceId}`, state, projectId: session.projectId, inputs: [...session.resources.values()].map(resource => ({ assetId: resource.assetId, versionId: resource.initialVersionId })) }, payload.expectedRevision !== undefined ? { expectedRevision: payload.expectedRevision } : {});
+        const result = await db.put('settings', { id: `bridge-state:${session.instanceId}`, state, recovery, projectId: session.projectId, inputs: [...session.resources.values()].map(resource => ({ assetId: resource.assetId, versionId: [...resource.versions].at(-1) })) }, payload.expectedRevision !== undefined ? { expectedRevision: payload.expectedRevision } : {});
         return { revision: result.revision };
       }
       if (operation === 'state.read') {
         const result = await db.get('settings', `bridge-state:${session.instanceId}`); check();
         assert(!result || result.projectId === session.projectId, 'STATE_CONTEXT_CONFLICT', 'This instance checkpoint belongs to another project.');
         assert(!result || (result.inputs || []).every(input => session.resources.get(input.assetId)?.versions.has(input.versionId)), 'STATE_CONTEXT_CONFLICT', 'Restore this checkpoint with its original authorized resources.');
-        return result ? { state: metadata(result.state), revision: result.revision, inputs: result.inputs } : null;
+        return result ? { state: metadata(result.state), recovery: result.recovery ? new Blob([Uint8Array.from(result.recovery.hex.match(/../g) || [], pair => parseInt(pair, 16))], { type: result.recovery.mime }) : null, revision: result.revision, inputs: result.inputs } : null;
       }
       if (operation === 'activity.report') {
         assert(identifier(payload.jobId) && typeof payload.label === 'string' && payload.label.length > 0 && payload.label.length <= 160 && ['running', 'failed', 'cancelled'].includes(payload.state), 'INVALID_MESSAGE', 'Report an actual running, failed, or cancelled external job. Save operations report committed completion.');

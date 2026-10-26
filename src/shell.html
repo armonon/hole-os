@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#151820">
   <meta name="description" content="Your personal browser workspace. A fluid desktop, familiar apps, and a little room for your ideas.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://localhost:8787; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Hole OS</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/assets/standalone.css">
@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="/assets/welcome.css">
   <link rel="stylesheet" href="/assets/browser.css">
   <link rel="stylesheet" href="/assets/continuity.css">
+  <link rel="stylesheet" href="/assets/flow-authoring.css">
+  <link rel="stylesheet" href="/assets/optional-memory.css">
   <link rel="stylesheet" href="/assets/universe.css">
   <link rel="stylesheet" href="/assets/everyday.css">
   <link rel="stylesheet" href="/assets/extensions.css">
@@ -39,6 +41,7 @@
   <script src="/assets/welcome.js"></script>
   <script src="/assets/actions-codecs.js"></script>
   <script src="/assets/actions.js"></script>
+  <script src="/assets/flow-authoring.js"></script>
   <script src="/assets/runtime.js"></script>
   <script src="/assets/bridge.js"></script>
   <script src="/assets/relay.js"></script>
@@ -50,6 +53,9 @@
   <script src="/assets/pdf-tools.js"></script>
   <script src="/assets/extensions-model.js"></script>
   <script src="/assets/extensions.js"></script>
+  <script src="/assets/optional-memory.js"></script>
+  <script src="/assets/continuity-model.js"></script>
+  <script src="/assets/luma.js"></script>
   <script src="/assets/continuity.js"></script>
   <script src="/assets/offline.js"></script>
   <noscript>This workspace needs JavaScript enabled to open apps and save your changes.</noscript>

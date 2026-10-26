@@ -108,3 +108,20 @@ test('Paperwork drafts recover saved edits and keep a competing tab from overwri
   assert.equal(recovered.recovered, true); assert.equal(recovered.value.cells[0][0], '3');
   await recovered.clear(); assert.equal(await reopened.get('settings', 'paper-table:one'), null); reopened.close();
 });
+
+test('Day deletion is recoverable across reopen and rejects stale deletion or restoration', async () => {
+  const db = new IDBFactory(), core = HoleCoreFactory.create({ indexedDB: db, localStorage: null, broadcast: false });
+  const removed = [];
+  for (const type of ['events', 'tasks', 'contacts']) {
+    const original = await core.put(type, { id: type + ':one', name: type, notes: 'Retain details' });
+    const deleted = await M.setDayDeleted(core, type, original, true); removed.push([type, deleted]);
+    await assert.rejects(M.setDayDeleted(core, type, original, false), { code: 'CONFLICT' });
+  }
+  core.close(); const reopened = HoleCoreFactory.create({ indexedDB: db, localStorage: null, broadcast: false });
+  for (const [type, deleted] of removed) {
+    assert.equal((await reopened.get(type, deleted.id)).deleted, true);
+    const restored = await M.setDayDeleted(reopened, type, deleted, false); assert.equal(restored.notes, 'Retain details'); assert.equal(restored.deleted, false);
+  }
+  const exported = JSON.parse(M.dayExport({ contacts: await reopened.list('contacts') }, 123)); assert.equal(exported.contacts[0].notes, 'Retain details'); assert.equal(exported.exportedAt, 123);
+  reopened.close();
+});

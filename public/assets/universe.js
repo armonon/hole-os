@@ -152,7 +152,7 @@
       if (description.textContent !== instruction) description.textContent = instruction;
       if (list) {
         world.style.transform = 'none';
-        for (const node of nodes) { node.holder.hidden = false; node.holder.style.cssText = ''; }
+        for (const node of nodes) { if (!node.holder.isConnected) grid.append(node.holder); node.holder.hidden = false; node.holder.style.cssText = ''; node.card.holeLoadPreview?.(); }
         const label = `${nodes.length} materials · shared files · list view`; if (state.textContent !== label) state.textContent = label; return;
       }
       world.style.transform = `translateZ(${-view.distance}px) rotateX(${view.pitch}deg) rotateY(${view.yaw}deg) translate3d(${-view.x}px,${-view.y}px,${-view.depth}px)`;
@@ -161,7 +161,8 @@
       const rendered = new Set(ordered.filter(item => !item.projection.behind && Math.abs(item.projection.x) < size.width / 2 + 250 && Math.abs(item.projection.y) < size.height / 2 + 250).slice(0, 30).map(item => item.node));
       for (const { node, projection } of ordered) {
         const hidden = !rendered.has(node); if (node.holder.hidden !== hidden) node.holder.hidden = hidden;
-        if (hidden) continue;
+        if (hidden) { if (node.holder.isConnected) { node.holder.remove(); node.card.holeReleasePreview?.(); } continue; }
+        if (!node.holder.isConnected) grid.append(node.holder); node.card.holeLoadPreview?.();
         node.holder.style.transform = `translate3d(${node.position.x}px,${node.position.y}px,${node.position.depth * prefs.depth}px) rotateY(${-view.yaw}deg) rotateX(${-view.pitch}deg) rotateZ(${node.position.rotation}deg) scale(${node.position.scale})`;
         node.holder.style.setProperty('--hu-brightness', String(clamp(1 - Math.max(0, -projection.depth) / 6000 * prefs.lighting, .8, 1)));
         node.holder.dataset.selected = String(node === chosen);
@@ -278,6 +279,7 @@
       stopAmbient();
       // Preserve a last camera without touching canonical material positions.
       saveView().catch(context.fail);
+      for (const card of cards) card.holeReleasePreview?.();
       grid.replaceChildren(...cards); grid.className = originalClass; if (originalStyle == null) grid.removeAttribute('style'); else grid.setAttribute('style', originalStyle);
       if (root.isConnected) root.before(grid); root.remove(); mounted.delete(grid); live.delete(cleanup);
     }

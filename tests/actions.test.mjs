@@ -336,3 +336,111 @@ test('audio extraction rejects an unsupported video codec with no fabricated res
   assert.equal(env.api.get('video.audio').outputSchema.contents[0], 'audio');
   env.store.close();
 });
+
+test('audio artwork Release Pack ZIP contains real image dimensions and unchanged pinned audio with both parents after reopen', async () => {
+  const { createCanvas, loadImage } = await import('@napi-rs/canvas');
+  const env = await realEnvironment();
+  env.context.createImageBitmap = async blob => loadImage(Buffer.from(await blob.arrayBuffer()));
+  env.context.OffscreenCanvas = class {
+    constructor(width, height) { this.canvas = createCanvas(width, height); }
+    getContext() { return this.canvas.getContext('2d'); }
+    async convertToBlob({ type }) { return new Blob([await this.canvas.encode(type === 'image/webp' ? 'webp' : 'png')], { type }); }
+  };
+  const canvas = createCanvas(3000, 3000); canvas.getContext('2d').fillRect(0, 0, 3000, 3000);
+  const artwork = await env.store.importAsset({ name: 'art.png', blob: new Blob([await canvas.encode('png')], { type: 'image/png' }), projectId: env.project.id });
+  const audioBytes = new Uint8Array(await env.codec.wav([Float32Array.of(.1, -.5, .75)], 48000).arrayBuffer());
+  const audio = await env.store.importAsset({ name: 'original.wav', blob: new Blob([audioBytes], { type: 'audio/wav' }), projectId: env.project.id });
+  // Change the current head: explicit original selection must remain immutable.
+  await env.store.commitAsset({ assetId: audio.asset.id, baseVersionId: audio.version.id, blob: new Blob(['different recording'], { type: 'audio/wav' }), operation: 'test' });
+  const result = await env.api.releasePack({ assetId: artwork.asset.id, audioAssetId: audio.asset.id, audioVersionId: audio.version.id, projectId: env.project.id, focalPoint: { x: .5, y: .5 } });
+  const archive = result.outputs.at(-1), bytes = new Uint8Array(await (await env.store.readAsset(archive.asset.id)).blob.arrayBuffer());
+  const files = unzipStored(bytes, env.codec), manifest = JSON.parse(new TextDecoder().decode(files.find(item => item.name === 'manifest.json').data));
+  assert.equal(files.length, 5);
+  const original = files.find(item => item.name.startsWith('audio/'));
+  assert.match(original.name, /\.wav$/); assert.deepEqual(original.data, audioBytes);
+  assert.deepEqual(manifest.inputs, [{ assetId: artwork.asset.id, versionId: artwork.version.id }, { assetId: audio.asset.id, versionId: audio.version.id }]);
+  assert.equal(manifest.audio.preservedOriginal, true); assert.equal(manifest.audio.versionId, audio.version.id);
+  for (const file of manifest.files.filter(item => item.role !== 'original-audio')) {
+    const image = await loadImage(Buffer.from(files.find(item => item.name === file.name).data));
+    assert.deepEqual([image.width, image.height], [file.width, file.height]);
+  }
+  assert.deepEqual(plain(archive.version.parentVersionIds), [artwork.version.id, audio.version.id]);
+  assert.deepEqual(plain(archive.version.provenance.inputVersions), manifest.inputs);
+  env.store.close();
+  const reopened = globalThis.HoleCoreFactory.create({ indexedDB: env.indexedDB, localStorage: null, broadcast: false }); await reopened.ready;
+  assert.deepEqual(new Uint8Array(await (await reopened.readAsset(archive.asset.id, archive.version.id)).blob.arrayBuffer()), bytes);
+  assert.deepEqual(new Uint8Array(await (await reopened.readAsset(audio.asset.id, audio.version.id)).blob.arrayBuffer()), audioBytes);
+  reopened.close();
+});
+
+test('Flow uses derived artwork and pinned original audio together and reuses completed outputs on retry', async () => {
+  const env = await realEnvironment();
+  const audio = await env.store.importAsset({ name: 'track.mp3', blob: new Blob([Uint8Array.of(0, 1, 255, 7)], { type: 'audio/mpeg' }), projectId: env.project.id });
+  const recipe = await env.api.saveRecipe({ name: 'Audio release', steps: [{ id: 'web', actionId: 'image.convert', parameters: { format: 'png' } }, { id: 'pack', actionId: 'release.asset-pack', from: 'web', parameters: { focalPoint: { x: .5, y: .5 } } }] });
+  const run = await env.api.runFlow(recipe, { inputs: [{ assetId: env.source.asset.id }, { assetId: audio.asset.id }], projectId: env.project.id });
+  const job = await env.store.get('jobs', run.stepStates[1].jobId);
+  assert.deepEqual(job.inputs, [run.stepStates[0].outputs[0], { assetId: audio.asset.id, versionId: audio.version.id }]);
+  const count = (await env.store.list('versions')).length;
+  await env.api.retryFlow(run.id); assert.equal((await env.store.list('versions')).length, count);
+  const wrong = await env.store.importAsset({ name: 'notes.txt', blob: new Blob(['text'], { type: 'text/plain' }) });
+  await assert.rejects(env.api.preview('release.asset-pack', { inputs: [{ assetId: env.source.asset.id }, { assetId: wrong.asset.id }], parameters: { focalPoint: { x: .5, y: .5 } } }), cause => cause.code === 'UNSUPPORTED_INPUT');
+  env.store.close();
+});
+
+test('recipe rejects invalid deferred parameters before execution', async () => {
+  const env = environment();
+  await assert.rejects(env.api.saveRecipe({ name: 'Bad second step', steps: [{ id: 'first', actionId: 'image.convert', parameters: { format: 'png' } }, { id: 'second', actionId: 'image.resize', from: 'first', parameters: { width: -5 } }] }), /width/);
+});
+
+test('cancelling Flow between steps retains completed outputs and retry runs only remaining steps', async () => {
+  const env = await realEnvironment(); let cancelled;
+  env.context.CustomEvent = class { constructor(type, options) { this.type = type; this.detail = options.detail; } };
+  env.context.dispatchEvent = event => { if (event.type === 'hole:flow-progress' && event.detail.index === 0) cancelled = env.api.cancelFlow(event.detail.runId); };
+  const recipe = { name: 'Cancel then resume', steps: [{ id: 'first', actionId: 'image.convert', parameters: { format: 'png' } }, { id: 'second', actionId: 'image.resize', from: 'first', parameters: { width: 100 } }] };
+  let runId;
+  await assert.rejects(env.api.runFlow(recipe, { inputs: [{ assetId: env.source.asset.id }] }), cause => { runId = cause.runId; return cause.code === 'CANCELLED'; }); await cancelled;
+  const stopped = await env.store.get('runs', runId); assert.equal(stopped.status, 'cancelled'); assert.equal(stopped.stepStates[0].status, 'completed');
+  assert.equal((await env.store.list('versions')).length, 2);
+  env.context.dispatchEvent = () => {};
+  const resumed = await env.api.retryFlow(runId); assert.equal(resumed.status, 'completed'); assert.equal(resumed.outputs.length, 2);
+  assert.equal((await env.store.get('jobs', stopped.stepStates[0].jobId)).attempt, 1); assert.equal((await env.store.list('versions')).length, 3);
+  env.store.close();
+});
+
+test('Flow review rejects missing originals and incompatible previous outputs before starting jobs', async () => {
+  const env = await realEnvironment(), inputs = [{ assetId: env.source.asset.id }];
+  await assert.rejects(env.api.previewFlow({ name: 'Missing audio', steps: [{ id: 'audio', actionId: 'audio.wav', inputIndex: 1 }] }, { inputs }), cause => cause.code === 'MISSING_INPUT');
+  await assert.rejects(env.api.previewFlow({ name: 'Wrong type', steps: [{ id: 'image', actionId: 'image.convert', parameters: {} }, { id: 'audio', actionId: 'audio.wav', from: 'image' }] }, { inputs }), cause => cause.code === 'UNSUPPORTED_INPUT');
+  assert.equal((await env.store.list('jobs')).length, 0); env.store.close();
+});
+
+class FlowElement {
+  constructor(tag) { this.tagName = tag; this.children = []; this.textContent = ''; this.value = ''; this.attributes = {}; }
+  append(...nodes) { this.children.push(...nodes); if (this.tagName === 'select' && this.children.length === nodes.length && !this.value) this.value = nodes[0]?.value || ''; }
+  replaceChildren(...nodes) { this.children = nodes; }
+  setAttribute(name, value) { this.attributes[name] = value; }
+  addEventListener() {}
+  get nodes() { return [this, ...this.children.flatMap(child => child.nodes)]; }
+}
+test('mounted multi-step authoring pins review, executes, reopens results and hands exact references to Publish', async () => {
+  const env = await realEnvironment(), container = new FlowElement('main'), published = [];
+  env.context.document = { createElement: tag => new FlowElement(tag) };
+  vm.runInContext(await readFile(new URL('../src/flow-authoring.js', import.meta.url), 'utf8'), env.context);
+  const options = { inputs: [{ assetId: env.source.asset.id, versionId: env.source.version.id }], projectId: env.project.id, onPublish: ref => published.push(ref), recipe: { name: 'Two image steps', steps: [{ id: 'first', actionId: 'image.convert', parameters: { format: 'png' } }] } };
+  const mounted = await env.context.HoleFlowUI.mount(container, options);
+  const click = async text => { const control = container.nodes.find(item => item.tagName === 'button' && item.textContent === text); assert.ok(control, text); assert.notEqual(control.disabled, true); await control.onclick(); };
+  await click('Add step'); await click('Save recipe'); assert.equal((await env.store.list('recipes'))[0].steps.length, 2);
+  await click('Review Flow'); assert.ok(container.nodes.some(item => item.textContent === 'Review before running'));
+  await click('Run reviewed Flow');
+  const run = await env.store.get('runs', mounted.getRunId()); assert.equal(run.status, 'completed'); assert.equal(run.stepStates.length, 2);
+  await env.context.HoleFlowUI.mountRun(container, run.id, options); await click('Review in Publish'); assert.deepEqual(plain(published[0]), run.outputs[0]);
+  await click('Use in another Flow'); assert.ok(container.nodes.some(item => item.textContent === 'Make a Flow'));
+  env.store.close();
+});
+
+test('ZIP cancellation yields while computing CRC of larger original audio', async () => {
+  const env = environment(), controller = new AbortController();
+  const task = env.codec.zip([{ name: 'audio.wav', bytes: new Uint8Array(4 * 1048576) }], { signal: controller.signal });
+  setTimeout(() => controller.abort(), 0);
+  await assert.rejects(task, cause => cause.code === 'CANCELLED');
+});

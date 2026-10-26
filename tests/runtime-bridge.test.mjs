@@ -240,3 +240,19 @@ test('SDK completes exact-origin handshake and Luma retries ambiguous saves with
   await assert.rejects(adapter.saveBack(), { code: 'DOCUMENT_CHANGED' });
   client.dispose(); f.bridge.dispose();
 });
+
+test('native recovery checkpoints retain exact bytes as JSON-safe records and reject changed retry bytes', async () => {
+  const f = fixture(); await f.handshake();
+  const bytes = new Blob([new Uint8Array([0, 255, 128, 42])], { type: 'application/x-luma' });
+  const packet = f.request('state.save', { state: { dirty: true }, recovery: bytes }, 'recovery:1');
+  await f.bridge.receive(f.event(packet));
+  const stored = f.records.get('settings/bridge-state:instance:1');
+  assert.equal(stored.recovery.hex, '00ff802a');
+  assert.equal(JSON.parse(JSON.stringify(stored)).recovery.mime, 'application/x-luma');
+  await f.bridge.receive(f.event({ ...packet, payload: { ...packet.payload, recovery: new Blob(['changed']) } }));
+  assert.equal(f.outbound.at(-1).message.ok, false);
+  assert.equal(f.records.get('settings/bridge-state:instance:1').revision, 1);
+  await f.bridge.receive(f.event(f.request('state.save', { state: { dirty: false }, recovery: null, expectedRevision: 1 }, 'recovery:2')));
+  assert.equal(f.records.get('settings/bridge-state:instance:1').recovery, null);
+  f.bridge.dispose();
+});

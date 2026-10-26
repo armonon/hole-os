@@ -9,3 +9,4 @@
 .hx-hero { border-radius:24px; padding:28px; background:linear-gradient(135deg,#edf0e3,#e7dce9); color:#302b35; }
 .hx-hero h2 { font-size:28px; letter-spacing:-.04em; margin:0 0 12px; }.hx-hero p { max-width:60ch; line-height:1.6; }
 @media(max-width:720px) { .hx-workbench {grid-template-columns:minmax(0,1fr);} .hx-preview{min-height:280px;} .hx-editor{min-height:220px;} }
+.hx-lab-controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:16px 0}.hx-lab-controls .hc-label{flex:1 1 160px}.hx-lab-controls audio{max-width:100%;width:320px}.hx-lab-report{font-variant-numeric:tabular-nums;line-height:1.6;max-width:70ch}@media(max-width:600px){.hx-lab-controls{display:grid;grid-template-columns:minmax(0,1fr)}.hx-lab-controls audio{width:100%}}

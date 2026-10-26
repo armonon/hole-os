@@ -60,6 +60,7 @@
     }
     return Object.freeze({
       openGranted, saveBack,
+      restoreRecovery: async blob => { assertBound(); if (busy || pending) throw fail('SAVE_PENDING', 'Finish the pending operation before recovery.'); busy = true; try { await studio.importProject(blob, { restoreHistory: true }); binding.documentId = documentId(); } finally { busy = false; } },
       getBinding: () => binding ? { ...binding } : null,
       getPendingSave: () => pending ? { requestId: pending.requestId, assetId: pending.input.assetId, baseVersionId: pending.input.versionId } : null,
       readKit: async () => { const grant = await client.ready; return client.request('project.kit', { projectId: grant.projectId }); },

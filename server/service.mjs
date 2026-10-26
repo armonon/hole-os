@@ -60,7 +60,7 @@ function assetView(state, user, project, asset) {
 }
 function projectView(state, user, project) {
   const access = project.members[user.id];
-  return { id: project.id, name: project.name, revision: project.revision, role: access.role, ownerId: project.ownerId, members: Object.entries(project.members).map(([userId, value]) => ({ userId, role: value.role, name: state.users[userId]?.name || 'Member' })) };
+  return { id: project.id, name: project.name, revision: project.revision, role: access.role, ownerId: project.ownerId, members: Object.entries(project.members).map(([userId, value]) => ({ userId, role: value.role, name: state.users[userId]?.name || 'Member', ...(access.role === 'owner' || userId === user.id ? { resources: structuredClone(value.resources || []) } : {}) })) };
 }
 function recordVisible(record, user, project) { return record.projectId === project.id && (record.ownerId === user.id || record.visibility === 'shared'); }
 function recordView(state, user, project, record) { return { ...record, references: record.references.filter(ref => canVersion(state, user, project, ref.versionId)) }; }
@@ -127,6 +127,11 @@ function applyChange(state, user, projectId, change, now) {
     assert(allowed.project.id === projectId && allowed.asset.state === 'active', 404, 'NOT_FOUND', 'This active resource is not available.');
     assert(allowed.asset.headVersionId === input.baseVersionId, 409, 'CONFLICT', 'The resource has changed. Preserve your edit as a separate version or review the latest permitted version.');
     result = addVersion(state, user, allowed.asset, input, now, [input.baseVersionId]);
+  } else if (change.type === 'asset.metadata') {
+    fields(input, ['assetId', 'expectedRevision', 'name']);
+    const asset = state.assets[input.assetId];
+    assert(asset?.projectId === projectId && (project.ownerId === user.id || asset.createdBy === user.id) && asset.versionIds.some(id => canVersion(state, user, project, id)), 403, 'FORBIDDEN', 'Only an authorized resource creator or owner can rename this resource.');
+    revision(asset, input.expectedRevision); asset.name = name(input.name, 240); asset.revision++; result = { assetId: asset.id, revision: asset.revision, name: asset.name };
   } else if (change.type === 'asset.trash' || change.type === 'asset.restore') {
     fields(input, ['assetId', 'expectedRevision']);
     const asset = state.assets[input.assetId];
@@ -143,9 +148,12 @@ function applyChange(state, user, projectId, change, now) {
     } else assert(input.expectedRevision === undefined && change.type === 'record.put', 409, 'CONFLICT', 'This record has no matching revision.');
     if (change.type === 'record.delete') { current.deleted = true; current.revision++; result = { id: current.id, revision: current.revision, deleted: true }; }
     else {
-      assert(['note', 'task', 'event', 'scene', 'draft', 'preference'].includes(input.type), 400, 'INVALID', 'Unsupported durable record type.');
+      assert(['note', 'task', 'event', 'scene', 'draft', 'preference', 'workspace', 'memory'].includes(input.type), 400, 'INVALID', 'Unsupported durable record type.');
+      jsonData(input.value);
+      if (input.type === 'memory') assert(input.value?.permitted === true && input.value.syncAllowed === true && input.value.consent === 'explicit' && (!input.value.expiresAt || input.value.expiresAt > now), 400, 'MEMORY_PERMISSION', 'Memory requires explicit permission and unexpired retention.');
+      if (input.type === 'preference') assert(['theme', 'reducedMotion', 'language', 'fontScale'].includes(input.value?.key), 400, 'LOCAL_ONLY', 'This setting is not approved for synchronization.');
       const visibility = input.visibility || 'private';
-      assert(['private', 'shared'].includes(visibility) && (!['draft', 'preference'].includes(input.type) || visibility === 'private'), 400, 'INVALID', 'Drafts and preferences remain private.');
+      assert(['private', 'shared'].includes(visibility) && (!['draft', 'preference', 'workspace', 'memory'].includes(input.type) || visibility === 'private'), 400, 'INVALID', 'Drafts and preferences remain private.');
       assert(!current || current.ownerId === user.id || visibility === current.visibility, 403, 'FORBIDDEN', 'Only the record owner can change its audience.');
       const references = input.references || [];
       assert(Array.isArray(references) && references.length <= 100, 400, 'INVALID', 'Invalid record references.');
@@ -294,6 +302,11 @@ export async function createService({ directory, origins = ['http://127.0.0.1:51
       if (parts[0] === 'projects' && parts[1]) {
         const projectId = parts[1];
         if (parts.length === 2 && req.method === 'GET') { const { project } = member(current, user, projectId); return respond(res, 200, projectView(current, user, project)); }
+        if (parts[2] === 'publications' && parts.length === 3 && req.method === 'GET') {
+          owner(current, user, projectId);
+          const publications = ['worlds', 'guests'].flatMap(kind => Object.values(current[kind]).filter(item => item.projectId === projectId).map(item => ({ ...publicManifest(current, item), kind, revoked: item.revoked, ...(item.expiresAt ? { expiresAt: item.expiresAt, expired: item.expiresAt <= stamp } : {}) })));
+          return respond(res, 200, { publications });
+        }
         if (parts[2] === 'membership' && parts.length === 3 && req.method === 'DELETE') {
           await store.transact(state => { const actor = auth(state, secret, now()), { project, access } = member(state, actor, projectId); assert(access.role !== 'owner', 409, 'OWNER_REQUIRED', 'Transfer ownership before leaving this project.'); delete project.members[actor.id]; project.revision++; });
           return respond(res, 200, { left: true });

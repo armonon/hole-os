@@ -348,7 +348,13 @@
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) clock(); });
   setInterval(() => { if (!document.hidden && !welcome.hidden) clock(); }, 30000);
-  window.HoleWelcome = { open: openWelcome, close: closeWelcome, openControls, closeControls, openAbout, closeAbout, notify, get preferences() { return { ...prefs }; } };
+  function applyPreferences(value) {
+    const next = { ...prefs };
+    for (const key of ['quiet','focus','stories','startHere']) if (Object.hasOwn(value, key)) { if (typeof value[key] !== 'boolean') throw new Error('Invalid preference: '+key); next[key] = value[key]; }
+    if (Object.hasOwn(value,'theme')) { if (!['auto','light','dark'].includes(value.theme)) throw new Error('Invalid theme.'); next.theme = value.theme; }
+    localStorage.setItem(storageKey, JSON.stringify(next)); prefs = next; syncPrefs(); return { ...prefs };
+  }
+  window.HoleWelcome = { applyPreferences, open: openWelcome, close: closeWelcome, openControls, closeControls, openAbout, closeAbout, notify, get preferences() { return { ...prefs }; } };
   renderStory(); renderAppPreview(); updateLibraryShortcuts(); syncPrefs(); clock(); H.icons();
   if (prefs.startHere) requestAnimationFrame(openWelcome);
 })();

@@ -72,9 +72,17 @@
       if (!name || name.includes('\\') || name.startsWith('/') || name.split('/').some(part => !part || part === '.' || part === '..') || /[\x00-\x1f]/.test(name) || seen.has(name)) throw fail('Archive filenames must be unique, safe relative paths.');
       seen.add(name);
       const filename = encoder.encode(name);
+      if (entry.blob instanceof Blob && (entry.blob.size > 268435456 || total + entry.blob.size > 536870912)) throw fail('Package exceeds the 512 MiB browser packaging limit.', 'RESOURCE_LIMIT');
       const bytes = entry.blob instanceof Blob ? new Uint8Array(await entry.blob.arrayBuffer()) : entry.bytes instanceof Uint8Array ? entry.bytes : encoder.encode(String(entry.text ?? ''));
       if (filename.length > 65535 || bytes.length > 268435456 || (total += bytes.length) > 536870912) throw fail('Package exceeds the 512 MiB browser packaging limit.', 'RESOURCE_LIMIT');
-      const crc = crc32(bytes);
+      let accumulator = 0xffffffff;
+      for (let start = 0; start < bytes.length; start += 1048576) {
+        if (options.signal?.aborted) throw fail('Packaging cancelled.', 'CANCELLED');
+        const end = Math.min(bytes.length, start + 1048576);
+        for (let index = start; index < end; index++) accumulator = crcTable[(accumulator ^ bytes[index]) & 255] ^ (accumulator >>> 8);
+        if (end < bytes.length) await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      const crc = (accumulator ^ 0xffffffff) >>> 0;
       const local = new Uint8Array(30 + filename.length), ld = new DataView(local.buffer);
       ld.setUint32(0, 0x04034b50, true); ld.setUint16(4, 20, true); ld.setUint16(6, 0x800, true); // UTF-8, STORE.
       ld.setUint16(10, stamp.time, true); ld.setUint16(12, stamp.date, true); ld.setUint32(14, crc, true);
@@ -87,6 +95,7 @@
       options.onProgress?.(seen.size / Math.max(1, entries.length));
       await new Promise(resolve => setTimeout(resolve, 0));
     }
+    if (options.signal?.aborted) throw fail('Packaging cancelled.', 'CANCELLED');
     const directorySize = directory.reduce((sum, item) => sum + item.length, 0), end = new Uint8Array(22), ed = new DataView(end.buffer);
     ed.setUint32(0, 0x06054b50, true); ed.setUint16(8, entries.length, true); ed.setUint16(10, entries.length, true);
     ed.setUint32(12, directorySize, true); ed.setUint32(16, offset, true);

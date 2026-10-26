@@ -196,3 +196,75 @@ test('two Relay clients reconcile a durable offline queue and retain conflicting
   assert.equal(pending.change.data.value.text, 'Local work must survive');
   assert.equal((await reopened.pull(f.project.id)).records[0].value.text, 'Remote work');
 });
+
+test('selected adapters exclude local settings and require permitted memory; private records restore to same account only', async t => {
+  const f = await setup(t), model = globalThis.HoleRelayModel;
+  assert.throws(() => model.selectedRecord('preference', { id: 'relay:endpoint', value: 'private' }, { remoteId: 'p:1' }), { code: 'LOCAL_ONLY' });
+  assert.throws(() => model.selectedRecord('memory', { text: 'private' }, { remoteId: 'm:1' }), { code: 'MEMORY_PERMISSION' });
+  const changes = [
+    model.selectedRecord('preference', { id: 'theme', value: 'dark' }, { remoteId: 'p:1' }),
+    model.selectedRecord('workspace', { name: 'Studio', windows: [{ secret: true }] }, { remoteId: 'w:1' }),
+    model.selectedRecord('memory', { text: 'Remember selected context', syncAllowed: true, consent: 'explicit', provenance: { source: 'explicit selection' } }, { remoteId: 'm:1', permitMemory: true })
+  ].map((data, i) => ({ id: `adapter:${i}`, type: 'record.put', data }));
+  assert.deepEqual((await f.sync(f.owner, changes)).value.results.map(item => item.status), ['committed', 'committed', 'committed']);
+  await f.accept(f.editor, await f.invite(f.editor, 'editor', []));
+  assert.equal((await f.request(`/sync?projectId=${f.project.id}`, { token: f.editor.token })).value.records.length, 0);
+  const snapshot = (await f.request(`/sync?projectId=${f.project.id}`, { token: f.owner.token })).value;
+  assert.equal(snapshot.records.length, 3); assert.ok(!JSON.stringify(snapshot).includes('windows'));
+  const shared = await f.sync(f.owner, [{ id: 'memory:shared', type: 'record.put', data: { ...changes[2].data, visibility: 'shared', expectedRevision: 1 } }]);
+  assert.equal(shared.value.results[0].status, 'failed');
+});
+
+test('reviewed text, layout, permission, metadata and deletion conflicts retain originals and recheck revisions', async t => {
+  const f = await setup(t), disk = new Map(), client = globalThis.HoleRelayModel.createClient({ endpoint: f.address, deviceId: 'review:one', loadQueue: async id => structuredClone(disk.get(id)), saveQueue: async (id, data) => disk.set(id, structuredClone(data)) });
+  await client.signIn({ email: f.owner.user.email, password: 'a durable private password' });
+  for (const type of ['note', 'scene']) {
+    const data = { id: `review:${type}`, type, value: { text: 'Original', x: 1 }, visibility: 'private' };
+    await f.sync(f.owner, [{ id: `initial:${type}`, type: 'record.put', data }]);
+    await f.sync(f.owner, [{ id: `remote:${type}`, type: 'record.put', data: { ...data, value: { text: 'Remote', x: 2 }, expectedRevision: 1 } }]);
+    const id = `local:${type}`;
+    await client.queue(f.project.id, { id, type: 'record.put', data: { ...data, visibility: 'shared', value: { text: 'Local', x: 3 }, expectedRevision: 1 } });
+    assert.equal((await client.flush(f.project.id)).results[0].status, 'conflict');
+    const review = await client.review(f.project.id, id); assert.equal(review.current.value.text, 'Remote');
+    await client.resolve(f.project.id, id, { decision: 'replace', replacement: { id: `resolved:${type}`, type: 'record.put', data: { ...data, value: { text: 'Merged', x: 4 }, expectedRevision: review.current.revision } } });
+    assert.equal((await client.flush(f.project.id)).results[0].status, 'committed');
+    assert.equal((await client.pending(f.project.id)).find(item => item.change.id === id).change.data.value.text, 'Local');
+    await client.queue(f.project.id, { id: `delete:${type}`, type: 'record.delete', data: { id: data.id, expectedRevision: 1 } });
+    assert.equal((await client.flush(f.project.id)).results[0].status, 'conflict');
+    await client.resolve(f.project.id, `delete:${type}`, { decision: 'keep-remote' });
+  }
+  const asset = await f.add(f.owner, 'metadata');
+  await f.sync(f.owner, [{ id: 'rename:one', type: 'asset.metadata', data: { assetId: asset.assetId, name: 'new.txt', expectedRevision: 1 } }]);
+  assert.equal((await f.sync(f.owner, [{ id: 'rename:two', type: 'asset.metadata', data: { assetId: asset.assetId, name: 'stale.txt', expectedRevision: 1 } }])).value.results[0].status, 'conflict');
+  assert.equal((await f.sync(f.owner, [{ id: 'trash:stale', type: 'asset.trash', data: { assetId: asset.assetId, expectedRevision: 1 } }])).value.results[0].status, 'conflict');
+});
+
+test('owners manage publications without recovering guest secrets; transfer and leave enforce current roles', async t => {
+  const f = await setup(t), asset = await f.add(f.owner, 'selected');
+  const latest = (await f.request(`/projects/${f.project.id}`, { token: f.owner.token })).value;
+  const guest = (await f.request(`/projects/${f.project.id}/guests`, { method: 'POST', token: f.owner.token, body: { name: 'Guest preview', resources: [{ assetId: asset.assetId, versionIds: [asset.versionId] }], expectedRevision: latest.revision } })).value;
+  const list = await f.request(`/projects/${f.project.id}/publications`, { token: f.owner.token });
+  assert.equal(list.value.publications[0].id, guest.id); assert.ok(!JSON.stringify(list.value).includes(guest.guestToken));
+  await f.accept(f.editor, await f.invite(f.editor, 'editor', [{ assetId: asset.assetId, versionIds: [asset.versionId] }]));
+  assert.equal((await f.request(`/projects/${f.project.id}/publications`, { token: f.editor.token })).status, 403);
+  assert.equal((await f.request(`/projects/${f.project.id}/membership`, { method: 'DELETE', token: f.owner.token })).status, 409);
+  const current = (await f.request(`/projects/${f.project.id}`, { token: f.owner.token })).value;
+  const transferred = await f.request(`/projects/${f.project.id}/ownership`, { method: 'POST', token: f.owner.token, body: { userId: f.editor.user.id, expectedRevision: current.revision } });
+  assert.equal(transferred.value.role, 'editor');
+  assert.equal((await f.request(`/projects/${f.project.id}/guests/${guest.id}`, { method: 'DELETE', token: f.owner.token })).status, 403);
+  assert.equal((await f.request(`/projects/${f.project.id}/guests/${guest.id}`, { method: 'DELETE', token: f.editor.token })).status, 200);
+  assert.equal((await f.request(`/guest/${guest.guestToken}`)).status, 404);
+  assert.equal((await f.request(`/projects/${f.project.id}/membership`, { method: 'DELETE', token: f.owner.token })).status, 200);
+  assert.equal((await f.request(`/sync?projectId=${f.project.id}`, { token: f.owner.token })).status, 404);
+});
+
+test('local memory revocation after queueing prevents transfer and retains reviewable work', async t => {
+  const f = await setup(t), disk = new Map(); let permitted = true;
+  const client = HoleRelayModel.createClient({ endpoint: f.address, deviceId: 'memory:revocation', loadQueue: async id => structuredClone(disk.get(id)), saveQueue: async (id, value) => disk.set(id, structuredClone(value)), validateQueued: async () => { if (!permitted) throw Object.assign(new Error('Permission removed'), { code: 'MEMORY_PERMISSION' }); } });
+  await client.signIn({ email: f.owner.user.email, password: 'a durable private password' });
+  const data = HoleRelayModel.selectedRecord('memory', { text: 'Selected memory', consent: 'explicit', syncAllowed: true }, { remoteId: 'memory:one', permitMemory: true });
+  await client.queue(f.project.id, { id: 'memory:queued', type: 'record.put', data }, { kind: 'memory', localRecordId: 'local:memory' });
+  permitted = false; assert.equal((await client.flush(f.project.id)).results.length, 0);
+  assert.equal((await client.pending(f.project.id))[0].error.code, 'MEMORY_PERMISSION');
+  assert.equal((await client.pull(f.project.id)).records.length, 0);
+});

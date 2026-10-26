@@ -137,7 +137,14 @@
       async clear() { await queue; if (record) await core.deleteRecord('settings', id, { expectedRevision: record.revision }); record = null; }
     };
   }
-  const model = Object.freeze({ DOC_MIME, SHEET_MIME, FORM_MIME, wallTimeToInstant, validateEvent, calendarICS, documentHTML, validateSheet, evaluateSheet, sheetCSV, validateForm, formResponse, draftSession });
+  async function setDayDeleted(core, type, record, deleted) {
+    if (!['events', 'tasks', 'contacts'].includes(type) || !record?.id || !record.revision) throw new Error('Choose a saved Day record.');
+    return core.put(type, { ...record, deleted: !!deleted, deletedAt: deleted ? Date.now() : null }, { expectedRevision: record.revision });
+  }
+  function dayExport({ events = [], tasks = [], contacts = [] }, exportedAt = Date.now()) {
+    return JSON.stringify({ format: 'hole-day', version: 1, exportedAt, events, tasks, contacts }, null, 2);
+  }
+  const model = Object.freeze({ DOC_MIME, SHEET_MIME, FORM_MIME, wallTimeToInstant, validateEvent, calendarICS, documentHTML, validateSheet, evaluateSheet, sheetCSV, validateForm, formResponse, draftSession, setDayDeleted, dayExport });
   globalThis.HoleEverydayModel = model;
   if (typeof document === 'undefined') return;
 
@@ -173,31 +180,41 @@
   async function contactDialog(ctx, existing = null) {
     const d = ctx.modal(existing ? 'Edit contact' : 'Someone close at hand.', 'A local address book. This does not send messages or synchronize with a provider.');
     const name = ctx.input('Name', 'text', existing?.name || ''), email = ctx.input('Email', 'email', existing?.email || ''), phone = ctx.input('Phone', 'tel', existing?.phone || ''), notes = ctx.input('Notes', 'textarea', existing?.notes || ''), project = projectSelect(ctx, await ctx.C.list('projects'), existing?.projectId || ctx.navigation.projectId), feedback = ctx.el('p', 'hc-status');
+    feedback.setAttribute('role', 'status');
     d.append(name.wrap, email.wrap, phone.wrap, notes.wrap, project.wrap, feedback, ctx.button('Save contact', 'check', async () => { if (!name.input.value.trim() || email.input.value && !email.input.validity.valid) { feedback.textContent = 'Enter a name and a valid email, or leave email blank.'; return; } try { await ctx.put('contacts', { ...(existing || {}), id: existing?.id || uid(), name: name.input.value.trim(), email: email.input.value, phone: phone.input.value, notes: notes.input.value, projectId: project.select.value || null }); d.close(); await ctx.render(); } catch (e) { feedback.textContent = e.message; } }, 'hc-primary'), ctx.button('Cancel', 'x', () => d.close())); name.input.focus(); ctx.H.icons();
   }
   async function day(ctx) {
-    const [events, tasks, contacts, projects] = await Promise.all(['events', 'tasks', 'contacts', 'projects'].map(type => ctx.C.list(type)));
+    const [allEvents, allTasks, allContacts, projects] = await Promise.all(['events', 'tasks', 'contacts', 'projects'].map(type => ctx.C.list(type)));
+    const events = allEvents.filter(item => !item.deleted), tasks = allTasks.filter(item => !item.deleted), contacts = allContacts.filter(item => !item.deleted);
+    const changeDeleted = async (type, record, deleted) => { try { await setDayDeleted(ctx.C, type, record, deleted); await ctx.render(); } catch (error) { ctx.fail(error); } };
     ctx.title('DAY', 'Now, next, whenever.', 'Your plans and people, with room to breathe.', [ctx.button('Add event', 'calendar-plus', () => eventDialog(ctx), 'hc-primary'), ctx.button('Add task', 'plus', () => taskDialog(ctx))]);
     const agenda = ctx.section('On the calendar');
     for (const event of events.sort((a, b) => a.startAt - b.startAt)) {
-      const row = ctx.el('article', 'hc-note he-agenda-row'); const display = new Intl.DateTimeFormat([], { timeZone: event.timeZone, dateStyle: 'medium', timeStyle: 'short' });
-      const body = ctx.el('div'); body.append(ctx.el('strong', '', event.name), ctx.el('p', '', display.format(event.startAt) + ' — ' + display.format(event.endAt)), ctx.el('small', '', event.timeZone));
-      row.append(body, ctx.button('Edit ' + event.name, 'pencil', () => eventDialog(ctx, event))); if (event.projectId) row.append(ctx.button('Open project', 'folder', () => ctx.open('projects', { projectId: event.projectId, assetId: null }))); agenda.append(row);
+      const row = ctx.el('article', 'hc-note he-agenda-row'); let dates;
+      try { if (!Number.isFinite(event.startAt) || !Number.isFinite(event.endAt)) throw new Error('Invalid saved time'); const display = new Intl.DateTimeFormat([], { timeZone: event.timeZone, dateStyle: 'medium', timeStyle: 'short' }); dates = display.format(event.startAt) + ' — ' + display.format(event.endAt); } catch { dates = 'Saved time needs repair. Edit this event; the original record is retained.'; }
+      const body = ctx.el('div'); body.append(ctx.el('strong', '', event.name), ctx.el('p', '', dates), ctx.el('small', '', event.timeZone));
+      row.append(body, ctx.button('Edit ' + event.name, 'pencil', () => eventDialog(ctx, event)), ctx.button('Delete ' + event.name, 'trash-2', () => changeDeleted('events', event, true))); if (event.projectId) row.append(ctx.button('Open project', 'folder', () => ctx.open('projects', { projectId: event.projectId, assetId: null }))); agenda.append(row);
     }
     if (!events.length) agenda.append(ctx.empty('Nothing scheduled yet. Add an event in its own time zone.'));
-    agenda.append(ctx.button('Export calendar (.ics)', 'download', () => ctx.download(new Blob([calendarICS(events)], { type: 'text/calendar;charset=utf-8' }), 'Hole-Day.ics')));
+    agenda.append(ctx.button('Export calendar (.ics)', 'download', () => { try { ctx.download(new Blob([calendarICS(events)], { type: 'text/calendar;charset=utf-8' }), 'Hole-Day.ics'); } catch (error) { ctx.fail(error); } }));
     const checklist = ctx.section('Next steps');
     for (const task of tasks.sort((a, b) => Number(a.done) - Number(b.done) || (a.dueDate || 'z').localeCompare(b.dueDate || 'z'))) {
       const row = ctx.el('div', 'hc-note he-task-row'), check = ctx.el('input'); check.type = 'checkbox'; check.checked = task.done; check.setAttribute('aria-label', 'Complete ' + task.name);
       check.addEventListener('change', async () => { check.disabled = true; try { await ctx.put('tasks', { ...task, done: check.checked }); await ctx.render(); } catch (e) { check.checked = task.done; ctx.fail(e); } finally { check.disabled = false; } });
-      row.append(check, ctx.el('span', '', task.name + (task.dueDate ? ' · ' + task.dueDate : '')), ctx.button('Edit task', 'pencil', () => taskDialog(ctx, task))); const project = projects.find(p => p.id === task.projectId); if (project) row.append(ctx.button(project.name, 'folder', () => ctx.open('projects', { projectId: project.id, assetId: null }))); checklist.append(row);
+      row.append(check, ctx.el('span', '', task.name + (task.dueDate ? ' · ' + task.dueDate : '')), ctx.button('Edit task', 'pencil', () => taskDialog(ctx, task)), ctx.button('Delete task ' + task.name, 'trash-2', () => changeDeleted('tasks', task, true))); const project = projects.find(p => p.id === task.projectId); if (project) row.append(ctx.button(project.name, 'folder', () => ctx.open('projects', { projectId: project.id, assetId: null }))); checklist.append(row);
     }
     if (!tasks.length) checklist.append(ctx.empty('No tasks waiting.'));
     checklist.append(ctx.button('Export tasks', 'download', () => ctx.download(json({ format: 'hole-tasks', version: 1, tasks }, 'application/json'), 'Hole-tasks.json')));
     const people = ctx.section('People'); people.append(ctx.button('Add contact', 'user-plus', () => contactDialog(ctx)));
-    for (const person of contacts.sort((a, b) => a.name.localeCompare(b.name))) { const row = ctx.el('div', 'hc-note he-contact'); row.append(ctx.el('strong', '', person.name), ctx.el('span', '', [person.email, person.phone].filter(Boolean).join(' · ')), ctx.button('Edit contact', 'pencil', () => contactDialog(ctx, person))); people.append(row); }
+    for (const person of contacts.sort((a, b) => a.name.localeCompare(b.name))) { const row = ctx.el('div', 'hc-note he-contact'); row.append(ctx.el('strong', '', person.name), ctx.el('span', '', [person.email, person.phone].filter(Boolean).join(' · ')), ctx.button('Edit contact', 'pencil', () => contactDialog(ctx, person)), ctx.button('Delete contact ' + person.name, 'trash-2', () => changeDeleted('contacts', person, true))); people.append(row); }
     if (!contacts.length) people.append(ctx.empty('Keep local contact details beside the work they belong to.'));
     people.append(ctx.button('Export contacts', 'download', () => ctx.download(json({ format: 'hole-contacts', version: 1, contacts }, 'application/json'), 'Hole-contacts.json')));
+    const recovery = ctx.section('Recently deleted');
+    const removed = [['events', allEvents], ['tasks', allTasks], ['contacts', allContacts]].flatMap(([type, records]) => records.filter(record => record.deleted).map(record => ({ type, record })));
+    for (const { type, record } of removed) recovery.append(ctx.el('p', '', `${type}: ${record.name}`), ctx.button('Restore ' + record.name, 'undo-2', () => changeDeleted(type, record, false)));
+    if (!removed.length) recovery.append(ctx.empty('Deleted plans and people will stay here for recovery.'));
+    recovery.append(ctx.button('Export all Day data including recovery', 'download', () => { try { ctx.download(new Blob([dayExport({ events: allEvents, tasks: allTasks, contacts: allContacts })], { type: 'application/json' }), 'Hole-Day.json'); } catch (error) { ctx.fail(error); } }));
+
   }
   async function newDocument(ctx, existing = null) {
     const d = ctx.modal(existing ? 'Edit document' : 'A page for your thoughts.', 'Use headings, bold, italic, lists, and quotes. Save creates an immutable version. Export a formatted HTML document.');

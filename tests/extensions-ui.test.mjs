@@ -19,6 +19,9 @@ class Element {
   emit(name, event = {}) { for (const callback of this.listeners.get(name) || []) callback(event); }
   remove() { this.removed = true; }
   focus() {}
+  getContext() { return new Proxy({}, { get: (_, key) => () => {} }); }
+  pause() {}
+  removeAttribute(name) { delete this.attributes[name]; }
   get nodes() { return [this, ...this.children.flatMap(child => child.nodes || [])]; }
 }
 async function environment() {
@@ -90,4 +93,53 @@ test('a failed WebLab draft save rejects navigation and retains editor values fo
   env.hooks.saveDraft = async () => { throw new Error('Quota exceeded'); };
   await assert.rejects(env.api.beforeLeave(), /Quota exceeded/); assert.equal(area.value, 'unsaved but visible');
   delete env.hooks.saveDraft; await env.api.beforeLeave(); assert.equal(JSON.parse((await env.core.list('drafts'))[0].text).files['index.html'], 'unsaved but visible'); env.core.close();
+});
+
+test('legacy Lab experiment reopens, changes state and commits while preserving original samples', async () => {
+  const env = await environment();
+  const legacy = { schema:'hole.experiment/1', model:'nonlinear-pendulum', gravity:9.80665, state:{length:1,angle:.2,velocity:0}, samples:[[.032,.2,0]] };
+  const source = await env.core.importAsset({name:'Pendulum experiment.json',blob:new Blob([JSON.stringify(legacy)],{type:'application/json'})});
+  assert.equal(await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx),true);
+  await env.button('Step').action(); await env.button('Save version').action();
+  const saved=JSON.parse(await (await env.core.readAsset(source.asset.id)).blob.text());assert.equal(saved.samples.length,2);assert.equal(saved.time,.064);assert.ok(saved.result.smallAnglePeriod>2);
+  assert.equal(JSON.parse(await (await env.core.readAsset(source.asset.id,source.version.id)).blob.text()).samples.length,1);
+  await env.api.beforeLeave(); await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);
+  const length=env.main.nodes.find(n=>n.attributes?.['aria-label']==='Length (metres)');length.value='2';
+  await env.button('Reset experiment').action();await env.api.beforeLeave();
+  assert.equal(JSON.parse((await env.core.list('drafts'))[0].text).state.length,2);
+  await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);assert.equal(env.main.nodes.find(n=>n.attributes?.['aria-label']==='Length (metres)').value,'2');
+  await env.api.beforeLeave();env.core.close();
+});
+
+test('Lab signal edits persist parameters and actual computed results with no autoplay',async()=>{
+  const env=await environment();
+  const source=await env.core.importAsset({name:'Signal.json',blob:new Blob([JSON.stringify({schema:'hole.experiment/1',model:'signal-oscillator'})],{type:'application/json'})});
+  await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);
+  env.main.nodes.find(n=>n.attributes?.['aria-label']==='Frequency (Hz)').value='880';
+  await env.button('Apply parameters').action();await env.button('Save version').action();
+  const saved=JSON.parse(await (await env.core.readAsset(source.asset.id)).blob.text());assert.equal(saved.parameters.frequency,880);assert.equal(saved.result.frames,48000);assert.ok(saved.result.rms>0);
+  assert.equal(env.main.nodes.find(n=>n.tagName==='audio').autoplay,undefined);
+  await env.api.beforeLeave();env.core.close();
+});
+
+test('Lab generative visual edits survive reopen and failed persistence keeps editable state',async()=>{
+  const env=await environment();const source=await env.core.importAsset({name:'Visual.json',blob:new Blob([JSON.stringify({schema:'hole.experiment/1',model:'lissajous'})],{type:'application/json'})});
+  await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);env.main.nodes.find(n=>n.attributes?.['aria-label']==='Phase (degrees)').value='45';await env.button('Apply parameters').action();
+  env.hooks.saveDraft=async()=>{throw new Error('Storage full');};await assert.rejects(env.api.beforeLeave(),/Storage full/);
+  assert.equal(env.main.nodes.find(n=>n.attributes?.['aria-label']==='Phase (degrees)').value,'45');delete env.hooks.saveDraft;await env.api.beforeLeave();
+  await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);assert.equal(env.main.nodes.find(n=>n.attributes?.['aria-label']==='Phase (degrees)').value,'45');
+  await env.button('Save version').action();const saved=JSON.parse(await (await env.core.readAsset(source.asset.id)).blob.text());assert.equal(saved.result.pointCount,1000);assert.equal(saved.parameters.phase,45);
+  await env.api.beforeLeave();env.core.close();
+});
+
+test('Lab exports decoded PNG graphics and nonzero WAV with exact sample count',async()=>{
+  const {createCanvas,loadImage}=await import('@napi-rs/canvas');const env=await environment(),exports=[];
+  const el=env.ctx.el;env.ctx.el=(tag,...args)=>{const element=el(tag,...args);if(tag==='canvas'){const canvas=createCanvas(640,360);element.getContext=()=>canvas.getContext('2d');element.toBlob=callback=>canvas.encode('png').then(bytes=>callback(new Blob([bytes],{type:'image/png'})));}return element;};
+  env.ctx.download=(blob,name)=>exports.push({blob,name});vm.runInContext(await readFile(new URL('../src/actions-codecs.js',import.meta.url),'utf8'),env.scope);
+  const source=await env.core.importAsset({name:'Tone.json',blob:new Blob([JSON.stringify({schema:'hole.experiment/1',model:'signal-oscillator',parameters:{duration:.1,frequency:440}})],{type:'application/json'})});
+  await env.api.openAsset(await env.core.readAsset(source.asset.id),env.ctx);await env.button('Export signal WAV').action();await env.button('Export visual PNG').action();
+  const wav=exports.find(item=>item.name.endsWith('.wav')).blob,bytes=await wav.arrayBuffer(),view=new DataView(bytes);assert.equal(view.getUint32(24,true),48000);assert.equal(view.getUint32(40,true),4800*2);assert.ok(Array.from({length:4800},(_,i)=>view.getInt16(44+i*2,true)).some(sample=>sample>1000));
+  const png=await loadImage(Buffer.from(await exports.find(item=>item.name.endsWith('.png')).blob.arrayBuffer()));assert.equal(png.width,640);assert.equal(png.height,360);
+  const pixels=createCanvas(640,360),g=pixels.getContext('2d');g.drawImage(png,0,0);assert.ok(g.getImageData(0,0,640,360).data.some((channel,index)=>index%4===3&&channel>0));
+  await env.api.beforeLeave();env.core.close();
 });

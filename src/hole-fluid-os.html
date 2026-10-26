@@ -681,7 +681,7 @@
   function updateNotePreview(){root.querySelectorAll('.hf-note-preview').forEach(el=>{el.textContent=state.note.trim().split('\n').find(Boolean)||'Start a new thought.';});}
   function search(){if(!drawerOpen)openDrawer({focus:false});if(searchPanel.hidden)searchReturnFocus=document.activeElement;searchPanel.hidden=false;searchInput.value='';renderResults('');searchInput.focus();}
   function dismissSearch(returnFocus=true){const wasOpen=!searchPanel.hidden;searchPanel.hidden=true;if(wasOpen&&returnFocus){const target=searchReturnFocus?.isConnected&&root.contains(searchReturnFocus)&&!searchReturnFocus.closest('[hidden],[inert]')?searchReturnFocus:drawerOpen?root.querySelector('[data-search]'):drawerToggle;target.focus({preventScroll:true});}}
-  function renderResults(query){const results=apps.filter(a=>['local','external'].includes(window.HoleCapabilities?.get(a.name)?.status)&&a.name.toLowerCase().includes(query.toLowerCase()));const container=searchPanel.querySelector('.hf-search-results');container.innerHTML=results.length?results.map(a=>'<button class="cursor-interaction" data-launch="'+a.name+'" style="--result-color:'+a.color+'"><i data-lucide="'+a.icon+'" aria-hidden="true"></i><span>'+a.name+'</span></button>').join(''):'<p class="hf-caption">No apps found.</p>';icons();}
+  function renderResults(query){const results=apps.filter(a=>['local','external'].includes(window.HoleCapabilities?.get(a.name)?.status)&&a.name.toLowerCase().includes(query.toLowerCase()));const container=searchPanel.querySelector('.hf-search-results');container.innerHTML=results.length?results.map(a=>'<button class="cursor-interaction" data-launch="'+a.name+'" style="--result-color:'+a.color+'"><i data-lucide="'+a.icon+'" aria-hidden="true"></i><span>'+a.name+'</span></button>').join(''):'<p class="hf-caption">No apps found.</p>';if(query.trim()){const web=document.createElement('button');web.type='button';web.dataset.webSearch='true';web.textContent='Search web for '+query;container.append(web);}icons();}
   searchInput.addEventListener('input',e=>renderResults(e.target.value));
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button)return;
@@ -697,6 +697,7 @@
     if(button.hasAttribute('data-home')){if(drawerOpen)closeDrawer({restoreFocus:false});dismissSearch(false);windows.forEach(r=>{if(!r.el.hidden)minimize(r);});visitSpace('overview');deskHint();return;}
     if(button.dataset.layout){setLayout(button.dataset.layout);return;}
     if(button.dataset.zoom){(drawerOpen?drawerGestures:desktopGestures).zoom(button.dataset.zoom==='in'?1.2:1/1.2);hover=null;return;}
+    if(button.hasAttribute('data-web-search')){const query=searchInput.value.trim();dismissSearch(false);window.HoleBrowser?.open({query,projectId:window.HoleContinuity?.navigation?.projectId||null});return;}
     if(button.hasAttribute('data-search')){search();return;}
     if(button.hasAttribute('data-dismiss-search')){dismissSearch();return;}
     if(button.hasAttribute('data-play')){state.playing=!state.playing;musicUI();save();return;}

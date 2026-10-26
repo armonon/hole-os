@@ -147,7 +147,7 @@
     } finally { image.close?.(); }
   };
   const releaseHandler = async context => {
-    const { inputs: [input], parameters, signal, progress, project, job } = context;
+    const { inputs: [input, audio], parameters, signal, progress, project, job } = context;
     const output = format(parameters), image = await decodeImage(input.blob, signal);
     try {
       const crops = releaseSizes.map(size => ({ ...size, geometry: codecs.focalCrop(image.width, image.height, size.width, size.height, parameters.focalPoint) }));
@@ -160,12 +160,18 @@
         outputs.push({ name, blob, kind: 'image', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), role: item.role, width: item.width, height: item.height, crop: item.geometry } });
         entries.push({ name, blob }); files.push({ name, role: item.role, width: item.width, height: item.height, mime: blob.type, bytes: blob.size, crop: item.geometry });
       }
-      const manifest = { format: 'hole-release-pack', schemaVersion: 1, actionVersion: 1, createdAt: job.createdAt, projectId: context.projectId || null, projectName: project?.name || null, input: { assetId: input.asset.id, versionId: input.version.id, name: input.asset.name, mime: input.blob.type }, settings: { focalPoint: parameters.focalPoint, allowUpscale: parameters.allowUpscale === true, format: output.extension, quality: output.quality }, compression: 'ZIP STORE (packaging, no recompression)', files };
+      if (audio) {
+        const name = `audio/${codecs.safeName(audio.asset.name)}.${({ 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/ogg': 'ogg', 'audio/flac': 'flac', 'audio/webm': 'webm' })[audio.blob.type]}`;
+        entries.push({ name, blob: audio.blob });
+        files.push({ name, role: 'original-audio', mime: audio.blob.type, bytes: audio.blob.size, assetId: audio.asset.id, versionId: audio.version.id, preservedOriginal: true });
+      }
+      const inputVersions = context.inputs.map(item => ({ assetId: item.asset.id, versionId: item.version.id }));
+      const manifest = { inputs: inputVersions, audio: audio ? { assetId: audio.asset.id, versionId: audio.version.id, name: audio.asset.name, mime: audio.blob.type, bytes: audio.blob.size, preservedOriginal: true } : null, format: 'hole-release-pack', schemaVersion: 1, actionVersion: 1, createdAt: job.createdAt, projectId: context.projectId || null, projectName: project?.name || null, input: { assetId: input.asset.id, versionId: input.version.id, name: input.asset.name, mime: input.blob.type }, settings: { focalPoint: parameters.focalPoint, allowUpscale: parameters.allowUpscale === true, format: output.extension, quality: output.quality }, compression: 'ZIP STORE (packaging, no recompression)', files };
       const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
       entries.push({ name: 'manifest.json', blob: manifestBlob });
-      await progress(.75, 'Packaging images and manifest');
+      await progress(.75, audio ? 'Packaging artwork, original audio and manifest' : 'Packaging images and manifest');
       const archive = await codecs.zip(entries, { signal, timestamp: job.createdAt, onProgress: () => {} });
-      outputs.push({ name: outputName(input, 'release-pack', 'zip', project), blob: archive, kind: 'archive', operation: context.id, parentVersionIds: [input.version.id], projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), manifest } });
+      outputs.push({ name: outputName(input, 'release-pack', 'zip', project), blob: archive, kind: 'archive', operation: context.id, parentVersionIds: inputVersions.map(item => item.versionId), projectId: context.projectId, provenance: { ...provenance(input, context.id, parameters), inputVersions, manifest } });
       await progress(.95, 'Saving release collection');
       return outputs;
     } finally { image.close?.(); }
@@ -289,18 +295,19 @@
   function describe(definition) {
     if (!definition) return null;
     const { handler, ...publicDefinition } = definition;
-    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: 1 }, capabilityRequirements: [definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id.startsWith('text.') ? 'text' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
+    return copy({ ...publicDefinition, version: 1, kind: 'transform', cardinality: { min: 1, max: definition.id === 'release.asset-pack' ? 2 : 1 }, capabilityRequirements: [definition.id.startsWith('text.') ? 'workspace.text' : isAudioAction(definition.id) ? 'browser.audio-decode' : definition.id === 'video.thumbnail' ? 'browser.video-decode' : 'browser.canvas'], permissionScope: 'selected-immutable-inputs-and-output-project', outputSchema: { policy: definition.outputPolicy, contents: definition.id === 'release.asset-pack' ? ['image', 'image', 'image', 'archive'] : [definition.id.startsWith('text.') ? 'text' : isAudioAction(definition.id) ? 'audio' : 'image'] }, progress: true, cancellation: 'before-durable-commit', retry: 'explicit-idempotent', available: available(definition) });
   }
   async function resolveRequest(id, request) {
     const definition = registry.get(id);
     if (!definition) throw error('This action is not registered.', 'UNKNOWN_ACTION');
-    if (!Array.isArray(request.inputs) || request.inputs.length !== 1) throw error('Choose exactly one input file.');
+    if (!Array.isArray(request.inputs) || request.inputs.length < 1 || request.inputs.length > (id === 'release.asset-pack' ? 2 : 1)) throw error(id === 'release.asset-pack' ? 'Choose artwork and optionally one original audio file.' : 'Choose exactly one input file.');
     const store = await core(), inputs = [];
     for (const reference of request.inputs) {
       if (!reference || typeof reference.assetId !== 'string') throw error('Choose a saved input file.');
       const input = await store.readAsset(reference.assetId, reference.versionId);
       if (!input || input.asset.state === 'trashed') throw error('The selected file is unavailable or in Trash.', 'NOT_FOUND');
-      if (!definition.acceptedTypes.includes(input.blob.type || input.version.mime)) throw error('This action does not support the selected file type.', 'UNSUPPORTED_INPUT');
+      if (!(id === 'release.asset-pack' && inputs.length === 1 ? audioTypes : definition.acceptedTypes).includes(input.blob.type || input.version.mime)) throw error('This action does not support the selected file type.', 'UNSUPPORTED_INPUT');
+      if (id === 'release.asset-pack' && inputs.length === 1 && input.blob.size > 134217728) throw error('Release audio is limited to 128 MiB.', 'RESOURCE_LIMIT');
       inputs.push(input);
     }
     let project = null;
@@ -323,7 +330,7 @@
         result.outputs = items.map(item => ({ role: item.role, name: outputName(input, item.role, output.extension, resolved.project), width: item.geometry.outputWidth, height: item.geometry.outputHeight, mime: output.mime, geometry: item.geometry }));
         if (items.some(item => item.geometry.needsUpscale)) result.warnings.push('Some outputs need upscaling, which cannot add original detail. Explicit consent is required.');
         result.requiresUpscaleConsent = items.some(item => item.geometry.needsUpscale) && parameters.allowUpscale !== true;
-        if (id === 'release.asset-pack') result.outputs.push({ role: 'archive', name: outputName(input, 'release-pack', 'zip', resolved.project), mime: 'application/zip', contains: 'Three images and manifest.json' });
+        if (id === 'release.asset-pack') result.outputs.push({ role: 'archive', name: outputName(input, 'release-pack', 'zip', resolved.project), mime: 'application/zip', contains: resolved.inputs.length === 2 ? 'Three images, the unchanged original audio and manifest.json' : 'Three images and manifest.json' });
       } finally { image.close?.(); }
     } else if (id === 'video.thumbnail') {
       const frame = await videoFrame(input.blob, parameters.time ?? 0);
@@ -446,6 +453,8 @@
       if (!step || typeof step.id !== 'string' || !step.id || step.id.length > 80 || known.has(step.id) || !registry.has(step.actionId)) throw error('Every step needs a unique ID and a supported action.');
       if (step.from && step.from !== 'inputs' && !known.has(step.from)) throw error('A step can use the original input or an earlier step.');
       if (step.outputIndex != null && (!Number.isInteger(step.outputIndex) || step.outputIndex < 0 || step.outputIndex > 3)) throw error('Choose a valid previous output index.');
+      if (step.inputIndex != null && (!Number.isInteger(step.inputIndex) || step.inputIndex < 0 || step.inputIndex > 1)) throw error('Choose original input 0 or 1.');
+      validateParameters(registry.get(step.actionId).parameterSchema, step.parameters || {});
       known.add(step.id);
     }
     return recipe;
@@ -460,13 +469,23 @@
   }
   async function previewFlow(recipeOrId, request = {}) {
     const recipe = await recipeFor(recipeOrId), store = await core();
-    if (!Array.isArray(request.inputs) || request.inputs.length !== 1) throw error('Select one original input for this Flow.');
-    const input = await store.readAsset(request.inputs[0].assetId, request.inputs[0].versionId);
-    const boundInputs = [{ assetId: input.asset.id, versionId: input.version.id }];
+    if (!Array.isArray(request.inputs) || request.inputs.length < 1 || request.inputs.length > 2) throw error('Select one or two original inputs for this Flow.');
+    const originals = await Promise.all(request.inputs.map(ref => store.readAsset(ref.assetId, ref.versionId)));
+    const boundInputs = originals.map(item => ({ assetId: item.asset.id, versionId: item.version.id }));
     const steps = [];
     for (const step of recipe.steps) {
       const action = describe(registry.get(step.actionId));
-      steps.push({ ...copy(step), action, preview: !step.from || step.from === 'inputs' ? await preview(step.actionId, { inputs: boundInputs, parameters: step.parameters || {}, projectId: request.projectId }) : null, inputDescription: step.from && step.from !== 'inputs' ? `Output ${step.outputIndex ?? 0} from ${step.from}; concrete dimensions will be checked before this step.` : input.asset.name });
+      if ((!step.from || step.from === 'inputs') && !boundInputs[step.inputIndex || 0]) throw error(`Step ${step.id} needs an original input that was not selected.`, 'MISSING_INPUT');
+      if (step.actionId === 'release.asset-pack' && step.inputIndex === 1) throw error('Release Packs use artwork first and optional original audio second.');
+      if (step.from && step.from !== 'inputs') {
+        const earlier = steps.find(item => item.id === step.from), slot = step.outputIndex || 0;
+        const kind = earlier.action.outputSchema.contents[slot];
+        if (!kind) throw error(`Step ${step.id} selects an output that ${step.from} does not produce.`, 'MISSING_STEP_OUTPUT');
+        const expected = action.acceptedTypes;
+        const compatible = kind === 'image' ? expected.some(type => type.startsWith('image/')) : kind === 'audio' ? expected.some(type => type.startsWith('audio/')) : kind === 'text' ? expected.some(type => type.startsWith('text/')) : false;
+        if (!compatible) throw error(`Step ${step.id} cannot use the ${kind} output from ${step.from}.`, 'UNSUPPORTED_INPUT');
+      }
+      steps.push({ ...copy(step), action, preview: !step.from || step.from === 'inputs' ? await preview(step.actionId, { inputs: step.actionId === 'release.asset-pack' ? boundInputs : [boundInputs[step.inputIndex || 0]], parameters: step.parameters || {}, projectId: request.projectId }) : null, inputDescription: step.from && step.from !== 'inputs' ? `Output ${step.outputIndex ?? 0} from ${step.from}; concrete dimensions will be checked before this step.` : originals[step.inputIndex || 0].asset.name });
     }
     return { recipe, inputs: boundInputs, projectId: request.projectId || null, steps };
   }
@@ -495,11 +514,12 @@
           record = latest;
           const step = record.recipeSnapshot.steps[index], state = record.stepStates[index];
           if (['succeeded', 'completed'].includes(state.status)) continue;
-          let inputs = record.inputs;
+          let inputs = step.actionId === 'release.asset-pack' ? record.inputs : [record.inputs[step.inputIndex || 0]];
           if (step.from && step.from !== 'inputs') {
             const prior = record.stepStates.find(item => item.id === step.from), output = prior?.outputs?.[step.outputIndex ?? 0];
             if (!output?.assetId || !output?.versionId) throw error(`Step ${step.id} has no saved input from ${step.from}.`, 'MISSING_STEP_OUTPUT');
             inputs = [{ assetId: output.assetId, versionId: output.versionId }];
+            if (step.actionId === 'release.asset-pack' && record.inputs[1]) inputs.push(record.inputs[1]);
           }
           const stepStates = copy(record.stepStates); stepStates[index] = { ...state, status: 'running', error: null };
           record = await update('runs', runId, { stepStates });
@@ -524,6 +544,7 @@
         emit('hole:flow-progress', { runId, status: 'completed' }); return record;
       } catch (cause) {
         record = await update('runs', runId, { status: cause.code === 'CANCELLED' || controller.signal.aborted ? 'cancelled' : 'failed', error: { code: cause.code || 'FLOW_FAILED', message: cause.message } });
+        emit('hole:flow-progress', { runId, status: record.status });
         cause.runId = runId; throw cause;
       } finally { flows.delete(runId); }
     });
@@ -539,7 +560,7 @@
     return runFlow(record.recipeSnapshot, { runId, retry: true });
   }
   globalThis.HoleActions = Object.freeze({ list: () => defs.map(describe), get: id => describe(registry.get(id)), preview, run, cancel, retry, recover,
-    releasePack: ({ assetId, versionId, projectId, focalPoint, allowUpscale = false, format: encoding = 'png', quality, idempotencyKey }) => run('release.asset-pack', { inputs: [{ assetId, versionId }], projectId, parameters: { focalPoint, allowUpscale, format: encoding, ...(quality == null ? {} : { quality }) }, idempotencyKey }),
+    releasePack: ({ assetId, versionId, audioAssetId, audioVersionId, projectId, focalPoint, allowUpscale = false, format: encoding = 'png', quality, idempotencyKey }) => run('release.asset-pack', { inputs: [{ assetId, versionId }, ...(audioAssetId ? [{ assetId: audioAssetId, versionId: audioVersionId }] : [])], projectId, parameters: { focalPoint, allowUpscale, format: encoding, ...(quality == null ? {} : { quality }) }, idempotencyKey }),
     saveRecipe, listRecipes: async () => (await core()).list('recipes'), previewFlow, runFlow, cancelFlow, retryFlow,
     releaseSizes: copy(releaseSizes) });
 })();
