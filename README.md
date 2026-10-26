@@ -4,6 +4,8 @@
 
 This branch implements the 26 October overhaul against the existing plain HTML/CSS/JavaScript OS. It adds a shared file and project foundation, useful local applications, spatial presentations, and a real development collaboration service. It is a review build; the complete master program still has acceptance gates. See the [program ledger](docs/implementation/backlog.md), [contracts](docs/architecture/contracts.md), and [browser qualification](docs/evidence/release-qualification.md).
 
+To continue the remaining program, use the [autonomous completion prompt](docs/implementation/autonomous-completion.md).
+
 ## Open and develop
 
 - [Overhaul review build](https://6adfa58acfc5e0940a9e0685--hole-os-armonon.netlify.app/)
