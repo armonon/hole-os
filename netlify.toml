@@ -26,3 +26,8 @@
   for = "/assets/transcription-worker.js"
   [headers.values]
     Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/weblab-script-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"

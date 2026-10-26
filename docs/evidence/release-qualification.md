@@ -1,6 +1,16 @@
 # Current continuation qualification
 
-Latest pushed implementation: `fe528a4` (456 passing tests). Latest byte-verified review: [364-file review](https://6adfb9fa6416f81d7f1bc297--hole-os-armonon.netlify.app), receipt `review-fe528a4.json`, including strict speech/stem-worker CSP. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `be71f56` (473 passing tests). Latest byte-verified review: [368-file review](https://6adfbc47c36db762a5536220--hole-os-armonon.netlify.app), receipt `review-be71f56.json`. Production remains unchanged; the master brief is not complete.
+
+## Seventh increment
+
+489 tests pass with the settled serial build. Retained Animate now supplies native editable cels/layers/fill/onion skins, real PNG/sprite atlas and bounded atomic frame-sequence cuts. Actual shell creation, native save/reopen, explicit PNG grants into ScenePilot and output pixels/timing pass. Full original animation tools/codecs remain available on the retained route; this is bounded consolidation, not full parity.
+
+Studio open now persists runtime identity and offers closed native recovery explicitly. Actual older-draft/newer-head conflict testing preserves both; arrangement restoration remains content-safe. Two simultaneous Luma/Glyph dirty instances survive all four project views without changing identity or committed originals. See `studio-view-recovery.md`.
+
+WebLab's optional QuickJS console executes in a disposable worker with no host capabilities. Actual infinite-loop deadline/cancel tests keep host heartbeats responsive; real built-app source/save/draft/navigation checks pass. Browser HTML preview now requires an explicit click, so reopening a looping authored project does not execute it automatically. The console has no DOM and is not general browser compatibility; regular preview remains cooperatively controlled. Exact runtime/license/hash and resource-limit scope are recorded in `weblab-bounded-script.md`.
+
+Momentous object packages create native editable shape/label/color assets with optional bounded counter state, explicit project placement, provenance and immutable versions. Actual generated-shell/profile-reopen/export/update/undo/package-rollback checks pass. Placement is project material; custom 3D objects and arbitrary executable grants remain out of this bounded path.
 
 ## Sixth increment
 

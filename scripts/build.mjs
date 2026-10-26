@@ -17,7 +17,7 @@ export async function build() {
   if (/<!doctype\s|<\s*(html|head|body)(?:\s|>)/i.test(fragment)) throw new Error('Expected an HTML fragment in src/hole-fluid-os.html.');
   if (/<iframe\b/i.test(shell + fragment)) throw new Error('Standalone output must not contain an iframe.');
   await mkdir(path.join(publicRoot, 'assets'), { recursive: true });
-  for (const name of ['bridge-client.js', 'luma-adapter.js', 'glyph-adapter.js', 'form-adapter.js', 'scenepilot-adapter.js', 'stemdeck-adapter.js']) await copyFile(path.join(projectRoot, 'sdk', name), path.join(publicRoot, 'assets', name));
+  for (const name of ['bridge-client.js', 'luma-adapter.js', 'glyph-adapter.js', 'form-adapter.js', 'scenepilot-adapter.js', 'stemdeck-adapter.js', 'animate-adapter.js']) await copyFile(path.join(projectRoot, 'sdk', name), path.join(publicRoot, 'assets', name));
   // Mirror the source vendor tree so removed engines cannot linger in offline builds.
   await rm(path.join(publicRoot, 'assets', 'vendor'), { recursive: true, force: true });
   await cp(path.join(sourceRoot, 'vendor'), path.join(publicRoot, 'assets', 'vendor'), { recursive: true });

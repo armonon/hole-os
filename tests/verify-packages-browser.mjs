@@ -59,6 +59,8 @@ try {
   await page.getByRole('button', { name: 'Use Practice desk', exact: true }).waitFor();
   const script = `console.log('source console works');try{indexedDB.open('host-secret')}catch(e){console.log('IDB blocked')}try{parent.document.body}catch(e){console.log('host DOM blocked')}fetch('https://example.invalid/probe').catch(()=>console.log('network blocked'));throw new Error('intentional preview error');`;
   await page.evaluate(async script => { await HoleExtensions.beforeLeave(); ctx.main.replaceChildren(); const saved = await HoleCore.importAsset({ name: 'Diagnostics.holeweb', blob: new Blob([JSON.stringify({ schema: 'hole.weblab/1', name: 'Diagnostics', files: { 'index.html': '<h1>Isolated page</h1>', 'style.css': '', 'script.js': script } })], { type: 'application/vnd.hole.weblab+json' }) }); await HoleExtensions.openAsset(await HoleCore.readAsset(saved.asset.id), ctx); }, script);
+  assert.ok(!(await page.locator('main').innerText()).includes('IDB blocked'));
+  await page.getByRole('button', {name:'Update isolated preview',exact:true}).click();
   await page.waitForFunction(() => { const text = document.querySelector('main').textContent; return ['source console works', 'IDB blocked', 'host DOM blocked', 'network blocked', 'intentional preview error'].every(value => text.includes(value)); });
   await page.getByRole('button', { name: 'Stop and revoke preview', exact: true }).click();
   assert.equal(await page.locator('iframe.hx-preview').getAttribute('srcdoc'), null);

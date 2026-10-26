@@ -1,0 +1,1 @@
+Selected owned Animate native engine at a189bc074f0c1c306d1029414d0c73d45f0a1b52. No open-source license asserted. See docs/evidence/animate-native.md and manifest.json. Rebuild with node scripts/vendor-animate.mjs <owned-source-checkout>.

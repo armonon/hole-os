@@ -16,13 +16,44 @@
     const ids = new Set();
     return { schema: 'hole.utility/1', name: string(value.name, 100), components: value.components.map(component => { if (!/^[a-zA-Z0-9_-]{1,60}$/.test(component.id || '') || ids.has(component.id)) fail('Component IDs must be unique.'); ids.add(component.id); return { id: component.id, config: globalThis.HoleExtensionModel.tool(component.config) }; }) };
   }
+  const OBJECT_MIME = 'application/vnd.hole.object+json';
+  function objectDefinition(value) {
+    if (value?.schema !== 'hole.object-definition/1' || Object.keys(value).some(key => !['schema','label','shape','color','textColor','initial','step','counter'].includes(key))) fail('Unsupported object definition.');
+    if (!['circle','tile','pill'].includes(value.shape) || !/^#[0-9a-f]{6}$/i.test(value.color || '') || !/^#[0-9a-f]{6}$/i.test(value.textColor || '')) fail('Use a supported shape and six-digit hex colors.');
+    if(value.counter!==undefined&&typeof value.counter!=='boolean')fail('Counter must be enabled explicitly.');
+    return {schema:'hole.object-definition/1',counter:value.counter===true,label:string(value.label,80),shape:value.shape,color:value.color,textColor:value.textColor,initial:number(value.initial ?? 0,-1000000,1000000),step:number(value.step ?? 1,-1000,1000)};
+  }
+  function objectSource(value) { if(!Number.isSafeInteger(value.packageVersion)||value.packageVersion<1)fail('Invalid object source version.'); return {packageId:string(value.packageId,80),packageVersion:number(value.packageVersion,1,Number.MAX_SAFE_INTEGER),provenance:string(value.provenance,500),definition:objectDefinition(value.definition),customized:value.customized===true}; }
+  function objectDocument(value) {
+    if(value?.schema!=='hole.object/1'||!Array.isArray(value.history)||value.history.length>10) fail('Invalid object document.');
+    return {schema:'hole.object/1',...objectSource(value),state:{count:number(value.state?.count,-1000000,1000000)},history:value.history.map(objectSource)};
+  }
+  const objectBlob=value=>new Blob([JSON.stringify(objectDocument(value),null,2)],{type:OBJECT_MIME});
+  async function placeObject(core,input,{projectId,x=0,y=0}={}) {
+    const m=manifest(input);if(m.kind!=='object') fail('Choose an object package.');
+    const project=await core.get('projects',projectId);if(!project) fail('Choose an existing local project.');number(x,-6000,6000);number(y,-6000,6000);
+    const value={schema:'hole.object/1',packageId:m.id,packageVersion:m.version,provenance:m.provenance,definition:m.object,state:{count:m.object.initial},history:[]};
+    const saved=await core.importAsset({name:m.name+'.holeobject',blob:objectBlob(value),kind:'object',projectId,spaceId:project.spaceId,provenance:{operation:'package-object-placement',packageId:m.id,packageVersion:m.version,source:m.provenance}});
+    try {const placement=await core.put('placements',{id:'object:'+saved.asset.id,sceneId:projectId,resourceType:'asset',resourceId:saved.asset.id,policy:'latest',x,y,depth:0});return {...saved,placement};}
+    catch(error){const failure=new Error('Object saved as '+saved.asset.id+' in the destination project, but its position could not be saved: '+error.message+'. Open the saved object from the project; do not retry placement unless you want another object.');failure.retainedAssetId=saved.asset.id;throw failure;}
+  }
+  async function editObject(core,record,operation,value) {
+    const document=objectDocument(JSON.parse(await record.blob.text()));
+    if(operation==='count') document.state.count=number(value,-1000000,1000000);
+    else if(operation==='customize') {document.history=[...document.history,objectSource(document)].slice(-10);document.definition=objectDefinition(value);document.customized=true;}
+    else if(operation==='appearance') {const m=manifest(value);if(m.kind!=='object'||m.id!==document.packageId)fail('Choose the same object package.');document.history=[...document.history,objectSource(document)].slice(-10);Object.assign(document,{packageVersion:m.version,provenance:m.provenance,definition:m.object,customized:false});}
+    else if(operation==='undo') {if(!document.history.length)fail('No prior object appearance is retained.');Object.assign(document,document.history.pop());}
+    else fail('Unsupported object edit.');
+    return core.commitAsset({assetId:record.asset.id,baseVersionId:record.version.id,blob:objectBlob(document),operation:'package-object-'+operation});
+  }
   function manifest(value) {
     if (value?.schema !== 'hole.package/1' || !/^[a-z0-9][a-z0-9.-]{0,79}$/.test(value.id || '') || !Number.isSafeInteger(value.version) || value.version < 1) fail('Invalid package identity/version.');
     if (!Array.isArray(value.permissions) || value.permissions.length) fail('These packages have no resource, network or execution grants.');
     if (value.runtimeVersion !== undefined && value.runtimeVersion !== 1) fail('This package requires an incompatible runtime.');
     if (value.kind === 'tool') return { ...globalThis.HoleExtensionModel.manifest(value), runtimeVersion: 1 };
     const result = { schema: 'hole.package/1', id: value.id, name: string(value.name, 100), version: value.version, kind: value.kind, runtimeVersion: 1, permissions: [], provenance: string(value.provenance || 'User imported package', 500) };
-    if (value.kind === 'instrument' || value.kind === 'app') result.composition = composition(value.composition);
+    if (value.kind === 'object') result.object = objectDefinition(value.object);
+    else if (value.kind === 'instrument' || value.kind === 'app') result.composition = composition(value.composition);
     else if (value.kind === 'theme') {
       const p = value.preferences || {}; if (!['auto', 'light', 'dark'].includes(p.theme)) fail('Theme must be auto, light or dark.');
       result.preferences = { theme: p.theme }; for (const key of ['quiet', 'focus', 'stories', 'startHere']) if (p[key] !== undefined) { if (typeof p[key] !== 'boolean') fail('Theme preferences must be boolean.'); result.preferences[key] = p[key]; }
@@ -51,5 +82,5 @@
     if (!record.history?.length) fail('No prior package version is retained.');
     return core.put('packages', { ...record, manifest: manifest(record.history.at(-1)), history: record.history.slice(0, -1) }, { expectedRevision: record.revision });
   }
-  globalThis.HolePackageModel = Object.freeze({ composition, manifest, install, rollback });
+  globalThis.HolePackageModel = Object.freeze({ composition, manifest, install, rollback, objectDefinition, objectDocument, placeObject, editObject, OBJECT_MIME });
 })();

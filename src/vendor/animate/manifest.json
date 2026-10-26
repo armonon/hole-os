@@ -1,0 +1,53 @@
+{
+  "source": "owned Animate",
+  "revision": "a189bc074f0c1c306d1029414d0c73d45f0a1b52",
+  "license": "Private owned source; no open-source license asserted",
+  "files": [
+    {
+      "path": "src/engine/project.ts",
+      "sha256": "fca91a774a5aa1ba269100ee037cac9c19a8caf29420fa909ee2885fb6e1428a"
+    },
+    {
+      "path": "src/engine/layers.ts",
+      "sha256": "36b807bfe5a89a6ba4c55ed85be76b1023d68517ac955b836868b04c9c0c66cd"
+    },
+    {
+      "path": "src/engine/timeline.ts",
+      "sha256": "59054d6585bdb549dc1e3c603c2d50a79175f438a10952cabb01609626c7ef1a"
+    },
+    {
+      "path": "src/engine/stroke.ts",
+      "sha256": "da657e84663fdc702ab74b81005fcfdab4cf1750f456a9a059c762a5f072eacb"
+    },
+    {
+      "path": "src/engine/tween.ts",
+      "sha256": "5f2c14ac4caf65ba0a23b5135d3af5f3c8a67ed99a8a1a23752bac0727ad2884"
+    },
+    {
+      "path": "src/engine/easing.ts",
+      "sha256": "aecf51f7172ac6313bf1aac69dcc8f6423112265057240951da97eb3e1268a49"
+    },
+    {
+      "path": "src/engine/render.ts",
+      "sha256": "8d953ffef460162489ec136be2f6bd224c45340acd94da70102bce53ba67bdd3"
+    },
+    {
+      "path": "src/engine/fill.ts",
+      "sha256": "76c5037bc5e27246f4c5e400439db48258a5566a291012bcb2ff3adfb51d9384"
+    },
+    {
+      "path": "src/engine/export/spritesheet.ts",
+      "sha256": "ba070b4db66a20c612673becd3ca3f0b8a4d9992705c9952b3fca1e136ef86c6"
+    },
+    {
+      "path": "src/lib/fill-tool.ts",
+      "sha256": "81f2f3be7ce8876fccf1f5089be0297f4328ec1fdf03d5c5b94d27cd616ca2de"
+    }
+  ],
+  "bundle": {
+    "path": "engine.js",
+    "bytes": 11801,
+    "sha256": "fc13e1f81ce473603a0a3477c3e1e843669b2286a1f87f0c45876bc0c990bf51"
+  },
+  "patch": "Build-time renderer lifecycle glue awaits cached image decode, bounds dimensions and clears caches."
+}

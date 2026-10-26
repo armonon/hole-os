@@ -17,9 +17,37 @@
     dialog.close = () => closing ||= Promise.all(running.map(session => session.dispose())).then(() => { running.forEach(session => sessions.delete(session)); nativeClose(); }).catch(error => { closing = null; throw error; });
     dialog.addEventListener('cancel', event => { event.preventDefault(); void dialog.close().catch(ctx.fail); }); dialog.append(ctx.button('Close composition', 'x', () => dialog.close())); ctx.H.icons();
   }
+  async function objectView(record,ctx) {
+    const value=M.objectDocument(JSON.parse(await record.blob.text())), definition=value.definition;
+    const placement=ctx.navigation.placementId?await ctx.C.get('placements',ctx.navigation.placementId):null;
+    const readOnly=!!ctx.navigation.versionId||placement?.policy==='pinned'||record.version.id!==(await ctx.C.get('assets',record.asset.id))?.headVersionId;
+    const host=ctx.el('section','hc-note');ctx.main.append(host);
+    const figure=ctx.el('div','',definition.label);figure.setAttribute('role','img');figure.setAttribute('aria-label',definition.shape+' object: '+definition.label);figure.dataset.objectShape=definition.shape;
+    Object.assign(figure.style,{width:'min(240px,100%)',minHeight:definition.shape==='circle'?'0':'160px',aspectRatio:definition.shape==='circle'?'1':'auto',padding:'24px',boxSizing:'border-box',display:'grid',placeItems:'center',textAlign:'center',overflowWrap:'anywhere',backgroundColor:definition.color,color:definition.textColor,borderRadius:definition.shape==='circle'?'50%':definition.shape==='pill'?'80px':'16px'});
+    host.append(figure,ctx.el('p','',`Source: ${value.packageId} v${value.packageVersion} · ${value.provenance}${value.customized?' · locally customized':''}`));
+    const status=ctx.el('p');status.setAttribute('role','status');host.append(status);
+    const save=async(operation,input)=>{const controls=[...host.querySelectorAll('button')];controls.forEach(b=>b.disabled=true);try{await M.editObject(ctx.C,record,operation,input);host.remove();await objectView(await ctx.C.readAsset(record.asset.id),ctx);}catch(error){status.textContent=error.message+' Original version retained.';controls.forEach(b=>b.disabled=false);}};
+    if(definition.counter){host.append(ctx.el('output','',String(value.state.count)));if(!readOnly)host.append(ctx.button('Add '+definition.step,'plus',()=>save('count',value.state.count+definition.step)),ctx.button('Reset object count','rotate-ccw',()=>save('count',definition.initial)));}
+    host.append(ctx.button('Export object','download',()=>ctx.download(record.blob,record.asset.name)));
+    if(readOnly)host.append(ctx.el('p','','This saved version is read-only. Open the latest unpinned object to edit.'));
+    else {
+      const label=ctx.input('Object label','text',definition.label),color=ctx.input('Object color','color',definition.color),textColor=ctx.input('Object text color','color',definition.textColor),shape=ctx.el('select');shape.setAttribute('aria-label','Object shape');for(const name of ['circle','tile','pill']){const option=ctx.el('option','',name);option.value=name;shape.append(option);}shape.value=definition.shape;
+      host.append(label.wrap,color.wrap,textColor.wrap,shape,ctx.button('Save object appearance','save',()=>save('customize',{...definition,label:label.input.value,color:color.input.value,textColor:textColor.input.value,shape:shape.value})));
+      const installed=await ctx.C.get('packages',value.packageId);if(installed?.manifest.kind==='object')host.append(ctx.button('Use installed appearance v'+installed.manifest.version,'package',()=>save('appearance',installed.manifest)));
+      if(value.history.length)host.append(ctx.button('Undo object appearance','undo',()=>save('undo')));
+    }ctx.H.icons();
+  }
+  async function placeObject(manifest,ctx) {
+    const dialog=ctx.modal('Place object','Choose an existing local project. This creates a separate editable object; later package updates do not change it automatically.'),projects=await ctx.C.list('projects'),select=ctx.el('select');select.setAttribute('aria-label','Object destination project');
+    for(const project of projects){const option=ctx.el('option','',project.name);option.value=project.id;select.append(option);}if(projects.some(p=>p.id===ctx.navigation.projectId))select.value=ctx.navigation.projectId;
+    const x=ctx.input('Object x','number',0),y=ctx.input('Object y','number',0),feedback=ctx.el('p');feedback.setAttribute('role','status');
+    const place=ctx.button('Place reviewed object','plus',async()=>{place.disabled=true;try{const saved=await M.placeObject(ctx.C,manifest,{projectId:select.value,x:Number(x.input.value),y:Number(y.input.value)});dialog.close();await ctx.open('projects',{projectId:select.value,assetId:saved.asset.id,placementId:saved.placement.id,versionId:null});}catch(error){feedback.textContent=error.message;if(!error.retainedAssetId)place.disabled=false;}});place.disabled=!projects.length;
+    dialog.append(select,x.wrap,y.wrap,place,feedback,ctx.button('Cancel','x',()=>dialog.close()));if(!projects.length)feedback.textContent='Create a project before placing an object.';ctx.H.icons();
+  }
   function examples() {
     const common = { schema: 'hole.package/1', version: 1, permissions: [], provenance: 'Hole built-in bounded template', runtimeVersion: 1 };
     return [
+      { ...common,id:'hole.focus-object',kind:'object',name:'Focus pebble',object:{schema:'hole.object-definition/1',label:'One thing at a time',shape:'circle',color:'#31594b',textColor:'#ffffff',counter:true,initial:0,step:1} },
       { ...common, id: 'hole.quiet-theme', kind: 'theme', name: 'Quiet light', preferences: { theme: 'light', quiet: true } },
       { ...common, id: 'hole.practice-instrument', kind: 'instrument', name: 'Practice desk', composition: { schema: 'hole.utility/1', name: 'Practice desk', components: [{ id: 'rounds', config: { type: 'counter', name: 'Rounds', step: 1 } }, { id: 'practice', config: { type: 'timer', name: 'Practice', seconds: 60 } }, { id: 'checklist', config: { type: 'checklist', name: 'Before you finish', items: ['Review work', 'Save an original'] } }] } },
       { ...common, id: 'hole.text-workflow', kind: 'workflow', name: 'Text preparation', recipe: { name: 'Text preparation', steps: [{ id: 'text', actionId: 'text.branch', parameters: {} }] } },
@@ -28,6 +56,7 @@
   }
   async function applyPackage(record, ctx) {
     const m = M.manifest(record.manifest);
+    if(m.kind==='object')return placeObject(m,ctx);
     if (m.kind === 'tool') return utility({ schema: 'hole.utility/1', name: m.name, components: [{ id: 'tool', config: m.component }] }, `${m.id}:v${m.version}`, ctx, { tool: 'package-state:' + m.id });
     if (['instrument', 'app'].includes(m.kind)) return utility(m.composition, `${m.id}:v${m.version}`, ctx);
     if (m.kind === 'theme') {
@@ -51,7 +80,7 @@
     dialog.append(ctx.button('Install reviewed package', 'check', async () => { await M.install(ctx.C, manifest); dialog.close(); await ctx.render(); }), ctx.button('Cancel', 'x', () => dialog.close())); ctx.H.icons();
   }
   async function store(ctx) {
-    await leave(); ctx.title('MOMENTOUS', 'Useful things, with their provenance.', 'Review bounded tools, composed apps, instruments, themes, workflows and space templates. Updates retain ten prior manifests; apply is explicit.');
+    await leave(); ctx.title('MOMENTOUS', 'Useful things, with their provenance.', 'Review bounded tools, composed apps, instruments, editable objects, themes, workflows and space templates. Updates retain ten prior manifests; apply is explicit.');
     const file = ctx.el('input'); file.type = 'file'; file.accept = '.json'; file.hidden = true; file.setAttribute('aria-label', 'Import compatible package');
     file.onchange = async () => { try { const selected = file.files?.[0]; if (!selected) return; if (selected.size > 131072) throw new Error('Package exceeds 128 KB.'); await review(JSON.parse(await selected.text()), ctx); } catch (error) { ctx.fail(error); } finally { file.value = ''; } };
     ctx.main.append(file, ctx.button('Inspect a package file', 'upload', () => file.click()));
@@ -86,10 +115,10 @@
       dialog.append(source.wrap, feedback, ctx.button('Save composition version', 'save', async () => { try { if (source.input.value.length > 131072) throw new Error('Composition exceeds 128 KB.'); const value = M.composition(JSON.parse(source.input.value)); await ctx.C.commitAsset({ assetId: asset.id, baseVersionId: current.version.id, blob: blob(value), operation: 'forge-composition-edit' }); dialog.close(); await ctx.render(); } catch (error) { feedback.textContent = error.message; } }), ctx.button('Cancel', 'x', () => dialog.close()));
     }), ctx.button('Export ' + asset.name, 'download', async () => ctx.download((await ctx.C.readAsset(asset.id)).blob, asset.name)));
   }
-  window.HolePackageStudio = Object.freeze({ store, utility, applyPackage, examples });
+  window.HolePackageStudio = Object.freeze({ store, utility, applyPackage, examples, objectView });
   window.HoleExtensions = Object.freeze({ ...base, beforeLeave: leave, install: (manifest, ctx) => M.install(ctx.C, manifest),
     async render(view, ctx) { if (view === 'momentous') return store(ctx); await leave(); await base.render(view, ctx); if (view === 'create') await addForge(ctx); if (view === 'weblab') watchPreview(ctx); },
-    async openAsset(record, ctx) { if (record.asset.mime === MIME) { await leave(); await utility(JSON.parse(await record.blob.text()), record.asset.id, ctx); return true; } const result = await base.openAsset(record, ctx); if (record.asset.mime === 'application/vnd.hole.weblab+json') watchPreview(ctx); return result; }
+    async openAsset(record, ctx) { if(record.asset.mime===M.OBJECT_MIME){await leave();await objectView(record,ctx);return true;} if (record.asset.mime === MIME) { await leave(); await utility(JSON.parse(await record.blob.text()), record.asset.id, ctx); return true; } const result = await base.openAsset(record, ctx); if (record.asset.mime === 'application/vnd.hole.weblab+json') watchPreview(ctx); return result; }
   });
   function watchPreview(ctx) {
     const observer = new MutationObserver(() => enhancePreview(ctx)); observer.observe(ctx.main, { childList: true, subtree: true });
