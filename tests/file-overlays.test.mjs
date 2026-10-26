@@ -61,10 +61,12 @@ function fixture({ load, save, remove } = {}) {
   let uid = 0;
   const context = {
     Blob, document, node, button, os, layer,
+    MutationObserver: class { observe() {} disconnect() {} },
     saveFile: save, transaction: remove, cleanName: String, history: () => ({}),
     files: [], selectedId: null, downloadURLs: new Map(), notifyFiles() {}, renderFiles() {},
     api: { state: { desk: { view: 'desk' } } },
     window: {
+      addEventListener() {}, removeEventListener() {},
       HoleCapabilities: { forFile: () => [{ mode: 'local', name: 'Text editor', description: 'Local editor' }] },
       HoleTextFiles: { MAX_TEXT_BYTES: 262144, decode: blob => blob.text() }
     },
@@ -194,7 +196,7 @@ for (const operation of ['rename', 'remove']) {
       completing = f.actions.overlay.querySelector('form').fire('submit');
     } else {
       f.actions.removeFile(file);
-      completing = f.findButton('Remove file').click();
+      completing = f.findButton('Move to Trash').click();
     }
     f.actions.requestCloseOverlay();
     f.actions.textEditor();

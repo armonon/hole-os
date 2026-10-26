@@ -1,0 +1,688 @@
+HOLE OS — MASTER BUILD PROMPT v1.0
+The Creating Co. | A personal computer that helps you return to your thoughts
+Prepared 26 October 2026. Revalidate repository revisions when execution begins.
+
+ROLE, AUTHORITY, AND FINISH LINE
+
+You are the coordinating architect, interaction designer, and implementation lead for Hole OS. Assemble specialized implementation agents and build the product described here on the existing codebase. This is an execution brief, not an instruction to produce another plan and stop.
+
+The user has explicitly superseded the earlier “Phase 0: audit only; stop before writes” instruction. Refresh the existing audit where necessary, then proceed through authorized implementation, integration, testing, and preparation of deployable releases. Do not request approval at every phase. Respect current user authorization, repository instructions, existing data, and the permissions available in the execution environment. Prepare concrete results before requesting any genuinely missing authorization for consequential external actions.
+
+Implement the complete program in dependency order. The first journey is the first acceptance gate, not the final scope. Do not declare the assignment complete after a mockup, a working shell, contract stubs, or the initial vertical slice. Track every work package through implemented, verified, and delivered states. If a real external dependency blocks a package, record exactly what is missing and continue independent work. Do not fabricate a substitute success state.
+
+Maintain a capability ledger that classifies each named requirement as required for this program, explicitly future under this brief, or currently blocked by a specific external dependency. Optional user presentation, such as choosing Universe instead of Flat, does not make its implementation optional. Do not quietly reduce required scope by changing its label.
+
+Primary repository: https://github.com/armonon/hole-os
+Existing preview: https://hole-os-armonon.netlify.app/
+Known local checkout: /Users/lillypad/Documents/New project/hole-os
+Known ecosystem workspace: /Users/lillypad/Documents/New project/tcc-operations
+
+Product name: Hole OS. Preserve “Make yourself at home.” Earlier references to “Creating OS” describe the ambition, not an instruction to rename the product.
+
+1. PRODUCT THESIS AND DECISIONS
+
+Build a personal world for creating, learning, collecting, working, playing, and being with people. Creativity is the first complete use case; the underlying computer must support everyday life too.
+
+Central interaction:
+  Move closer to reveal what you can do with something.
+  Move farther away to understand what it belongs to.
+
+An object retains its identity through every view. A note becomes a readable preview and then an editable surface. Pulling back reveals its surrounding materials, project, Space, and place in the user's world. Positions, edits, provenance, and return paths persist.
+
+Adopt three complementary product directions:
+
+A. A personal place — the foundation.
+   Someone returns to a song, school assignment, or trip and recognizes both the materials and the unfinished thought. Stable geography and trustworthy restoration provide the value.
+
+B. An adaptive instrument — the everyday power.
+   Selecting material reveals useful tools. Smart Screen can propose a temporary work surface for studying a PDF, comparing mixes, planning a journey, or making release artwork. Existing objects and running applications supply the work surface.
+
+C. A network of rooms — the shared future.
+   People invite others into a bounded project, listening session, class, or exhibition. Access, authorship, presence, and leaving are understandable.
+
+Recommendation: build A as the durable foundation, B through shared capabilities and reversible arrangements, and C through real authorization and collaboration services. All three belong in the complete program. Their dependency order is not a reason to omit the later work.
+
+Tradeoffs to make explicit:
+- A asks us to invest heavily in reliable persistence, migration, and retrieval. Spatial arrangements can become cluttered, so direct search, outlines, and optional tidy views are essential.
+- B can make tools easier to reach but can also make the interface unpredictable. Keep adaptation temporary or explicitly accepted, keep the source material visible, and let users pin a familiar arrangement.
+- C makes the computer more social but introduces access boundaries, conflicts, and interruptions. Build scope and role visibility into the interface and make solitary work equally complete.
+- Supporting several views increases maintenance and testing cost. Share services and instances, and ship fewer well-integrated interactions before expanding presentation variety.
+
+Keep these product decisions consistent across agents:
+
+- Flat Desktop, project canvas, Smart Screen, and optional Universe are views of one computer. They share assets, app instances, drafts, permissions, jobs, and project context.
+- Flat Desktop is the dependable default. Users can choose another startup view. Universe is an optional presentation of real work, not a separate app or duplicate filesystem.
+- The canvas host belongs to the OS. Luma can brand the creative canvas experience; other studio editors remain equal plug-ins.
+- Spatial zoom changes context and information density. Time/history is a deliberate, separately labeled mode.
+- Smart Screen proposes useful arrangements without silently moving the user's landmarks. Temporary views can be dismissed, saved, or explicitly applied with undo.
+- People can open things directly through search, links, Recents, and keyboard navigation. They never have to fly through the world to perform a simple action.
+- The computer remains useful without AI, an account, a network connection, or 3D graphics.
+- Private is the default. Sharing a placement does not implicitly share every linked resource or surrounding Space.
+- A smaller functional drawer is preferable to a larger drawer of promises. App count is not a completion metric.
+
+2. VERIFIED STARTING POINT — RECHECK CHANGES, DO NOT REPEAT THE ENTIRE AUDIT
+
+At the completed audit, the local Hole checkout was clean at a215491. Remote main was 7d98b7251718b5615196bad2c793554f8573b6b1, six commits ahead. Twenty checked deployed HTML/JS/CSS assets matched that remote revision byte-for-byte. Those observations identify the audit baseline, not a permanent claim about current main or deployment.
+
+Before editing, inspect current branch, uncommitted changes, applicable AGENTS.md files, remote revision, and deploy target. Preserve user changes. Start from an explicitly verified current base; do not overwrite the newer deployed work with the stale local checkout. Prefer a suitable existing worktree; otherwise use an isolated managed worktree or branch consistent with repository instructions.
+
+The audited Hole implementation is plain HTML/CSS/JavaScript with Node build and test scripts. Preserve the stack unless a narrow, justified addition is necessary. Do not begin with a framework rewrite.
+
+Relevant source boundaries:
+- src/hole-fluid-os.html: desktop state, camera, gestures, app/window launch, shell integration.
+- src/window-system.js: shared window behavior.
+- src/file-platform.js: real local files, Blob storage, jobs, previews, processing.
+- src/text-files.js: actual .txt/.md editing and derived versions.
+- src/persistence.js: workspace persistence.
+- src/clusters-model.js and src/clusters.js: nested shortcut containers.
+- src/workspace-setup.js: portable setup import/export.
+- src/capabilities.js: MIME routing and capability descriptions, not a security-grant system.
+- src/browser.js: current browser handoff; do not claim a query bridge already exists.
+- scripts/build.mjs, package.json, netlify.toml, and tests/: build, hosting policies, verification.
+
+Current functionality includes a desktop, windows, drawer, spaces, pan/zoom, clusters, local Files, scratchpad Notes, real text-file editing, image conversion, Activity, and portions of session/layout persistence. External studio launches generally open separate tabs; opening a URL is not asset open/save-back integration.
+
+The 52-entry drawer audit classified 3 local utility entries, 16 external launches, 2 partial/sample entries, 28 concept entries, and 3 future OS entries. Files has more working capability than that count alone suggests. Consult the current catalog and runtime before changing classification.
+
+Storage facts at the audit:
+- IndexedDB hole-file-library-v1 stores file metadata, Blob contents, and jobs.
+- Workspace localStorage contains layout, spaces, placements, clusters, pins, scratchpad Notes, and portions of session state.
+- Window geometry is stored separately and keyed by app name.
+- Existing “projects” partly mean named desktop spaces; they are not yet the proposed canonical project model.
+- Current derived files have lineage, but do not yet implement the proposed stable Asset plus immutable AssetVersion model.
+- Setup v1/v2 exports are layout/configuration packages. They omit file bytes and much work/session state. They are not backups.
+- No verified account authentication, account sync, secure sharing backend, or native application execution exists in Hole itself.
+
+Prioritize demonstrated weaknesses:
+1. Workspace/scratchpad writes can appear successful in memory after localStorage failure.
+2. Unsaved text-editor drafts do not survive reload/crash reliably.
+3. Image output and job completion can commit separately, creating ambiguous retry states.
+4. File removal can permanently delete metadata/bytes; general recoverable trash is missing.
+5. Whole-workspace cross-tab writes can overwrite newer state without revision conflict handling.
+6. Active resource/editor state is not reliably reconstructed after reload.
+
+The prior audit ran 63 focused tests against the newer source in memory. It did not run a complete integrated browser test suite. Do not report that evidence as full end-to-end verification.
+
+Source/evidence index to accelerate discovery:
+- Hole remote baseline: https://github.com/armonon/hole-os/tree/7d98b7251718b5615196bad2c793554f8573b6b1 ; its CATALOG.md and source/tests contain the inspected current app classifications and behavior. Reconcile with current HEAD.
+- Ecosystem registry: /Users/lillypad/Documents/New project/tcc-operations/audit-lab/registry.json ; audit guidance: tasks/APP-AUDIT-HANDOFF.md under that workspace. Registry entries are discovery clues, not proof of implementation.
+- Inspected local sources under that workspace's repos/: luma-studio, form-studio, ghost-garment-studio, glyph-studio, moodboard, scenepilot-studio-badass, portfolio-studio, weblab, bounce, librarian, thecreatingco-site, sattari-plugins-suite. Read each repository's instructions before work.
+- Animate inspected remotely at https://github.com/armonon/animate/tree/a189bc074f0c1c306d1029414d0c73d45f0a1b52 ; inspect its project, IDB, drawing, and export implementations rather than assuming a local checkout exists.
+- Native Sattari source: repos/sattari-plugins-suite, including plugins/modular and native StemDeck implementations. Catalog browser source armonon/sattari was empty at audit; do not mistake native functionality for browser availability.
+- Sessions UI inspected at https://thecreatingco.com/community/network?view=Sessions ; room creation/joining and backend were not exercised. NOW/Circle/Pocket Studio source availability remained unresolved.
+- thecreatingco-site is an incomplete historical mirror; never deploy it wholesale to “repair” another product. Resolve the exact project and deployment target first.
+
+Preserve these evidence categories separately: local source inspected, remote source inspected, deployed bytes matched, runtime behavior observed, and source/service unresolved.
+
+3. EVERY FEATURE MUST DESCRIBE A HUMAN INTERACTION
+
+For each proposal and implemented feature, record:
+- What the person is trying to do in an ordinary moment.
+- What action they take.
+- What visibly changes on screen.
+- What remains stable: resource identity, location, selection, draft, permission, return path.
+- Why the interaction improves their life.
+- What durable output or observable behavior proves it works.
+
+Develop these extensions as real interactions:
+
+Places that unfold:
+  A song reveals recordings, lyrics, cover studies, and experiments. A trip reveals dates, places, reservations, plans, and photographs. Both share containers, references, history, tools, and return paths. Their useful previews differ: waveform/listening position for audio, map/day sequence for travel, reading position for study. Use typed project templates over common primitives, not unrelated navigation systems.
+
+Tools around materials:
+  Select a photograph; a small contextual strip offers crop, color, cutout when genuinely available, compare, and open in Luma. The photograph stays anchored. A focused editor may expand, but the surrounding project remains available. On phones, controls move into a reachable sheet rather than becoming tiny floating icons. Deep studio work remains available.
+
+Connections across the world:
+  Place one holiday photograph into a trip, palette study, and letter. Each placement references the same asset unless the user deliberately duplicates or branches it. Show “Used in…” and whether a placement follows the latest version or is pinned. A letter intended for sending pins an approved version. Traversing a connection preserves a return bookmark.
+
+Places with memory:
+  Returning restores the arrangement and working context. An optional “Where you left off” card points to the exact note, paragraph, playhead, or unresolved comparison. This is inspectable workspace state, not secret behavioral surveillance. Let people leave a short “next thought” beside an object. Memory can be corrected, excluded, exported, or forgotten.
+
+Making places together:
+  Invite a friend to compare two mixes. The invitation names the project and role, opens at the selected material, and displays the audience. Private notes stay outside the invitation. Show a guest preview before publishing a World. Provide leave, revoke, and ownership controls. Do not promise to retract copies already downloaded.
+
+Personal instruments:
+  Save a useful combination of references and tools as a reusable arrangement: a listening station, vocabulary practice surface, travel review, or poster export bench. Each control invokes a registered capability with inspectable inputs. The arrangement is editable and usable without conversational AI.
+
+Permission to leave work unfinished:
+  Spaces support piles, tentative branches, experiments, and quiet. No mandatory inbox zero, completion scoring, activity streak, or urgent notification system. Useful summaries should reduce the effort of returning, not impose a productivity ritual.
+
+Confusing moments the design must resolve explicitly:
+- “Did I open something or start typing?” Separate focus/preview from intentional editing.
+- “Is this the same photograph?” Expose linked identity, pinned/current version, and independent duplication.
+- “Where did my work go?” Keep stable landmarks, a dependable Back path, direct search, and return bookmarks.
+- “Did that really save?” Show durable local state separately from pending sync and failures.
+- “Why did everything move?” Preview adaptive arrangements and preserve a reversible prior arrangement.
+- “Am I looking at now or yesterday?” Give History a persistent scope/date label and an obvious return to live work.
+- “Who can see this?” Show audience at the Space/object boundary and preview the actual guest/public payload.
+- “Why does my phone look different?” Adapt controls and layout while preserving identity, recognizable ordering, and the original desktop arrangement.
+- “Why did an old result change?” Let people pin approved versions and inspect updates before adopting them.
+
+4. THE FIRST COMPLETE JOURNEY AND STATE MACHINE
+
+Implement this before expanding the interface across the whole app catalog:
+  Your spaces → Studio → Night garden project → First thought note
+  → edit → pull back to all spaces → leave/reload → return to the same thought.
+
+The names are a clearly labeled test fixture or user-created project, never fake production data presented as the user's work.
+
+States:
+- WORLD: meaningful Space labels, stable placement, recognizable project summaries.
+- SPACE: its project/cluster arrangements and relevant work become visible.
+- PROJECT: real material references, project Kit, relationships, and tools.
+- OBJECT_PREVIEW: readable content, version/save status, deliberate Edit action.
+- OBJECT_EDIT: accessible editor, selection/caret or media position, relevant tools.
+- HISTORY: explicit read-only historical view with scope and date/version labels.
+- NAVIGATE: explicit optional spatial camera control, separate from text input.
+
+Represent presentation mode separately from navigation scope. Smart Screen/Desktop/Universe must not be competing copies of WORLD/SPACE/PROJECT data. Represent editor state, history state, active project, focus, and navigation mode explicitly rather than inferring them from CSS scale.
+
+Transitions:
+1. Enter Studio by click/tap, keyboard activation, direct link, or intentional semantic zoom. Anchor the transition on the selected Space. Save the departure camera.
+2. Open Night garden from its stable position. Reveal its real materials rather than replacing the entire scene with an unrelated page.
+3. Focus First thought. Its card becomes readable. Zoom alone does not start editing.
+4. Choose Edit. Route keyboard input to the editor. Persist a durable draft against a known base version. Report saving, saved locally, syncing if applicable, or failure truthfully.
+5. Keep durable drafts continuously during editing, then checkpoint grouped edits as a new immutable version when the user chooses Done or leaves editing. Avoid creating a permanent version for each keystroke. A failed checkpoint retains the draft and its visible pending/error state. “Saved” means the relevant durable transaction succeeded; label “Draft saved” distinctly from a committed version.
+6. Pull back. Preserve the same asset ID, arrangement, selection, and parent camera. If save fails, retain the draft and offer retry/export; do not imply success or discard the text.
+7. Return to all spaces through breadcrumbs, Back, overview control, or zoom. Do not require the exact reverse gesture sequence.
+8. Reload or reopen after an acknowledged durable save. Reconstruct the project, resource, arrangement, relevant editor state, and a clear route back. Do not depend on beforeunload to make drafts durable.
+9. Reenter the project. The user finds the edited note and its surrounding materials without reconstructing context. Restore caret/scroll when appropriate without unexpectedly stealing focus.
+
+Navigation requirements:
+- Use separate enter/exit thresholds or another tested hysteresis policy to prevent oscillation at zoom boundaries.
+- Preserve the selected anchor through transitions. Handle deletion, missing resources, revoked access, and stale links with a labeled destination and route home.
+- Breadcrumb path describes the current visit path; ownership/location details describe the underlying resource. A linked object can have several visit paths without changing identity.
+- Browser Back/Forward, explicit Back, parent navigation, search jumps, and connection jumps must have documented, consistent behavior.
+- Separate object dragging from camera movement using tested gesture thresholds and cancellation. Never interpret a cancelled drag as an edit or drop.
+- Persist meaningful transition endpoints and settled geometry. Avoid writing every animation frame.
+
+Keep the existing Depth interaction study as a visual reference only:
+/Users/lillypad/.codex/visualizations/2026/10/25/01a17211-e1b1-7182-961d-e903c06e1f65/hole-depth.html
+It demonstrates staged navigation and an editable concept note. It is not connected to Hole's real files, permissions, jobs, or production persistence; do not import its save-status assumptions into the product.
+
+5. THE SMALL INTERACTIVE EXPERIMENT
+
+Build a feature-flagged experiment using the real resource and workspace services. Include one Space, one project, a note, an image, one linked placement of that image, and an explicit History control. Provide a clearly labeled disposable test dataset and reset action scoped only to that dataset.
+
+Experiment tasks:
+1. Complete the first journey above with no guidance beyond the visible interface.
+2. Edit the note, leave, reload, and find the edited thought.
+3. Move the image without changing its file identity or project ownership.
+4. Visit its second placement and identify whether it follows the latest version.
+5. Open History deliberately, inspect an older arrangement, leave History, and return to live work.
+6. Repeat with keyboard, small screen, and reduced motion.
+
+Questions to test with people:
+- Can they predict what Closer and Further out will do?
+- Do they know when they are editing rather than navigating?
+- Can they tell a shared reference from a copy?
+- Can they find the same thought after a break without searching through apps?
+- Does the spatial transition help recognition compared with a simple direct-opening view?
+
+Measure observed task completion, mistaken transitions, recovery actions, and explanation of object identity. Begin with a small formative session, for example five people, and report actual observations. This is a proposed research plan until sessions occur. Do not invent user research results. Failure to improve orientation is a reason to revise the interaction, not add more animation.
+
+6. SHARED DOMAIN MODEL AND SERVICE CONTRACTS
+
+Publish small, versioned contracts before parallel implementation. Use the repository's language and module conventions; JSON schemas/JSDoc are sufficient if the project remains JavaScript. Avoid a gratuitous infrastructure rewrite.
+
+Core entities:
+- Account: authenticated identity when the real service is available; local identity remains distinct.
+- Device: synchronization identity and device-specific presentation/capability information.
+- Space: a place and its access boundary; not a synonym for every project or folder.
+- Project: durable work membership, name, Kit, release packages, and relationships.
+- Asset: stable identity, kind, display name, current head/version references, revision, lifecycle state.
+- AssetVersion: immutable content reference, MIME/size/hash where applicable, parent version IDs, operation, parameters, provenance, author/job/time.
+- ProjectMembership: explicit association between a project and resource; moving a visual card does not change it implicitly.
+- Placement/SpatialObject: instance ID, scene ID, resource reference, follow-latest or pinned-version policy, geometry, presentation, accessibility label.
+- SpatialScene: placements, layout schema version, named camera bookmarks, rendering preferences.
+- Draft: editor instance, resource/base version, durable content or delta, revision, update time, recovery status.
+- WorkspaceSnapshot: arrangement, app instances, resource references, selection, cameras, device layout class, and schema version.
+- ActivityJob: verb/version, immutable input versions, parameters, state, progress, outputs, retry/cancellation data, idempotency key.
+- ConnectionGrant: app identity/origin, resources/projects, allowed operations, expiry/revocation, originating user intent.
+- SharePermission: subject, scope, role, conditions, server revision, revocation.
+- AppCapability/Verb: supported inputs, parameters, requirements, permission needs, execution and output contracts.
+- FlowRun: recipe version, concrete inputs, steps, jobs, outputs, restart/retry state.
+- PublishTarget/ReleasePackage: destination or export type, explicitly selected version manifest, preview, publication state.
+- MemoryEntry: optional explicit or inspectable retained context, source, scope, retention, deletion/export behavior; distinct from raw chat and application state.
+
+Containment rule: a Space contains placements of projects and loose objects. A Project owns work membership and can appear in multiple Spaces. A Cluster groups placements without changing project membership or resource ownership. Preserve existing cluster identity/nesting through adapters; the navigation path is not a filesystem ownership tree.
+
+Identity rules:
+- Multiple placements can reference one asset. Removing a placement does not delete the asset.
+- “Duplicate” creates an independent asset; “Link here” creates another placement; “Branch” creates a new asset with provenance from an existing version. Label these distinctly.
+- Restoring an old version creates a new current version; history remains intact.
+- One-to-many transforms such as stem splitting create derived assets linked to input versions. Do not make several unrelated stems successive versions of one original song.
+- Reading a pinned version does not silently update it. Follow-latest placements update only after durable commits and indicate relevant changes without disruptive motion.
+- Opening a pinned version for modification offers Edit latest or Branch this version. The approved pinned placement remains unchanged unless the user explicitly repins it. Saving through another placement never silently advances it.
+- Sharing and ownership never derive solely from where a card is drawn.
+- Sharing must explicitly authorize a pinned version or an approved stream of future versions. A follow-latest placement cannot silently expose a private branch, later unapproved content, or new dependencies. Enforce grants for each requested version, preview, and derivative.
+
+Services:
+1. ResourceService: import/read/draft/commit/branch/trash/restore/export with revision checks.
+2. WorkspaceService: spaces, placements, scenes, snapshots, navigation bookmarks, layouts.
+3. AppRuntime: instance IDs and open/focus/serialize/restore/suspend/close lifecycle.
+4. CapabilityRegistry: typed actions and availability, routed consistently from every surface.
+5. JobService: durable state machine and atomic result publication.
+6. EditorRegistry: choose in-place editors by supported resource types and capabilities.
+7. HoleBus: typed revisioned events emitted after successful commits, not a second source of truth.
+8. BridgeService: connection/grant/message lifecycle for integrated applications.
+9. SearchService: permission-aware local index of resources, projects, places, commands, and relevant history.
+10. Sync/CollaborationService: real remote authorization and state reconciliation behind explicit availability.
+11. AgentService: plans and executes registered capabilities under the same grants as manual operations.
+
+Specify conflict and error results as part of these contracts. A stale revision must not silently replace a newer edit. App/verb schemas need version negotiation and tested compatibility behavior.
+
+7. PERSISTENCE, MIGRATION, RECOVERY, AND TRUST
+
+Use the existing IDB implementation as the first durable backend and evolve it incrementally. Move critical workspace state toward revision-aware transactions through adapters; preserve legacy loading and setup imports while compatibility is required.
+
+Before changing schemas:
+- Implement and test a full private backup/export format distinct from portable Setup.
+- Include file bytes, metadata, lineage, projects, drafts, placements, arrangements, and necessary preferences in a versioned manifest with integrity checks.
+- Exclude live authentication tokens and secrets from ordinary exports. Describe sensitive export contents clearly.
+- Restore into a separate empty store/profile in tests and verify content plus references.
+- Treat imported archives as untrusted: validate schema, manifest, expanded byte limits, integrity hashes, references, and safe archive paths. Stage restoration separately; never auto-execute imported content. Malformed/truncated archives and quota failure must leave the existing library intact.
+
+Migration:
+- Preserve original IDs and raw legacy snapshots. Maintain a mapping when a new entity structure is unavoidable.
+- Use additive changes, an idempotent journal, validation, and an explicit cutover point.
+- Retain orphaned or ambiguous lineage honestly rather than inventing parents or ownership.
+- Keep unknown compatible fields when round-tripping formats where feasible.
+- Coordinate open tabs and schema upgrades; use revisions/compare-and-swap semantics or a proven equivalent for writes.
+- Verify interruption before, during, and after cutover. Recovery must resume or safely retain the previous state.
+- Enforce reader/writer schema compatibility so an older build cannot corrupt a newer store. Rollback after cutover must preserve subsequently acknowledged edits through a compatible reader, conversion, or journal replay; restoring only a pre-migration snapshot would lose new work.
+- Do not delete old stores or archived modules until replacement and restore gates pass.
+- Do not relabel Setup v1/v2 as a complete backup.
+
+Transaction rules:
+- Commit file bytes, versions, relevant membership, and successful job outputs consistently. For operations spanning nontransactional systems, use a durable staged manifest and recovery protocol; do not claim cross-service atomicity.
+- Jobs finish only after outputs are durable. Retries use idempotency keys and do not silently create duplicate results.
+- Store crash-recoverable drafts during editing, with visible pending/error states. Only acknowledged durable content is guaranteed restored.
+- Trash is recoverable. Permanent purge is distinct, explains dependencies, and follows explicit intent. Garbage collection must respect pinned versions, histories, shares, and backups/retention policies.
+- A cancelled job has a defined result policy. Either nothing is published, or already committed partial outputs are explicitly identified and recoverable.
+- Quota, unavailable storage, permission denial, corrupt import, and offline errors preserve originals and offer a usable next action.
+
+Distinguish Saved locally, Sync pending, Synced, Conflict, and Failed. Browser storage is not equivalent to an independent backup. Provide storage usage, export, and recovery affordances without alarming or misleading language.
+
+8. APP RUNTIME, CANVAS, AND SECURE BRIDGE
+
+Replace app-name singleton assumptions with stable app instance IDs where needed. Opening the same studio on different resources must not silently retarget or overwrite another editor. Reuse an instance only through an explicit, safe policy.
+
+Mode changes must preserve running instances and in-memory state. Keep ordinary DOM editors at a stable runtime location where possible; changing a camera or view must not remount an iframe/editor and lose work. If a constrained platform requires suspension, checkpoint and restore through the app contract and make limitations visible.
+
+Canvas editor sequence:
+- Text and image first, using real resources and durable versions.
+- Audio trim/loop/level and playback next using validated browser audio support.
+- Video preview/trim/captions, PDFs, 3D previews, and specialist studio bridges next.
+- “Open in studio” must open the current resource/version with project context and a dependable route back.
+- Shared canvas objects remain references; the host must not become the owner of every specialist file format.
+
+Every integrated studio must:
+1. Open a specified asset/version ID through an authorized resource handle.
+2. Save back a new version or declared derived assets and receive committed IDs.
+3. Read the permitted project Kit: fonts, colors, logo, and related settings.
+4. Report long-running work through Activity with real states.
+5. Expose at least one genuine registered verb or clearly declared read-only capability where the product is a reader/player.
+6. Serialize/restore relevant editor state and report unsupported capabilities honestly.
+
+Bridge protocol:
+- Versioned handshake with exact approved origin, source window/channel, nonce/session ID, request ID, operation, and schema validation.
+- Grants scoped to named resources/projects and actions, with expiry and revocation.
+- No wildcard targetOrigin for sensitive messages; validate incoming origin and source. Never send session/account tokens or the entire private desktop to an arbitrary app.
+- Bound payload sizes and define Blob/ArrayBuffer transfer, errors, cancellation, and cleanup.
+- Bind asynchronous results to the original project, input versions, and base revision. Switching the active project while a job runs must not redirect its output.
+- Acknowledge save only after durable commit. Repeated messages must be idempotent.
+- Test unknown origin, wrong source, malformed message, stale grant, revoked access, duplicate request, and conflicting base version.
+
+Untrusted executable content needs a real isolation boundary. Third-party apps, generated tools, and imported active content must not inherit the OS origin's ambient storage privileges. Use isolated origins or correctly sandboxed execution surfaces and brokered capabilities. Validate the transport model for sandboxed/opaque origins rather than weakening origin checks. Test that an installed/generated app cannot directly read the workspace database or bypass a revoked grant; postMessage validation alone cannot restrict arbitrary same-origin JavaScript.
+
+The audited build rejects literal iframe markup, and current CSP/Permissions-Policy are restrictive. Inspect and deliberately update policies only for required capabilities. Do not remove protections globally to make embedding work. A target site's own framing policy may prevent embeds. Support real connected-window integration where possible, and clearly label external handoff when no bridge exists. Do not bypass framing restrictions or describe download/reupload as automatic integration.
+
+9. VERBS, CAPTURE, CARRY, TIME, FLOW, AND PUBLISH
+
+Verb contract:
+  id, version, label, kind(transform|command), accepted input types/cardinality,
+  parameter schema, capability requirements, permission scope, output schema,
+  progress, cancellation/retry policy, and execution handler.
+
+Handlers receive scoped immutable input versions, parameters, abort signal, and progress reporting. They return proposed outputs or metadata operations. The host performs authorized durable commits. AI, context menus, Quick Tools, Carry, canvas, and Flow invoke the same registry.
+
+Do not force every action to create a content version. “Send to Carry” and “Add to project” are reversible metadata commands. Crop, convert, and text editing create content versions; split/extract may create derived assets. Record the actual operation in Activity/history.
+
+Implement starter actions in a capability matrix:
+- Text save/branch, image crop/resize/thumbnail, PNG/WebP conversion: begin with known real primitives.
+- Cutout: integrate the actual Luma capability after inspecting engine and processing requirements.
+- Audio trim/normalize/convert/extract and video thumbnail/caption operations: qualify codec support and processing costs; provide real outputs and fallbacks.
+- Key/BPM and stem separation: locate and validate actual engines/models or implement a genuine supported path. Missing models or native-only engines are not working web verbs.
+- Compress must declare its actual codec/quality/size behavior; renaming an extension is never conversion.
+
+Capture:
+- Quick text, links, user-pasted images, dropped files, and voice memo where supported.
+- Show the destination: active project or Inbox. Preserve creation time and source metadata.
+- Mic access follows a user action and usable permission state. Current deployed microphone policy must be fixed deliberately before recording can work. Test denied/unavailable/device-loss cases.
+- Do not continuously read clipboard or record ambient audio.
+
+Carry:
+- Persistent references and snippets in a small shelf available across views.
+- Preview/play where appropriate; drag or choose an explicit destination.
+- Changing projects does not silently reassign a carried item. Indicate current destination.
+- Work on keyboard/touch as well as drag/drop. Respect missing and revoked resources.
+
+Time:
+- Explicit asset/project/arrangement history with scope labels.
+- Text diff, image comparison, and audio A/B where supported.
+- Restore and Branch preserve the record; historical view is read-only until deliberate action.
+- Workspace arrangement restore must define whether it affects positions, windows, and active resources; it must not unexpectedly roll content back.
+
+Flow:
+- Durable versioned recipes composed of registered actions.
+- Preview concrete inputs, parameters, expected outputs, and required capabilities before consequential execution.
+- Support cancellation, retry, per-step errors, and deterministic output naming.
+- Implement “Release Asset Pack”: approved cover image → explicit crop/focal-point choices → 3000×3000, 1080×1920, 1200×630 outputs → PNG/WebP as supported → systematic project/role/version names → release collection and ZIP with manifest.
+- Display actual generated previews. Do not stretch images silently. Warn when a requested output requires upscaling and let the user choose.
+- Audio plus artwork packaging preserves actual audio unless a separate, declared audio transform is chosen.
+
+Publish:
+- Consolidate release packages, press materials, portfolio export, and curated Worlds around explicitly approved versions.
+- Separate local preview/export, draft hosted preview, and public publication states.
+- Exported ZIP/static site/PDF must be valid and usable independently.
+- Public Worlds serialize only approved resources, versions, and presentation—not the private workspace or hidden dependencies.
+- Preserve working old routes and export formats while replacements mature.
+
+10. FULL PRODUCT CAPABILITY MAP AND CONSOLIDATION CORRECTIONS
+
+Use this as a destination capability map, not a claim that all applications are already working. Do not force an arbitrary installed count. Install only functioning entries by default; maintain a clearly separated roadmap/catalog for unavailable products. Capture, Carry, Time, Search, Activity, Settings, Spaces/Universe, and Relay are system capabilities even when some have dedicated windows.
+
+Proposed first-21 application windows from the audit recommendation:
+  Luma, StemDeck, ScenePilot, Form, Glyph;
+  Bounce, Librarian;
+  NOW, Circle;
+  Paper, Atlas, Tongue;
+  WebLab, Forge, Lab;
+  Flow, Publish;
+  Files, Capture, Carry, Hole Browser.
+This is the shared destination roster, not twenty-one installed completion claims. Capture/Carry also remain always-available OS surfaces. Preserve Notes as a quick editor and durable text type. Calendar/Tasks/contacts remain everyday capabilities exposed through appropriate workspace, Paper, Atlas, and NOW surfaces; separate app packaging can be decided without dropping them. Crew is the agent control center. Momentous and qualified Vault expand the catalog in later waves; Care remains future. Do not remove a useful functioning app to enforce the number twenty-one.
+
+Before distributing app work, turn the requested capabilities below into a finite acceptance matrix: capability, ordinary journey, supported formats/platforms, owner, dependency, test/output, and delivery state. Preserve the requested scope. Do not add adjacent product categories merely to make an app seem “serious,” and do not reduce scope with vague “when supported” labels; specify the supported path or exact blocker.
+
+Core everyday surfaces:
+- Files: actual import, preview, search, folders/collections, Photos and Locker views, versions, trash, and verified full export/recovery.
+- Hole Browser: supported URL/search handoff, saved links and Trails/history, project context, and clear external-page limitations. Distinguish an external tab from an embedded or connected page; do not promise unrestricted browser embedding.
+- Notes: preserve existing scratchpad content and routes, migrate safely to durable drafts/text assets, and let a thought remain quick to capture. Paper can open the same assets for deeper work without duplicating or silently reformatting them.
+
+Studios:
+- Luma: image/design tools, project canvas presentation, Moodboard, appropriate 2D tools, reusable Cutout and image verbs. Preserve existing projects/autosave/export.
+- StemDeck: genuine music editing and production paths, fast beat sketching, qualified analysis and render verbs. Preserve native products while assessing browser parity.
+- ScenePilot: video editing, caption tracks, supported media exports, and Animate capabilities.
+- Form: 3D/CAD/fabric work, Ghost integration, characters/avatars/rigging where supported.
+- Glyph: font and typography workflows, preserving actual font project formats and TTF/OTF export.
+
+Reading, listening, and everyday work:
+- Bounce: real local audio library/playback, queue, persistent playhead, consistent global playback controls. View switching must not interrupt playback; reload restoration respects autoplay rules.
+- Librarian: real PDF/book opening, reading position, collections, supported annotations, and Files integration.
+- Paper: documents, tables/formulas/charts, project calculations, forms, PDFs and annotation. Build each promised capability with real exports; distinguish a visual blackout from actual PDF redaction, and distinguish drawn signatures from verified digital signatures.
+- Atlas: saved places, maps through a legitimately configured source, itineraries, linked material, and shared trip plans. Make source/license/offline limitations clear.
+- Tongue: translation/transcription where an actual engine/provider exists, subtitles, pronunciation practice, lessons/exercises, and durable learning progress. Do not fabricate assessments or provider results.
+- Calendar, Tasks, and contacts: implement local events with explicit time zones, project checklists, and contact records linked to relevant work; verify save/reopen and portable export. External calendar/contact synchronization is a separately qualified integration. Mail requires a real authorized provider connection to claim sending/receiving; until connected, label draft/handoff capabilities honestly and retain provider integration as an explicit dependency.
+
+Building and experimenting:
+- WebLab: preserve its working website-checkup functionality. Deep code editing, project files, previews, and developer tools are an explicit new expansion.
+- Forge: visually compose or generate small working tools using bounded capabilities. Generated code runs in a deliberately restricted environment; never grant arbitrary host privileges by default.
+- Lab: real interactive simulations, signal/audio analysis, and generative visuals. Expose assumptions/units for scientific simulations; distinguish creative visualization from measurement.
+
+Workflow and people:
+- Flow and Publish as specified above.
+- NOW: private communication, project feedback, Rooms, and supported live sessions; source/service availability must be verified.
+- Circle: public discovery, following, public projects, and published Worlds. It stays distinct from NOW. Do not revive the superseded proposal to merge Circle into NOW.
+- Crew: inspectable agent plans, resource scopes, capability grants, budgets, progress, cancellation, checkpoints, and review of consequential actions.
+- Momentous Store: discover/install/update compatible apps, themes, objects, instruments, workflows, and Space templates with manifests, permissions, provenance, rollback, and real transaction states if commerce is included.
+- Vault: implement only against a specific threat model, encryption/key lifecycle, recovery policy, and security review. A hidden folder or visual lock is not a secure credential vault. Do not advertise password-manager parity before qualified.
+- Care: remains explicitly a future roadmap item under the user's existing scope. Do not fill the drawer with fake repair controls.
+
+Minimum concrete demonstrations for broad product categories:
+- Paper: create a formatted document; create a table with arithmetic plus SUM/AVERAGE and a chart; fill a saved form; annotate a PDF; apply a clearly identified drawn signature; redact selected content and verify that content is absent from the resulting PDF text/content, not merely covered visually. Save/reopen documents and sheets in documented native formats, exchange text/HTML/CSV as appropriate, and export actual PDFs. Track additional requested format compatibility explicitly.
+- Atlas: save places from a legitimate map source, organize them into a dated itinerary, link real photos/notes, connect scheduled events, and explicitly publish selected trip material to Circle when that service is ready. Test private locations remaining private.
+- Tongue: translate supported text, transcribe supported audio, create usable subtitle output, run lessons/exercises and practice conversations with a real declared engine/provider, record pronunciation practice, and adapt exercises using inspectable progress. Show unsupported languages and offline/provider limitations rather than generating fake scores.
+- Form: preserve current 3D/CAD/fabric workflows and exports; import a real Ghost result; create/edit a character, rig it, and demonstrate a saved/reopened animation. Document estimated geometry and file compatibility honestly.
+- WebLab: retain real website audit results; add a project of editable HTML/CSS/JS files with controlled preview, saved revisions, and working export. Track deeper development tooling as explicit additions, not implied shell access.
+- Forge: create a working user-configurable utility from bounded components or generated code, inspect its grants, save/reopen it, and test it in the isolation boundary. Demonstrate that it cannot read unrelated private resources.
+- Lab: deliver a real parameterized physics simulation and an audio/signal visualization as initial reusable instruments; document equations/units or signal sources and save parameters/results. Keep the extension interface real and testable.
+- Momentous: install a real package with manifest and permissions, open its working capability, update it, and roll back safely. Commerce requires real provider/transaction handling before purchases are enabled; a purchase button without a service does not meet that scope.
+- Crew: delegate a bounded real task, observe actual jobs and outputs, enforce a resource/cost limit, cancel execution, and inspect the result. A decorative list of agents does not meet the requirement.
+
+Apply equally concrete matrices to retained studios using their existing functionality/parity checklists. The demonstrations above establish minimum gates, not permission to discard other explicitly required capabilities.
+
+Required consolidation corrections from inspected sources:
+1. Ghost performs 3D garment work and belongs with Form; preserve source imagery and metadata. Inferred garment geometry is not calibrated fit or production sewing patterns.
+2. Pocket is the beat sketchpad. Pocket Studio is voice-memo/sharing material. Do not merge them based only on their similar names.
+3. Sessions showed shared listening, a queue, and room conversation. Its backend was not exercised. Do not assume it is collaborative multitrack recording.
+4. Animate includes cel drawing, onion skin, layers, animation, and real export formats. A few transform keyframes in ScenePilot do not preserve its functionality. Retain an animation mode and project-format import/export until parity is proven.
+5. The catalog's armonon/sattari repository was empty at the audit. Native Sattari/StemDeck/Modular code exists elsewhere, with different capabilities and platform requirements. A marketing web page is not a browser audio engine.
+6. Evaluate Sattari Rack as a StemDeck mode versus separate app after a real technical prototype. Native AU/VST hosting requires an actual native bridge. Do not promise it inside an ordinary browser.
+7. WebLab currently checks websites; it is not already the requested IDE.
+8. Portfolio already has useful project storage and export capability. Reuse it for Publish, without pretending static packaging is remote hosting.
+9. Locker has its own storage/origin and legacy bridge. Migration requires actual export/import and scoped connection handling; cross-origin IndexedDB is not shared automatically.
+10. A catalog entry named HOLE elsewhere in the ecosystem is a separate community/search surface. Do not confuse it with this Hole OS repository.
+
+For every merge, create a parity checklist covering open/import, edit, save/reload, history where present, project formats, exports, shortcuts, accessibility, and old routes. Keep the old implementation available until its replacement passes. Archive only after integration and recovery are verified; do not delete working functionality merely to simplify the app list.
+
+11. SMART SCREEN, PERSONAL AGENT, AND GENERATED TOOLS
+
+Keep a Talk Bar and universal search accessible without demanding attention. Search and direct commands must work without an AI provider. A natural-language request may select a deterministic template before an AI service is available; label capability availability accurately.
+
+Example: “Help me study these three pages.”
+- The user selects the source pages or grants a specific scope.
+- Hole proposes a temporary surface with the pages, notes, a source-linked explanation if available, and a real exercise.
+- The original Study Space, files, and arrangement remain intact.
+- The user can keep an output, save the instrument, apply the arrangement, or dismiss it.
+- Generated factual material identifies source coverage and uncertainty rather than disguising invented content as extracted text.
+
+Agent execution requirements:
+- Plan and act through registered capabilities, scoped resource handles, and ordinary jobs.
+- Distinguish a suggestion, a queued action, a running action, a verified output, and a failure.
+- Preview material edits/rearrangements when appropriate; make reversible actions easy to undo.
+- Respect existing user authorization without repetitive confirmation. Require explicit intent for new sending, public publishing, purchasing, sensitive sharing, permanent deletion, and permission expansion.
+- Users can stop work, inspect the inputs/results, and revoke access.
+- Budget/time/cost limits are real controls, not decorative counters.
+- Untrusted documents/web content cannot grant permissions or instruct the agent to override the user.
+- Memory is inspectable and scoped. Ephemeral conversations do not silently become permanent project memory.
+- Generated utilities declare data sources, capabilities, persistence, and export behavior. Unsupported runtime operations remain unavailable.
+
+12. UNIVERSE, INPUT, ACCESSIBILITY, AND PERFORMANCE
+
+Implement optional Universe over shared scenes and resource references. Begin with restrained depth and recognizable objects; add environment templates after useful editing and restoration work. Themes may include Minimal Void, Music Studio, Study Library, Creative Gallery, Developer Lab, and Relaxed Home.
+
+Provide named Orbit, Explore, and Flat camera modes with an immediate, visible return to Flat. Demonstrate genuine spatial coordinates and camera navigation over real objects; a flat CSS scale effect alone does not satisfy Universe. The first customization gate includes selectable environment/background, depth, lighting where rendered, opt-in ambient audio, camera bookmarks, and saved presets. Track richer furniture, user-created interactive objects, and configurable physics as explicit later capability packages; do not let decorative complexity delay reliable editing.
+
+Scene positions, depth, rotation, scale, anchors, and cameras are presentation data. The existing camera field z means zoom; do not silently reinterpret it as spatial depth. Migrate or version representations explicitly.
+
+Input policy:
+- Scene navigation owns gestures on the scene surface. Active editors own their content gestures. Breadcrumbs and an explicit Further out control remain available to leave editing; scrolling or magnifying editor content must never unexpectedly change navigation scope.
+- Normal desktop wheel/trackpad behavior remains predictable. Do not globally steal document scrolling.
+- Semantic zoom can use established gestures plus explicit controls; browser page magnification remains available.
+- WASD/QE and faster movement apply only in an explicit Explore mode with no editable focus.
+- F may focus selection only in an appropriate navigation context.
+- Escape leaves pointer lock/navigation before other scope changes and never discards a draft.
+- Tab and Shift+Tab remain native focus traversal. Replace the earlier proposed Tab-to-overview shortcut with a dedicated control or nonconflicting configurable shortcut.
+- Cmd/Ctrl+K can open command/search if it does not intercept a more specific active editor behavior; provide a visible alternative.
+- Pointer lock is optional, user-initiated, and visibly escapable. Basic navigation never requires it.
+- Touch supports explicit enter/back/focus and reachable controls. Drag-only operations have alternatives.
+
+Accessibility:
+- Use semantic DOM controls and a logical reading/focus order in every presentation.
+- Offer a list/tree equivalent to spatial discovery and search that reaches every permitted object.
+- Focus indicators, labels, announcements, dialogs, contrast, and state errors must be usable with assistive technology.
+- Edit text at a readable size rather than scaling it into a texture. Support browser zoom and reflow; 320px width must retain reachable essential controls.
+- Reduced motion removes camera travel/parallax and uses immediate or restrained transitions while preserving orientation.
+- Keyboard-only use must complete the entire first journey and core file workflow.
+- Restore focus predictably after overlays, history, and navigation; do not trap focus in an offscreen object.
+
+Device adaptation:
+- Preserve conceptual object identity and geography. A phone can show an ordered outline or focused panel of the same scene.
+- Keep device-specific presentation overlays separate from the canonical arrangement; visiting on a phone must not overwrite the user's desktop layout.
+- Mark local-only unavailable assets and offer download/reconnect paths. Do not draw a convincing preview of inaccessible content.
+
+Rendering/performance:
+- Choose DOM/CSS and optional lazy-loaded WebGL after measuring the current stack. WebGPU is a progressive enhancement.
+- Keep live editable DOM accessible. Do not make a renderer with browser-zoom limitations the only editing path.
+- Bound visible scene complexity, texture resolution, pixel ratio, and active previews. Virtualize large collections.
+- Pause hidden rendering and inactive previews without stopping intentionally playing audio. Revoke object URLs and release media/GPU resources when safe.
+- Recover from graphics context loss and unsupported features by preserving work and falling back to Flat.
+- Establish measured budgets on named reference devices before scaling. Suggested initial targets: responsive editing with 200 indexed assets, smooth navigation around 30 visible objects, and no lost input while background jobs run. Record real frame/input/memory measurements rather than claiming universal 60fps.
+- Test relevant Safari and Chromium versions; do not claim a browser was verified if its runtime was unavailable.
+
+13. REAL ACCOUNTS, SHARING, COLLABORATION, AND RELAY
+
+Build and test the real service boundaries; visual simulations do not satisfy these milestones. Use existing legitimate services when available, or implement a documented backend with local development and integration tests. Missing production credentials/deployment authorization may block release, not all local service development.
+
+Authentication:
+- A local welcome/lock screen can protect against casual viewing but must not be represented as account authentication or storage encryption.
+- Account access uses real authentication, session lifecycle, sign-out, recovery, and server authorization. Privacy-safe unauthenticated widgets receive no personal context.
+
+Sharing:
+- Private Universe, invited Shared Space, and curated Public World are distinct access models.
+- Enforce access server-side for metadata and content bytes, not merely by hiding UI.
+- Invitations specify scope and role. Shared collections must not leak private references, thumbnails, titles, search hits, or nested dependencies.
+- Test guests, viewers, editors, owners, expired invitations, revoked permissions, and concurrent role changes.
+- Presence is truthful; start with cursors/badges. Do not fabricate online people.
+- Define collaboration granularity and conflict policy before implementing simultaneous edits. Preserve concurrent work; do not silently last-write-win over another person's content.
+- Public search/indexes and cached responses must respect the publication model and access changes.
+
+NOW and Circle:
+- Verify actual service/source availability before integration.
+- Distinguish transport encryption, protected storage, and end-to-end encryption. Do not claim E2EE without a reviewed implementation and key lifecycle.
+- Treat confidential direct messages separately from server-accessible project rooms.
+- External social integrations use authorized APIs/OAuth with per-provider capability states. Never require third-party passwords or pretend unsupported feeds/posting are connected.
+- Sending/posting follows the user's explicit authorization. Maintain drafts and truthful pending/sent/failed states.
+
+Relay:
+- Built-in synchronization of selected durable content, preferences, workspace references, and permitted memory.
+- Local work remains usable offline. Queue changes and show real progress/errors on reconnection.
+- Implement offline shell/asset delivery for previously installed or cached use, with coherent versioned updates. Distinguish this from a first-ever visit without connectivity. Test offline cold reopening, interrupted updates, incompatible cached/new bundles, and recovery without clearing user data.
+- Define conflict resolution for text, metadata, versions, arrangements, deletion, and permissions; do not use one blanket last-writer rule.
+- Device-local layout, unsupported app state, and local-only file handles may not sync. Expose that clearly.
+- Restore a second device using authorized bytes and references, not a screenshot of the first device.
+- Do not synchronize secret tokens as ordinary workspace data or promise remote execution of unsupported native apps.
+- Test revocation and offline caches realistically. Explain that already downloaded content may remain with recipients.
+
+14. MULTI-AGENT EXECUTION AND OWNERSHIP
+
+The lead owns product coherence, shared contracts, dependency ordering, integration, and the completion evidence. Agents must not implement separate definitions of Asset, Project, Job, Permission, or app lifecycle.
+
+Maintain concise repository-native artifacts:
+- architecture/contracts: current schemas and service interfaces.
+- implementation/backlog: work packages, dependencies, owner, state, blockers.
+- evidence: exact revision, tests, observed workflows, outputs, browser/device coverage.
+- compatibility: legacy routes/formats and migration/parity status.
+- decisions: meaningful tradeoffs and resolved conflicts, not an unbounded diary.
+
+Adapt paths to existing project conventions. Do not scatter duplicate plans across repositories.
+
+Work packages and ownership:
+P0 Lead/integration: shared shell entry points, contracts, routing, release integration.
+P1 Continuity/storage: resource model, drafts, transactions, migration, backup, trash, conflicts.
+P2 Capabilities/jobs: registry, durable jobs, Activity, cancellation, initial verbs, Flow primitives.
+P3 Runtime/bridge: app instances, lifecycle, scoped SDK, connection security, studio adapter contract.
+P4 Navigation/workspace: semantic scope transitions, saved paths/cameras, clusters, keyboard/touch.
+P5 Canvas/editors: host, text/image/audio editors, linked placements, contextual tools, Time UI.
+P6 Studio integrations: separately bounded adapters and parity-preserving product merges.
+P7 Smart Screen/Crew: temporary work surfaces, intent routing, scoped agent execution, generated tools.
+P8 Universe/performance: optional renderer, camera modes, themes, quality/fallback behavior.
+P9 Services/social/Relay: auth, invitations, authorization, sync, presence, NOW/Circle adapters.
+P10 Everyday/build/catalog: Paper, Atlas, Tongue, WebLab expansion, Forge, Lab, installable products.
+P11 Independent verification: migration, adversarial bridge/permission tests, workflow tests, accessibility, release evidence.
+
+Respect the actual concurrency limit. With four total agent slots, keep the lead plus three workers active and schedule packages in waves. Logical roles do not require twelve simultaneous agents. Increase parallelism only where the environment permits and dependencies allow.
+
+Before assigning a package, give the worker:
+- Exact outcome and consumer-facing acceptance demonstration.
+- Contract version and allowed modules/files.
+- Known dependencies and source evidence.
+- Required compatibility and relevant tests.
+- Clear handoff format: changed files, behavior, validation, remaining gaps, integration steps.
+
+Use isolated worktrees or nonoverlapping module ownership. Do not let several agents edit the central shell, schema migration, or shared styles without an explicit owner and integration plan. Request contract changes from their owner, update consumers together, and version compatibility intentionally.
+
+Contract fixtures can support parallel development, but label them as tests and remove them from production success paths. At integration, replace fixture assumptions with real services and test complete workflows.
+
+Agents should challenge contradictions early. The lead resolves them in the decision record and updates the one authoritative contract. Do not send the user a pile of incompatible agent plans.
+
+15. DELIVERY WAVES — CONTINUE THROUGH THE PROGRAM
+
+Wave 1: Reliable return to work.
+  Refresh the base; fix visible save failure, durable drafts, atomic jobs, recoverable deletion, and conflicting writes. Establish the resource/workspace/runtime contracts and safe migration. Implement the real Studio → Project → Note journey and backup/restore. Exit gate: acknowledged work and context survive leave/reload/return, including a tested error path.
+
+Wave 2: A useful continuous creative workflow.
+  Add canvas text/image editing, linked placements, Carry, Capture, Time, starter verbs, one real studio adapter, and Release Asset Pack. Exit gate: import → project → edit → version → Activity → Carry → Flow → Publish preview/export → reopen → recover, with actual output files and lineage.
+
+Wave 3: One computer across views.
+  Integrate Smart Screen arrangements and optional Universe over the same running instances. Add search/direct paths, saved instruments, accessible navigation, and measured fallback behavior. Exit gate: switching views preserves active work, playback, identity, and permissions; transformations preview/apply/revert correctly.
+
+Wave 4: Depth across specialist tools.
+  Integrate retained studios and the actual app consolidations. Preserve project formats and exports. Add deeper media verbs and canvas editors as their engines qualify. Exit gate: each integrated studio passes the shared contract and its parity checklist. Missing sources remain open work, not silently removed scope.
+
+Wave 5: A shared and continuous personal computer.
+  Implement real account/session, permissions, Shared Spaces, NOW/Circle capabilities, curated Worlds, and Relay. Exit gate: two actual clients exchange authorized content/presence, access is enforced and revoked, offline changes reconcile, and private material stays excluded from guest/public payloads.
+
+Wave 6: Everyday computing and extensibility.
+  Complete the approved everyday/build applications, Crew, reusable instruments, installation/update model, and Momentous integration. Implement Vault only through its security gates; retain Care as explicitly future. Qualify Sattari Rack with a real prototype and documented product decision. Exit gate: each delivered product has a meaningful create/open → use → save → reopen → export/recover workflow, plus its permission and failure behavior.
+
+Within each wave, integrate small working increments. Some later independent work can start earlier against stable contracts. Do not hold all integration until every agent finishes. Each integration should leave the product buildable and the existing workflows usable.
+
+16. ACCEPTANCE AND COMPLETION EVIDENCE
+
+Functional acceptance:
+1. Enter Studio, open a project, edit a note, pull back, reload, and return to the exact saved thought and recognizable surroundings.
+2. Switch Desktop, canvas, Smart Screen, and Universe without losing an editor draft or restarting a running app instance.
+3. Show one asset in two places; edit it; explain and demonstrate follow-latest versus pinned-version behavior.
+4. Restore or branch an older version and retain its lineage. Restore an arrangement without unintentionally reverting content.
+5. Run a transform; observe real progress; cancel/retry; verify durable outputs and no duplicate success from repeated requests.
+6. Complete the shared open/save-back/Kit/job contract for every retained editing studio, plus the relevant read-only contract for readers/players. One adapter satisfies an early integration gate, not final ecosystem completion.
+7. Produce and inspect the Release Asset Pack dimensions, MIME types, filenames, previews, archive, and manifest.
+8. Export a full backup and restore it into an isolated clean profile with equivalent content and relationships.
+9. Complete the first journey and core workflow using keyboard, touch, small-screen layout, and reduced motion.
+10. Test quota failure, crash/reload after a durable draft, stale concurrent tab writes, missing sources, and interrupted migration without silent data loss.
+11. Reject malicious/invalid bridge messages and saves outside a grant; revocation applies to later operations.
+12. Demonstrate real guest/editor/owner access, curated publication, and second-device continuity. These are required later-wave gates; any unmet external dependency remains explicit unfinished work. Test that new private versions of a previously shared asset do not leak.
+13. Preserve legacy routes/formats and the working capabilities of merged products.
+14. Demonstrate useful operation without AI and offline operation within the stated local capability set.
+
+Testing policy:
+- Run existing build/tests on the integrated revision, plus meaningful tests for storage, migration, state transitions, permissions, and failure recovery.
+- Use isolated test stores/profiles and explicit fixtures. Never experiment by destroying a user's production data.
+- Browser tests must exercise actual editors, navigation, reload, and exports; unit tests alone do not establish product completion.
+- Verify outputs rather than only checking toast text or DOM presence.
+- Review accessibility manually and with available tooling. Record browser/device limitations honestly.
+- Run the appropriate checks once changes settle; expand testing when new failures or risks justify it. Do not substitute endless test churn for integration.
+
+Completion evidence for every package:
+  exact revision; changed behavior; source integration; observed demonstration;
+  durable output where applicable; tests; compatibility; known limits;
+  deployment/release state; remaining external prerequisites.
+
+Use precise status language:
+- Concept: an idea or screen without the promised operation.
+- Implemented: the operation exists in code.
+- Verified: observed behavior and relevant checks support the claim.
+- Delivered: the verified build is available at its stated destination.
+- Blocked: identify the specific missing dependency and work still required.
+
+A local backend implementation awaiting production credentials can be implemented and verified locally while release remains blocked. Do not call the entire platform shipped. Likewise, a functional external link is a handoff, not an integrated studio.
+
+17. HISTORY AND ORIGINALITY
+
+Credit the lineage accurately. Hole did not invent hypertext, linked objects, collaboration, contextual tools, zoomable interfaces, or calm technology.
+
+- Engelbart and his team's 1968 NLS demonstration combined linked information and collaborative work: https://www.dougengelbart.org/mousesite/1968Demo.html
+- Bederson, Hollan, and collaborators explored multiscale/zoomable graphical interfaces in Pad++: https://chi1995.acm.org/proceedings/shortppr/bbb_bdy.htm
+- Weiser and Brown described technology that works with the center and periphery of attention: https://calmtech.com/papers/coming-age-calm-technology
+
+Hole's proposed extension is a coherent practical combination: durable identity across tools and views, meaningful zoom into real editable work, explicit recoverable memory, adaptable instruments, and understandable sharing. Treat its usefulness as a hypothesis to test through ordinary journeys, not a historical first to proclaim.
+
+18. BEGIN EXECUTION
+
+Start with a concise statement of the current verified base, active package assignments, and first integration target. Reuse the completed audit, verify what may have changed, and begin implementation without an automatic audit-only pause.
+
+Keep the user informed about working behavior, discoveries that change scope, and real blockers. Do not overwhelm them with every internal tool call or restate the entire plan after each milestone.
+
+Proceed until the authorized complete program is implemented, integrated, and verified, or clearly identify the specific external dependencies that prevent remaining work while completing all independent work available. Preserve an accurate resume point if execution spans sessions. Never imply that promises, mockups, fixture data, or agent reports alone are a finished personal computer.

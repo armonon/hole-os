@@ -78,19 +78,18 @@
     }
     async function loadStorage() {
       try {
-        const opening = indexedDB.open(DB_NAME, 1);
+        await window.HoleCore?.ready;
+        const opening = indexedDB.open(DB_NAME, 2);
         opening.onupgradeneeded = () => {
           const database = opening.result;
-          database.createObjectStore('files', { keyPath: 'id' });
-          database.createObjectStore('contents');
-          database.createObjectStore('jobs', { keyPath: 'id' });
+          for (const store of ['files', 'contents', 'jobs', 'assets', 'versions', 'versionContents', 'records', 'journal', 'backupStage']) if (!database.objectStoreNames.contains(store)) database.createObjectStore(store, store === 'records' ? { keyPath: ['type', 'id'] } : ['contents', 'versionContents'].includes(store) ? undefined : { keyPath: 'id' });
         };
         opening.onblocked = () => { announce('Close another Hole tab to finish opening the file library.'); };
         db = await request(opening);
         db.onversionchange = () => { db.close(); db = null; dbError = 'Reload Hole to reopen your file library.'; announce(dbError); };
         const tx = db.transaction(['files', 'jobs'], 'readonly');
         [files, jobs] = await Promise.all([request(tx.objectStore('files').getAll()), request(tx.objectStore('jobs').getAll())]);
-        files = files.filter(f => typeof f.id === 'string' && typeof f.name === 'string' && typeof f.type === 'string');
+        files = files.filter(f => f.state !== 'trashed' && typeof f.id === 'string' && typeof f.name === 'string' && typeof f.type === 'string');
         jobs = jobs.filter(j => typeof j.id === 'string').map(restoredJob);
         notifyFiles(); notifyJobs(); renderFiles();
       } catch (error) { dbError = storageError(error); announce(dbError); renderFiles(); }
@@ -106,13 +105,26 @@
     if (channel) channel.onmessage = async event => {
       if (!db) return;
       try {
-        if (event.data?.type === 'files') { files = await request(db.transaction('files', 'readonly').objectStore('files').getAll()); notifyFiles(false); renderFiles(); }
+        if (event.data?.type === 'files') { files = (await request(db.transaction('files', 'readonly').objectStore('files').getAll())).filter(f => f.state !== 'trashed'); notifyFiles(false); renderFiles(); }
         if (event.data?.type === 'jobs') {
           const saved = await request(db.transaction('jobs', 'readonly').objectStore('jobs').getAll()), active = jobs.filter(j => j.ownerId === sessionId && ['queued', 'running'].includes(j.status));
           jobs = saved.map(j => active.find(a => a.id === j.id) || restoredJob(j)); active.filter(j => !jobs.some(k => k.id === j.id)).forEach(j => jobs.push(j)); notifyJobs(false);
         }
       } catch { /* The local session keeps working if another tab is closing its database. */ }
     };
+    window.addEventListener('hole:core-change', async event => {
+      if (!db) return;
+      try {
+        if (['assets', 'restore'].includes(event.detail?.type)) {
+          files = (await request(db.transaction('files', 'readonly').objectStore('files').getAll())).filter(f => f.state !== 'trashed');
+          notifyFiles(false); renderFiles();
+        }
+        if (['jobs', 'restore'].includes(event.detail?.type)) {
+          const saved = await request(db.transaction('jobs', 'readonly').objectStore('jobs').getAll());
+          jobs = saved.map(j => jobs.find(active => active.id === j.id && ['queued', 'running'].includes(active.status)) || restoredJob(j)); notifyJobs(false);
+        }
+      } catch (error) { announce(storageError(error)); }
+    });
     async function blobFor(id) {
       if (!db) throw new Error(dbError || 'File storage is still opening.');
       const content = await request(db.transaction('contents', 'readonly').objectStore('contents').get(id));
@@ -121,7 +133,8 @@
     }
     async function saveFile(meta, blob, createOnly = false) {
       if (!files.some(file => file.id === meta.id) && files.length >= MAX_FILES) throw new Error('This library holds up to 500 files. Remove a local file before adding another.');
-      await transaction(['files', 'contents'], 'readwrite', tx => {
+      if (window.HoleCore) meta = (await window.HoleCore.saveLegacyFile({ file: meta, blob, createOnly })).file;
+      else await transaction(['files', 'contents'], 'readwrite', tx => {
         const method = createOnly ? 'add' : 'put';
         tx.objectStore('files')[method](meta); if (blob) tx.objectStore('contents')[method](blob, meta.id);
       });
@@ -136,11 +149,14 @@
       jobs = jobs.filter(j => !old.some(o => o.id === j.id)); notifyJobs();
     }
     function history(type, detail) { return { id: uid(), type, detail, at: Date.now() }; }
-    async function saveTextResult(options) {
+    async function saveTextResult(options, draft = null) {
       const result = await window.HoleTextFiles.save(options, { id: uid, now: Date.now, persist: async ({ file, blob, job }) => {
         if (files.length >= MAX_FILES) throw new Error('This library holds up to 500 files. Download files you want to keep before removing any.');
         // A completed activity entry cannot exist without its saved file and bytes.
-        await transaction(['files', 'contents', 'jobs'], 'readwrite', tx => {
+        if (window.HoleCore) {
+          const saved = await window.HoleCore.saveLegacyFile({ file, blob, job, createOnly: true, draftId: draft?.id, draftRevision: draft?.revision });
+          Object.assign(file, saved.file);
+        } else await transaction(['files', 'contents', 'jobs'], 'readwrite', tx => {
           tx.objectStore('files').add(file); tx.objectStore('contents').add(blob, file.id); tx.objectStore('jobs').add(job);
         });
       } });
@@ -158,23 +174,53 @@
       const submit = button(source ? 'Save new version' : 'Save to Files', 'save', () => {}, 'hfiles-primary'); submit.type = 'submit';
       form.append(nameLabel, name, label, editor, status, submit);
       content.append(node('p', 'hfiles-muted', source ? 'Edit UTF-8 text up to 256 KB. Save returns a separate version to Files; your original stays unchanged.' : app === 'Notes' ? 'Save this snapshot as a real text file. Your scratchpad stays unchanged.' : 'Create a UTF-8 text file up to 256 KB. Use .md for Markdown; other names save as plain text.'), form);
-      const update = () => { const size = new Blob([editor.value]).size; status.textContent = `${formatBytes(size)} / 256 KB`; submit.disabled = size > window.HoleTextFiles.MAX_TEXT_BYTES; };
-      editor.addEventListener('input', update); update();
+      const draftId = 'legacy-text:' + (source?.id || app), core = window.HoleCore;
+      let draftRecord = null, draftQueue = Promise.resolve(), draftPending = 0, draftMessage = '', loadingDraft = !!core;
+      const update = () => { const size = new Blob([editor.value]).size; status.textContent = `${formatBytes(size)} / 256 KB${draftMessage ? ' · ' + draftMessage : ''}`; submit.disabled = loadingDraft || size > window.HoleTextFiles.MAX_TEXT_BYTES; };
+      if (core) {
+        name.disabled = editor.disabled = true; draftMessage = 'Checking for a saved draft…';
+        draftQueue = core.get('settings', draftId).then(saved => {
+          draftRecord = saved;
+          if (saved) { name.value = saved.name; editor.value = saved.text; editor.setSelectionRange(saved.selection?.start || 0, saved.selection?.end || 0); editor.scrollTop = saved.scroll || 0; draftMessage = 'Recovered draft saved locally'; }
+          else draftMessage = '';
+        }).catch(error => { draftMessage = storageError(error); }).finally(() => { loadingDraft = false; name.disabled = editor.disabled = false; update(); });
+      }
+      const saveDraft = () => {
+        if (!core || loadingDraft || new Blob([editor.value]).size > window.HoleTextFiles.MAX_TEXT_BYTES) { update(); return; }
+        const snapshot = { id: draftId, name: name.value, text: editor.value, sourceId: source?.id || null, app, selection: { start: editor.selectionStart, end: editor.selectionEnd }, scroll: editor.scrollTop };
+        draftPending++; draftMessage = 'Saving draft…'; update();
+        draftQueue = draftQueue.catch(() => {}).then(async () => {
+          draftRecord = await core.put('settings', snapshot, { expectedRevision: draftRecord?.revision || 0 });
+          draftMessage = 'Draft saved locally';
+        }).catch(error => { draftMessage = storageError(error); throw error; }).finally(() => { draftPending--; if (content.isConnected) update(); });
+        draftQueue.catch(() => {});
+      };
+      editor.addEventListener('input', saveDraft); name.addEventListener('input', saveDraft); update();
       let saving = false, discardPrompt = null; const initialName = name.value;
+      const unload = event => { if (draftPending || draftMessage && !['Draft saved locally', 'Recovered draft saved locally'].includes(draftMessage) && editor.value !== initialText) { event.preventDefault(); event.returnValue = ''; } };
+      window.addEventListener('beforeunload', unload);
+      const observeClosed = new MutationObserver(() => { if (!content.isConnected) { window.removeEventListener('beforeunload', unload); observeClosed.disconnect(); } }); observeClosed.observe(layer, { childList: true, subtree: true });
       overlayCloseRequest = () => {
         if (saving) { announce('Finishing the save. Keep this tab open.'); return; }
         if (name.value === initialName && editor.value === initialText) { closeOverlay(); return; }
         if (!discardPrompt) {
           discardPrompt = node('div', 'hfiles-route'); discardPrompt.setAttribute('role', 'group'); discardPrompt.setAttribute('aria-label', 'Unsaved text');
           const keep = button('Keep editing', 'pencil', () => { discardPrompt.remove(); discardPrompt = null; editor.focus(); });
-          discardPrompt.append(node('p', 'hfiles-muted', 'This version has unsaved changes.'), keep, button('Discard edits', 'x', () => closeOverlay())); content.append(discardPrompt); paintIcons(); keep.focus();
+          const discard = button('Discard edits', 'x', async () => {
+            try { await draftQueue.catch(() => {}); if (draftRecord) await core.deleteRecord('settings', draftId, { expectedRevision: draftRecord.revision }); closeOverlay(); }
+            catch (error) { draftMessage = storageError(error); update(); }
+          });
+          discardPrompt.append(node('p', 'hfiles-muted', core ? 'Keep this draft to continue when you reopen this editor.' : 'This version has unsaved changes.'), keep);
+          if (core) discardPrompt.append(button('Keep draft and close', 'save', async () => { try { if (!draftRecord) saveDraft(); await draftQueue; closeOverlay(); } catch { update(); } }));
+          discardPrompt.append(discard); content.append(discardPrompt); paintIcons(); keep.focus();
         } else discardPrompt.querySelector('button')?.focus();
       };
       form.addEventListener('submit', async event => {
         event.preventDefault(); if (saving || submit.disabled) return; saving = true; submit.disabled = true;
         name.disabled = true; editor.disabled = true;
         try {
-          const file = await saveTextResult({ text: editor.value, name: name.value, source, app, space: api.state.desk.view === 'overview' ? 'desk' : api.state.desk.view });
+          await draftQueue;
+          const file = await saveTextResult({ text: editor.value, name: name.value, source, app, space: api.state.desk.view === 'overview' ? 'desk' : api.state.desk.view }, draftRecord);
           // A closed editor must not dismiss a newer dialog or steal its focus.
           if (content.isConnected) { closeOverlay(false); openFiles(file.id); }
           announce(`${file.name} saved in Files. ${source ? 'Your original is unchanged.' : 'A separate file is ready.'}`);
@@ -285,18 +331,41 @@
       }); input.focus(); input.select(); paintIcons();
     }
     function removeFile(file) {
-      const content = openOverlay('Remove local file?', 'remove');
-      content.append(node('p', 'hfiles-muted', `Remove ${file.name} from this browser’s library? The original on your device and any separate versions stay unchanged.`));
-      const actions = node('div', 'hfiles-action-row'), remove = button('Remove file', 'trash-2', async () => {
+      const content = openOverlay('Move to Trash?', 'remove');
+      content.append(node('p', 'hfiles-muted', `${file.name} will move to recoverable Trash. Its saved bytes and versions remain in this browser.`));
+      const actions = node('div', 'hfiles-action-row'), remove = button('Move to Trash', 'trash-2', async () => {
         remove.disabled = true;
         try {
-          await transaction(['files', 'contents'], 'readwrite', tx => { tx.objectStore('files').delete(file.id); tx.objectStore('contents').delete(file.id); });
+          const trashed = { ...file, state: 'trashed', modifiedAt: Date.now() };
+          if (window.HoleCore) await window.HoleCore.saveLegacyFile({ file: trashed });
+          else await transaction(['files'], 'readwrite', tx => tx.objectStore('files').put(trashed));
           files = files.filter(f => f.id !== file.id); if (selectedId === file.id) selectedId = null;
           const downloadURL = downloadURLs.get(file.id); if (downloadURL) { downloadURLs.delete(file.id); setTimeout(() => URL.revokeObjectURL(downloadURL), 30000); }
-          if (content.isConnected) closeOverlay(); notifyFiles(); renderFiles(); announce('File removed from this browser.');
+          if (content.isConnected) closeOverlay(); notifyFiles(); renderFiles(); announce('Moved to Trash. You can restore it from Files.');
         } catch (error) { announce(storageError(error)); remove.disabled = false; }
       });
       actions.append(button('Keep file', 'arrow-left', () => closeOverlay()), remove); content.append(actions); paintIcons();
+    }
+    async function showTrash() {
+      const content = openOverlay('Trash', 'trash');
+      content.append(node('p', 'hfiles-muted', 'These files remain saved in this browser and can be restored.'));
+      try {
+        const removed = (await request(db.transaction('files', 'readonly').objectStore('files').getAll())).filter(file => file.state === 'trashed');
+        if (!content.isConnected) return;
+        if (!removed.length) content.append(node('p', 'hfiles-muted', 'Trash is empty.'));
+        for (const file of removed) {
+          const row = node('div', 'hfiles-action-row'), restore = button('Restore ' + file.name, 'undo-2', async () => {
+            restore.disabled = true;
+            try {
+              if (window.HoleCore) await window.HoleCore.restoreAsset(file.id);
+              else { const restored = { ...file, state: 'active', modifiedAt: Date.now() }; await transaction(['files'], 'readwrite', tx => tx.objectStore('files').put(restored)); files.push(restored); notifyFiles(); renderFiles(); }
+              row.remove(); announce(file.name + ' restored.');
+            } catch (error) { restore.disabled = false; announce(storageError(error)); }
+          });
+          row.append(restore); content.append(row);
+        }
+        paintIcons();
+      } catch (error) { content.append(node('p', 'hfiles-muted', storageError(error))); }
     }
     function showHistory(file) {
       const content = openOverlay('File history', 'history');
@@ -365,8 +434,12 @@
           const now = Date.now(), id = uid();
           const derivative = { id, name: derivativeName(source.name, job.format), type, size: output.size, createdAt: now, modifiedAt: now, parentId: source.id, rootId: source.rootId || source.id, space: source.space, operation: `Converted to ${job.format.toUpperCase()}`, history: [history('convert', `Created from ${source.name}; ${width} × ${height}`)] };
           // The save transaction is the commit point; cancellation is unavailable while committing.
-          job.committing = true; notifyJobs(); await saveFile(derivative, output);
-          await updateJob(job, { status: 'completed', progress: 100, step: 'Ready in Files', outputId: id, committing: false }); announce(`${derivative.name} is ready. Your original is safe.`);
+          job.committing = true; notifyJobs();
+          if (files.length >= MAX_FILES) throw new Error('This library holds up to 500 files. Export a backup before making room.');
+          const completed = { ...job, status: 'completed', progress: 100, step: 'Ready in Files', outputId: id, committing: false, updatedAt: Date.now() };
+          if (window.HoleCore) Object.assign(derivative, (await window.HoleCore.saveLegacyFile({ file: derivative, blob: output, job: completed, createOnly: true })).file);
+          else await transaction(['files', 'contents', 'jobs'], 'readwrite', tx => { tx.objectStore('files').add(derivative); tx.objectStore('contents').add(output, id); tx.objectStore('jobs').put(completed); });
+          files.push(derivative); Object.assign(job, completed); notifyFiles(); notifyJobs(); renderFiles(); announce(`${derivative.name} is ready. Your original is safe.`);
         } catch (error) {
           const wasCancelled = error?.name === 'AbortError';
           Object.assign(job, { status: wasCancelled ? 'cancelled' : 'failed', step: wasCancelled ? 'Cancelled' : 'Could not finish', error: wasCancelled ? '' : storageError(error), committing: false, updatedAt: Date.now() });
@@ -394,7 +467,7 @@
       head.append(title, add, input);
       const toolbar = node('div', 'hfiles-action-row');
       const create = button('New text', 'file-plus', () => textEditor(), 'hfiles-primary');
-      toolbar.append(create, button('App capabilities', 'info', showCapabilities));
+      toolbar.append(create, button('Trash', 'trash-2', showTrash), button('App capabilities', 'info', showCapabilities));
       const note = node('p', 'hfiles-local-note', 'Stored in this browser · download important originals to keep a backup.');
       const work = node('div', 'hfiles-work'), list = node('div', 'hfiles-list'), preview = node('section', 'hfiles-preview'); list.setAttribute('aria-label', 'Your imported files'); preview.setAttribute('aria-label', 'File preview');
       work.append(list, preview); shell.append(head, toolbar, note, work); body.append(shell);

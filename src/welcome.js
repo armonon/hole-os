@@ -4,7 +4,7 @@
   if (!H || window.HoleWelcome) return;
   const { root, os } = H;
   const storageKey = 'hole.welcome.v1';
-  const defaults = { quiet: false, focus: false, stories: true, startHere: true, theme: 'auto' };
+  const defaults = { quiet: false, focus: false, stories: true, startHere: false, theme: 'auto' };
   let prefs = { ...defaults };
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -232,7 +232,7 @@
       const app = H.byName.get(name); if (!app) return;
       const orb = document.createElement('span'); orb.className = 'hw-preview-orb'; orb.style.setProperty('--hw-app-color', app.color); orb.style.setProperty('--hw-app-ink', app.ink || '#fff'); orb.innerHTML = icon(app.icon); preview.append(orb);
     });
-    welcome.querySelector('.hw-app-count').textContent = H.apps.length;
+    welcome.querySelector('.hw-app-count').textContent = H.apps.filter(app => ['local', 'external'].includes(window.HoleCapabilities?.get(app.name)?.status)).length;
     H.icons();
   }
   function updateLibraryShortcuts() {

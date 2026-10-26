@@ -209,7 +209,7 @@ for (const occupiedStore of ['files', 'contents']) {
     const stored = { files: new Map(), contents: new Map() };
     stored[occupiedStore].set('collision', occupiedStore === 'files' ? existing : bytes);
     let notifications = 0;
-    const context = { MAX_FILES: 500, files: occupiedStore === 'files' ? [existing] : [], notifyFiles() { notifications++; }, renderFiles() {} };
+    const context = { window: {}, MAX_FILES: 500, files: occupiedStore === 'files' ? [existing] : [], notifyFiles() { notifications++; }, renderFiles() {} };
     context.transaction = async (stores, mode, action) => {
       const pending = Object.fromEntries(stores.map(name => [name, new Map(stored[name])]));
       action({ objectStore(name) {

@@ -1,87 +1,83 @@
 # Hole OS
 
-A fluid browser workspace with a circular spaces manager, small upright desktop icons, and a circular App Drawer. Drag or swipe to pan, pinch or Ctrl-scroll to zoom. Zoom far enough out of a desktop to return to your spaces; tap a space to enter. Empty canvas taps gently focus that area, and a sustained hold increases the zoom. Single-click opens files; right-click or a stationary long-press opens Quick Tools. Continue a touch hold and drag to move a desktop file.
+**Make yourself at home.** A personal browser workspace where projects, materials, tools and unfinished thoughts stay connected.
 
-The drawer and dock share colored circular app icons. Spaces and App Drawer stay fixed beside a scrollable app row: Notes, Music, and Files are pinned, every running app stays available, and the three most recently used closed apps remain as shortcuts. Drag, swipe, or scroll the row; arrow keys move between dock buttons. Running dots belong to the current tab, while recent shortcuts are saved in this browser.
+This branch implements the 26 October overhaul against the existing plain HTML/CSS/JavaScript OS. It adds a shared file and project foundation, useful local applications, spatial presentations, and a real development collaboration service. It is a review build; the complete master program still has acceptance gates. See the [program ledger](docs/implementation/backlog.md), [contracts](docs/architecture/contracts.md), and [browser qualification](docs/evidence/release-qualification.md).
 
-## Open Hole
+## Open and develop
 
-- Live app: https://hole-os-armonon.netlify.app
-- Source: https://github.com/armonon/hole-os
-- Browser code editor: https://github.dev/armonon/hole-os
+- [Overhaul review build](https://6adfa58acfc5e0940a9e0685--hole-os-armonon.netlify.app/)
+- [Existing production app](https://hole-os-armonon.netlify.app/)
+- [Private source repository](https://github.com/armonon/hole-os)
+- [Overhaul branch](https://github.com/armonon/hole-os/tree/codex/hole-os-overhaul)
+- [Browser source editor](https://github.dev/armonon/hole-os/tree/codex/hole-os-overhaul)
 
-The source repository is private. Sign in to the owning GitHub account to edit it. The published workspace is publicly accessible. Notes, layouts, and window geometry are saved in browser storage; imported file bytes and version history use IndexedDB on that browser. Clearing site data removes those local files, so export anything you need to keep.
-
-## Work from another computer
-
-For quick code changes, open the browser code editor above, edit the source, then commit and push.
-
-For a full terminal and running preview, open the repository, select **Code → Codespaces → Create codespace on main**, then run:
+Use Node 22.13 or newer. For local development or a GitHub Codespace on this branch:
 
 ```sh
+npm ci
 npm run dev
 ```
 
-Open the forwarded **5173** port. The repository includes the Codespaces configuration; no application dependencies need installing. Codespaces availability and compute usage follow your GitHub account settings.
-
-For local development:
+Open the forwarded **5173** port. To verify the source and generate the static site:
 
 ```sh
-git clone https://github.com/armonon/hole-os.git
-cd hole-os
-npm run dev
-```
-
-## Edit and build
-
-The shell and shared gestures live in `src/hole-fluid-os.html`. `window-system.js` handles resizing, fullscreen, and the dock gesture; `file-platform.js` handles files and real jobs; `text-files.js` validates and prepares immutable text results; `welcome.js` handles Welcome, About, and Control Center; `browser.js` connects the Browser window to the existing Hole search workspace. UI modules have matching stylesheets. `ecosystem.js` lists Creating Co destinations, and `capabilities.js` classifies every launcher and its eligible file routes. Keep the desktop, overview, and App Drawer on the shared gesture system. Build and test with:
-
-```sh
-npm run build
 npm test
+npm run build
 ```
 
-Netlify publishes `public/`. The original interface source is retained separately from the browser runtime so it can also remain usable in the conversation preview.
+Netlify publishes **only `public/`**. Source modules in `src/` are copied by the build; edit source rather than generated copies. Pushes to `main` update the existing production site through its Netlify integration. Branch previews should be qualified before merging. The private source repository requires access to the owning GitHub account.
 
-## Publish remote changes
+## What is working in this build
 
-Push a commit to `main` and Netlify automatically runs `npm run build` and updates the live site. The connection uses a read-only deploy key scoped to this repository and a push webhook; no hosting credentials are stored in the source.
+- **Shared materials:** stable Assets, immutable AssetVersions, projects, linked or pinned placements, provenance, durable drafts, revision conflicts, recoverable Trash, and atomic job outputs. Legacy files and layouts migrate additively. New output also remains available through the existing Files app.
+- **One project, several views:** Desktop, a pan-and-zoom Canvas, deterministic Smart Screen arrangement proposals with explicit apply/undo, and a CSS 3D Universe with saved coordinates, Orbit/Explore and a direct List alternative. Search and breadcrumbs provide direct access. Quiet motion and compact layouts remain available.
+- **Capture and continuity:** text, links and file import; recording when the browser supports it and the user grants microphone access. Recover a text draft after reload, commit a version, compare or restore history, carry materials between projects, and keep a media player open while navigating.
+- **Actions and Flow:** real image crop/resize/PNG/WebP conversion; audio trim/normalize/WAV; browser-decoded video thumbnails and audio extraction; reusable Flow runs; and a Release Asset Pack with three PNG sizes and a ZIP manifest. Jobs use pinned input versions and report actual progress, failures, cancellation and retries. Browser codec and resource limits are visible.
+- **Day and Paperwork:** zoned events, tasks, contacts and ICS/JSON export; formatted documents, sheets with bounded formulas and charts, local forms/responses, and PDF annotation, drawn signatures and image-only redacted copies. PDF engines are vendored for local operation. PDF limits and destructive rasterization are disclosed before export.
+- **Create and WebLab:** bounded counter/checklist/timer/calculator tools with durable state, plus versioned HTML/CSS/JavaScript projects, an isolated code preview and source ZIP export. These tools do not receive ambient access to private files or accounts.
+- **Lab, Crew and Momentous:** a saved pendulum experiment with CSV output; bounded local job workflows with previews and review; and validated local tool-package install, update and rollback. No AI activity, autonomous publishing, paid transaction or arbitrary-code permission is simulated.
+- **Atlas, Tongue and Rack:** local itineraries with deliberate OpenStreetMap handoff; browser-qualified translation, available system voices, phrase practice and manually timed subtitles; and a real browser oscillator/filter/envelope/delay instrument that exports presets and stereo WAV. Translation availability depends on the browser. Rack is explicitly a technical prototype.
+- **Recovery and offline delivery:** integrity-checked private backup/restore, versioned static shell caching, and user-initiated updates that flush and protect open drafts. Loopback development disables caching unless `?offline-test=1` is supplied. The full backup contains private content; portable setup JSON remains layout-only.
+
+The existing circular App Drawer, dock recents, desktop shortcuts, Clusters, resizable legacy windows and fullscreen dock gestures remain available. Single-click opens; right-click or stationary long-press opens Quick Tools. Existing studio routes and native formats stay available until their replacements pass parity. Canonical workspace applications are not yet all independently resizable runtime windows. The [catalog](CATALOG.md) distinguishes local tools, external launchers, partial previews, concepts and explicitly future capabilities.
+
+## Local collaboration service
+
+The static client does not make Netlify an account or file-sync backend. Start the included **development** service separately:
 
 ```sh
-git add src scripts public
-git commit -m "Refine Hole workspace"
-git push
+HOLE_DATA_DIR=/absolute/private/data/path node server/start.mjs
 ```
 
-Use the GitHub web editor's **Commit & Push** action for browser-only edits. Check build status in the [Netlify dashboard](https://app.netlify.com/projects/hole-os-armonon/deploys). The live site changes only after a successful deployment.
+Shared spaces can connect to `http://127.0.0.1:8787` (or `http://localhost:8787`). The service implements actual accounts, expiring sessions, recovery, roles, invitations, version-scoped content grants, revocation, presence, bounded sync and curated public manifests. The UI transfers selected file versions and restores authorized copies. Complete bidirectional application-state sync and all public publishing controls remain unfinished.
 
-## Current features and scope
+Production Relay needs an approved HTTPS destination, durable storage, deployment operations and identity/email configuration. Its private data directory must stay outside the published site. See [service contracts and limits](docs/architecture/service.md) and [bridge qualification](docs/compatibility/bridges.md). NOW/Circle and other provider integrations still need their upstream contracts.
 
-- Drag a desktop shortcut onto another, pause for the release cue, then release to form a Cluster. Clusters hold app shortcuts, local-file shortcuts and nested folders. Open them with one click; rename, add, move out and ungroup through a resizable window. Quick Tools → Organize provides the keyboard alternative. Folders are browser-local shortcut containers, not operating-system folders. Membership, placement and the open group survive reloads; grouping never changes original file bytes. The Clusters control also places any catalog app on the desktop, with its actual capability label.
-- Create up to twelve custom project spaces. Camera views, file placements, pinned imported files, recent apps, and open/minimized app sessions survive reloads.
-- Resize windows with the corner handle or its arrow-key controls. Fullscreen reduces the dock to a handle; hover or press Enter to reveal it. Start an upward swipe on that handle: 10% reveals the dock, 30% returns to the desktop, and 50% opens all spaces. Release commits the selected stage; reversing the gesture changes it before release.
-- Window movement and resizing are saved on release. Escape, lost pointer capture, leaving the tab, or changing the workspace cancels the preview and restores its previous geometry. Cancelling an edge gesture restores the previous dock visibility immediately.
-- Import files, preview supported media/text, rename, duplicate, download, place on a desktop, and inspect version history. PNG/JPEG/WebP conversion creates a new real file while preserving its original. Activity shows actual conversion work and outcomes. Files stay in this browser.
-- Save a copy of Notes to Files, or create a plain text/Markdown file there. Open with → Text editor edits UTF-8 files up to 256 KB and saves a separate version with source/app provenance and real completed activity. Original files and the Notes scratchpad remain unchanged. Dirty editors ask before discarding edits.
-- Open source follows a version to the file it came from. History shows each direct source and identifies missing originals/sources without promising recovery. Copies record Files and their immediate source. File selection, history navigation and background updates retain keyboard focus; delayed rename/removal completions cannot dismiss a newer editor.
-- Welcome offers an expanding full-app launcher, Circle and NOW messaging shortcuts, and a Hole Browser search launcher. Discover Creating Co and its product stories live in the in-Hole About page, reachable from Welcome and Control Center. Files and actual job activity remain accessible through Control Center. Control Center also provides appearance, quiet motion, focus, layout, and portable setup JSON. Setup files contain layout metadata, not private files or notes; they are not account sync. Version 2 setup JSON carries Cluster/folder names, structure, app shortcuts and non-file geometry. It contains opaque local-file identifiers, never file contents, filenames or Notes. File memberships reconnect only to matching shortcuts already present in the destination library; missing links are skipped and reported. Imports preserve existing group records and ownership, and accept older version 1 setup files. This is not a file backup.
-- Files → App capabilities classifies all 52 launcher entries: 3 local utilities, 16 external launchers, 2 partial previews, 28 concepts and 3 future capabilities. See the [catalog audit](CATALOG.md) for evidence and limitations. External apps open in another tab and require manual file handoff. Open with offers explicit download/open instructions for PNG/JPEG/WebP in Luma, MP3/WAV in Bounce and PDFs in Librarian; it does not upload files, track external processing or link manually imported results to a source. The Hole Browser card opens the existing searchable Hole workspace without query handoff. Audio stem separation stays external.
+## Data and trust
 
-There is no account authentication, live phone pairing, cross-device file sync, cloud computer, or native Windows/macOS/Linux application execution yet. Welcome is a public start screen, not a security lock. Some existing app tiles remain concept screens. Remote code editing is available through GitHub and Codespaces above.
+Local work lives in this browser's IndexedDB and workspace storage. Export a full private backup before clearing site data or moving to another origin. The production site, a preview URL and localhost each have separate browser storage. A source-code push does not sync someone's files.
 
-## Verification
+Welcome is a public start screen, not an authentication lock. Vault has a [threat model and security qualification gate](docs/architecture/vault-security-gate.md), not a disguised folder advertised as encryption. Browser downloads do not run native Windows/macOS/Linux executables or AU/VST plugins.
 
-Run `npm test` for production-code checks of gesture thresholds and reversibility, file names/formats/limits, and saved-state validation. The overhaul was also checked in the browser at desktop and 320-pixel widths: circular navigation, zoom-out return, keyboard resizing, fullscreen dock gestures, recent apps, real image import/conversion/history, previews, pinned-file reload, quiet motion, and appearance controls. Physical touch-device testing remains outstanding.
+## Verification and remaining acceptance
 
-The window recovery phase adds 55 lifecycle regressions; its [verification record](VERIFICATION.md) preserves the setup-download evidence and remaining device/access checks. The subsequent [shared file workflow record](FILE-WORKFLOW-VERIFICATION.md) covers the catalog, atomic text results, keyboard focus, reload persistence and byte-verified native downloads. Historical 320px checks above were not repeated successfully in these phases.
+The test suite exercises production code, real IndexedDB transactions, failures/conflicts, codecs, permissions, service HTTP requests, gesture cancellation, draft recovery, package validation and offline update coordination. The [release record](docs/evidence/release-qualification.md) separates actual browser output checks from source-level or simulated transport tests. It also records the desktop and 320px layout checks.
 
-The [portable setup verification record](PORTABLE-SETUP-VERIFICATION.md) covers versioned metadata, compatibility, validated merging and missing-file handling. Browser file-chooser import remains unverified.
+Physical touch devices, screen-reader sessions, measured large-scene performance and formative sessions with actual people remain acceptance work. Hosted-service operation and mounted studio save-back require additional integration qualification. These are tracked requirements, not completed claims.
 
-The [Clusters verification record](CLUSTERS-VERIFICATION.md) documents the shortcut-container model, cancellation fixes, keyboard/browser checks, reload recovery and remaining physical-device gaps.
+Historical regression evidence remains in [window recovery](VERIFICATION.md), [file workflows](FILE-WORKFLOW-VERIFICATION.md), [portable setup](PORTABLE-SETUP-VERIFICATION.md), [Clusters](CLUSTERS-VERIFICATION.md), and [file history](FILE-HISTORY-VERIFICATION.md).
 
-The [file-history reliability record](FILE-HISTORY-VERIFICATION.md) documents source navigation, copy provenance, cross-tab draft preservation, 122 passing tests and the unresolved browser-console attribution limits.
+## Engine and integration gates · 26 October 2026
 
-## References
+The overhaul contains real local image/audio/video actions, an original Web Audio Rack prototype, and an engine-level Luma bridge round trip. The following work remains explicitly unfinished; a launcher, source adapter or prototype does not complete it:
 
-- [GitHub browser editing](https://docs.github.com/en/codespaces/the-githubdev-web-based-editor)
-- [Creating a Codespace](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository)
+- **Image Cutout:** connect and qualify Luma's actual segmentation path, its model/runtime delivery, fallback disclosure, cancellation and output contract. Hole currently has no installed segmentation model or executable Cutout action.
+- **Stem separation:** qualify a real separation engine and weights, licenses, memory/runtime budget, cancellation, progress and output validation. Existing external StemDeck use is separate from an executable Hole action.
+- **Key/BPM analysis:** implement and validate a real analysis engine, confidence reporting and difficult-audio fixtures. No analysis backend is registered.
+- **Captions/transcription:** supply a real recognition engine or authorized service, language/timing support and an editable correction workflow. Playback and audio extraction are not transcription.
+- **Connected retained studios:** Luma's real engine has passed PNG and native `.luma` save-back through the actual SDK/Core using simulated transport. Its mounted browser UI, production opener policy and authorized release remain unqualified. Glyph, Form, ScenePilot, StemDeck and the other retained studio bridges still need their own native-document, recovery, dependency and live browser round trips. Existing routes and formats must remain available until parity is demonstrated.
+- **Sattari Rack production integration:** the local prototype produces real Web Audio sound and offline WAV, with versioned `.hole-rack.json` assets. It does not yet provide StemDeck session integration, polyphony, MIDI/MPE, arbitrary patch routing, timeline automation, native plugin preset compatibility or native DSP parity. The product recommendation is a Rack mode inside StemDeck.
+- **Native applications and plugins:** ordinary browser downloads do not run Windows/macOS/Linux executables or host AU/VST plugins. That requires a real, authorized native/remote host with isolation, transport, lifecycle and device qualification; none is supplied by the local Web Audio prototype.
+
+See the [retained studio parity ledger](docs/compatibility/studio-parity.md), [bridge contracts](docs/compatibility/bridges.md), [media engine boundaries](docs/evidence/media-actions.md), and [Universe limits and verification gates](docs/evidence/universe.md). Browser codec availability, physical touch/accessibility testing and measured large-scene performance remain separate acceptance checks.
