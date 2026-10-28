@@ -198,6 +198,7 @@
       const invitation = input('Invitation token', 'text', ''); projectArea.append(invitation.wrap, button('Accept invitation', 'mail-check', run(async () => {
         const project = await connection.request(`/invitations/${encodeURIComponent(invitation.input.value.trim())}/accept`, { method: 'POST' }); selectedRemote = project.id; invitation.input.value = ''; await showProjects(); report('Joined with the invitation’s explicit access.');
       })));
+      await globalThis.HoleRelayRestore?.mount({ client: connection, ctx, host: projectArea });
       const detail = el('div'); projectArea.append(detail);
       async function showRemote() {
         detail.replaceChildren(); if (!selectedRemote) return;
@@ -286,20 +287,8 @@
             const sent = await connection.flush(remoteId); report(`${sent.results.filter(item => item.status === 'committed').length} files saved remotely. Unsent/conflicting work remains local.`); await showRemote();
           }));
           if (!['owner', 'editor'].includes(snapshot.project.role)) push.disabled = true;
-          detail.append(push, button('Restore files into a new local project', 'download', run(async () => {
-            const project = await C.put('projects', { id: `project:${crypto.randomUUID()}`, name: `${snapshot.project.name} · restored`, spaceId: ctx.navigation.spaceId || null, assetIds: [], provenance: { relayProjectId: remoteId } });
-            let count = 0;
-            for (const asset of snapshot.assets.filter(item => item.state !== 'trashed')) {
-              let restored = null;
-              for (const version of asset.versions) {
-                const blob = await connection.readVersion(asset.id, version.id);
-                if (!restored) restored = await C.importAsset({ name: asset.name, blob, projectId: project.id, spaceId: ctx.navigation.spaceId || null, provenance: { relay: { projectId: remoteId, assetId: asset.id, versionId: version.id } } });
-                else restored = await C.commitAsset({ assetId: restored.asset.id, baseVersionId: restored.version.id, blob, operation: 'relay-restore', parameters: { remoteAssetId: asset.id, remoteVersionId: version.id, remoteParentVersionIds: version.parentVersionIds } });
-              }
-              count++;
-            }
-            report(`Restored ${count} files and their authorized versions into “${project.name}”. Device layout and unsupported app state were not transferred.`);
-          })));
+          detail.append(push);
+          await globalThis.HoleRelayRestore?.mount({ client: connection, ctx, host: detail, projectId: remoteId, snapshot });
           if (snapshot.project.role !== 'owner') detail.append(button('Leave this shared project', 'log-out', run(async () => {
             const dialog = ctx.modal('Leave shared project?', 'You will lose service access. Files already downloaded remain on this device. Joining again requires another invitation.');
             dialog.append(button('Leave project', 'log-out', run(async () => { await connection.request(`/projects/${remoteId}/membership`, { method: 'DELETE' }); dialog.close(); selectedRemote = null; await showProjects(); report('You left the project. Existing local copies remain local.'); })), button('Cancel', 'x', () => dialog.close()));

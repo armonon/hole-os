@@ -243,7 +243,8 @@
       await ready;
       if (!validId(jobId) || !validId(idempotencyKey) || !Array.isArray(outputs) || !outputs.length || outputs.length > 100) throw error('INVALID', 'A job needs an identity and 1–100 real outputs.');
       if (new Set(outputs.filter(o => o.assetId).map(o => o.assetId)).size !== outputs.filter(o => o.assetId).length) throw error('INVALID', 'A job may advance each asset only once.');
-      const prepared = await Promise.all(outputs.map(async output => ({ input: output, content: await preparedContent(output.blob) })));
+      for (const output of outputs) if (output.expectedProjectRevision !== undefined && (!validId(output.projectId) || !Number.isSafeInteger(output.expectedProjectRevision) || output.expectedProjectRevision < 1)) throw error('INVALID', 'A destination guard requires a project and positive revision.');
+      const prepared = await Promise.all(outputs.map(async output => ({ input: { ...output }, content: await preparedContent(output.blob) })));
       const fingerprint = canonical(prepared.map(({ input, content }) => ({ assetId: input.assetId, baseVersionId: input.baseVersionId, name: input.name, kind: input.kind, projectId: input.projectId, parentVersionIds: input.parentVersionIds, operation: input.operation, parameters: input.parameters, hash: content.hash, mime: content.mime })));
       const result = await transaction(['records', 'assets', 'versions', 'versionContents', 'journal', 'files', 'contents', 'jobs'], 'readwrite', async tx => {
         const key = 'job:' + idempotencyKey, prior = await request(tx.objectStore('journal').get(key));
@@ -255,6 +256,12 @@
         if (!job) throw error('NOT_FOUND', 'The job is unavailable.');
         if (['cancelled', 'canceled'].includes(job.status)) throw error('CANCELLED', 'This job was cancelled before its outputs committed.');
         if (job.status === 'completed') throw error('CONFLICT', 'This job already completed with another result.');
+        // Check every destination against the same pre-write snapshot. A batch may add several members.
+        for (const { input } of prepared) if (input.expectedProjectRevision !== undefined) {
+          const project = await readRecord(tx, 'projects', input.projectId);
+          if (!project || project.revision !== input.expectedProjectRevision) throw error('CONFLICT', 'The destination project changed before output commit. Review it before retrying.');
+          if (input.assetId && (await request(tx.objectStore('assets').get(input.assetId)))?.projectId !== input.projectId) throw error('CONFLICT', 'The output asset moved to another project. Its current placement is retained.');
+        }
         const results = [];
         for (const { input, content } of prepared) {
           const result = input.assetId ? nextVersion(await request(tx.objectStore('assets').get(input.assetId)), { ...input, jobId }, content) : makeAsset({ ...input, provenance: { ...(input.provenance || {}), jobId } }, content);

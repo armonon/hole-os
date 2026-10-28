@@ -303,3 +303,24 @@ test('idempotency key cannot be reused with different bytes or a different job',
   await assert.rejects(instance.commitJobOutputs({ ...first, jobId: 'j2' }), { code: 'CONFLICT' });
   assert.equal((await instance.list('assets')).length, 1); assert.equal((await instance.get('jobs', 'j2')).status, 'running'); instance.close();
 });
+
+test('job destination revision is checked atomically after content preparation and before all outputs', async () => {
+  const instance=core();const project=await instance.put('projects',{id:'guarded',name:'Reviewed destination',assetIds:[]});await instance.put('jobs',{id:'guard-job',status:'queued'});
+  let entered,release;const waiting=new Promise(resolve=>entered=resolve);
+  class DelayedBlob extends Blob {async arrayBuffer(){entered();await new Promise(resolve=>release=resolve);return super.arrayBuffer();}}
+  const input={jobId:'guard-job',idempotencyKey:'guard-job',outputs:[{name:'Retained.txt',projectId:project.id,expectedProjectRevision:project.revision,blob:new DelayedBlob(['reviewed bytes'],{type:'text/plain'})}]};
+  const running=instance.commitJobOutputs(input);await waiting;const changed=await instance.put('projects',{...project,name:'Changed during content hash'},{expectedRevision:project.revision});release();await assert.rejects(running,{code:'CONFLICT'});
+  assert.equal((await instance.list('assets')).length,0);assert.equal((await instance.list('versions')).length,0);assert.deepEqual((await instance.get('projects',project.id)).assetIds,[]);assert.equal((await instance.get('jobs','guard-job')).status,'queued');
+  const retry={...input,outputs:[{...input.outputs[0],expectedProjectRevision:changed.revision,blob:text('reviewed bytes')}]};const committed=await instance.commitJobOutputs(retry);assert.equal(committed.outputs.length,1);
+  const latest=await instance.get('projects',project.id);await instance.put('projects',{...latest,name:'Changed after ACK'},{expectedRevision:latest.revision});const replay=await instance.commitJobOutputs(retry);assert.equal(replay.replayed,true);assert.equal(replay.outputs[0].asset.id,committed.outputs[0].asset.id);assert.equal((await instance.list('assets')).length,1);instance.close();
+});
+test('guarded job batches check initial destination once per precondition and reject invalid guards',async()=>{
+  const instance=core();const project=await instance.put('projects',{id:'batch-project',name:'Batch',assetIds:[]});await instance.put('jobs',{id:'batch-job',status:'queued'});const input={jobId:'batch-job',idempotencyKey:'batch-job',outputs:['a','b'].map(name=>({name,projectId:project.id,expectedProjectRevision:project.revision,blob:text(name)}))};
+  for(const bad of [{expectedProjectRevision:0},{expectedProjectRevision:1.5},{expectedProjectRevision:1,projectId:null}])await assert.rejects(instance.commitJobOutputs({...input,outputs:[{...input.outputs[0],...bad}]}),{code:'INVALID'});
+  const result=await instance.commitJobOutputs(input);assert.equal(result.outputs.length,2);assert.equal((await instance.get('projects',project.id)).assetIds.length,2);instance.close();
+});
+test('destination guard cannot advance an asset belonging to a different project',async()=>{
+  const instance=core(),first=await instance.put('projects',{id:'first-destination',name:'First',assetIds:[]}),other=await instance.put('projects',{id:'other-destination',name:'Other',assetIds:[]});const asset=await instance.importAsset({name:'Owned.txt',projectId:first.id,blob:text('original')});await instance.put('jobs',{id:'wrong-destination',status:'queued'});
+  await assert.rejects(instance.commitJobOutputs({jobId:'wrong-destination',idempotencyKey:'wrong-destination',outputs:[{name:'Must roll back.txt',projectId:other.id,expectedProjectRevision:other.revision,blob:text('new')},{assetId:asset.asset.id,baseVersionId:asset.version.id,projectId:other.id,expectedProjectRevision:other.revision,blob:text('wrong target')}]}),{code:'CONFLICT'});
+  assert.equal((await instance.list('assets')).length,1);assert.equal((await instance.list('versions')).length,1);assert.equal(await(await instance.readAsset(asset.asset.id)).blob.text(),'original');assert.deepEqual((await instance.get('projects',other.id)).assetIds,[]);instance.close();
+});

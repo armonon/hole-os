@@ -4,7 +4,7 @@
 
 ## Delivery and current integration
 
-Eleventh `e5be235` is pushed. Review https://6ae1e609c41c4e9cc58caec2--hole-os-armonon.netlify.app has all417 files byte verified and strict worker CSP; receipt `docs/evidence/review-e5be235.json`. Exact public archived `/tmp/hole-release-e5be235/public`. PR1 updated; production unchanged. Settled556tests and actual generated browser journeys pass. Evidence remains scoped to Chrome156, not physical-device qualification.
+Twelfth `bfbb60f` is pushed. Review https://6ae1ebdb4406cb99974c5309--hole-os-armonon.netlify.app has all 419 files byte verified and strict worker CSP; receipt `docs/evidence/review-bfbb60f.json`. Exact public archived `/tmp/hole-release-bfbb60f/public`. PR1 updated; production unchanged. Settled 572 tests and final built browser journeys pass; physical-device qualification remains open.
 
 ## Eleventh delivered
 
@@ -14,10 +14,11 @@ Both studio parents authenticate child pending state and protect browser unload 
 
 ## Next ownership and exact steps
 
-1. Eleventh delivered; twelfth qualified locally with572/572tests and serial build. Tongue/Press/Luma final built checks pass without overrides. Root generated-shell Portfolio integration regression also passes (exact media/parents/recovery, errors[], remote[]); ready for commit/push/review deploy. No production promotion.
-2. Tongue malformed provenance and close/open races were reproduced independently and fixed; final separate independent repros clear both. Press pending-write/new-edit race fixed by draining epochs and freezing disposal input. Evidence: tongue-practice.md, press-kit.md, luma-layers.md. Full log /tmp/hole-wave12-final-tests.log.
-3. Interfaces: WorldTools awaited beforeLeave; Tongue mount/beforeLeave/dispose with per-mount open admission. PressKit mount(target,{core,projectId,onOpen}) returns guarded beforeLeave/dispose. Root owns continuity/shell, builds and release; agents currently frozen.
-4. Next bounded proposals after release: Relay reviewed exact-snapshot restore journal (current retry duplicates partial projects); Glyph retained native kerning/type preview plus dirty-input flush; Luma next retained-tool depth pending proposal. Continue required work and retain genuine external gates.
+1. Twelfth delivered: private authored press kits with exact-byte ZIP/retry; Tongue actual local caption/audio practice with malformed/late-open recovery; retained Luma layer controls and JPEG/WebP routes. Evidence: press-kit.md, tongue-practice.md, luma-layers.md. Root Portfolio regression also passed, sourceOverride:false. Full log /tmp/hole-wave12-final-tests.log.
+2. Thirteenth locally qualified, release pending: settled591tests (/tmp/hole-wave13-final-tests.log), serial build, final generated-browser Glyph/Relay/Luma/pinned-tools pass. Native Glyph kerning/layout/TTF plus durable raw fields and completed-pointer recovery; native Luma transforms; Relay immutable reviewed restore journal and atomic Core expectedProjectRevision guards; exact-version Quick Tools/Carry/copy/MIME routing. Evidence docs: glyph-kerning.md, luma-transforms.md, relay-restore.md, pinned-tools.md. No source overrides in final normal journeys; targeted recovery faults remain explicitly injected.
+3. Independent reviews corrected Relay destination TOCTOU, pinned readonly Moodboard/object routing, Glyph raw character switching and stroke loss before checkpoint. All reproduced seams rechecked. Late Glyph input during runtime checkpoint is now covered by final close flush with inert frame; storage refusal restores editability and retains authority. 591 tests pass, zero final Glyph page errors. Full studio/platform qualification is not claimed.
+4. Exact next: commit/push thirteenth, archive public, deploy review only, verify every file SHA256 and worker CSP, update PR1. Then Relay worker implements native Librarian collections; Luma worker native editable rectangle/ellipse layers; Flow proposes next retained Form/ScenePilot gap. Root next qualifies/fixes shared runtime close admission across adapters. Luma review also found pre-existing completed-brush loss on failed pre-action checkpoint; worker must reproduce/fix before shapes, without expanding grants. Root owns shared shell/Core/continuity/runtime/public and serial releases. Agents do not build/commit/deploy.
+5. Continue all available required work; no whole-program completion claim. Keep full parity, security/service and physical-device gates explicit.
 
 ## Working environment and gates
 

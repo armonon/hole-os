@@ -24,14 +24,14 @@
       project = engine.validateEditableProject(value); revision++;
       return structuredClone(project);
     }
-    async function restoreRecovery(blob) { bound(); if (busy || pending) throw fail('SAVE_PENDING','A save is pending.'); return replaceProject(await engine.parseProjectFile(blob)); }
+    async function restoreRecovery(blob) { bound(); if (busy || pending) throw fail('SAVE_PENDING','A save is pending.'); const restored=await engine.parseProjectFile(blob);if(JSON.stringify(restored)===JSON.stringify(project))return structuredClone(project);return replaceProject(restored); }
     async function saveBack() {
-      bound(); if (busy) throw fail('SAVE_PENDING', 'Wait for the current operation.'); busy = true;
+      bound(); if (busy) throw fail('SAVE_PENDING', 'Wait for the current operation.'); if (!pending && revision === savedRevision) return {versionId:binding.versionId}; busy = true;
       try {
         pending ||= {requestId:`glyph-save:${crypto.randomUUID()}`,revision,payload:{assetId:binding.assetId,baseVersionId:binding.versionId,blob:nativeBlob(),operation:'glyph-project-save',parameters:{editor:'Glyph'}}};
         const output = await client.request('resource.commit',pending.payload,{requestId:pending.requestId});
         binding.versionId = output.versionId; savedRevision = pending.revision; pending = null; return output;
-      } finally {busy = false;}
+      } catch(error) { if (pending && error.hostRejected && error.code==='QUOTA') pending.requestId=`glyph-save:${crypto.randomUUID()}`; throw error; } finally {busy = false;}
     }
     async function exportFont(format) {
       bound(); if (!['ttf','otf'].includes(format)) throw fail('UNSUPPORTED_FORMAT','Choose TTF or OTF.');
@@ -42,7 +42,7 @@
         const blob = new Blob([bytes],{type:format === 'ttf' ? 'font/ttf' : 'font/otf'});
         pendingExport = {format,requestId:`glyph-export:${crypto.randomUUID()}`,payload:{assetId:binding.assetId,versionId:binding.versionId,operation:`glyph-${format}-export`,parameters:{editor:'Glyph',kerning:format === 'ttf' ? 'legacy-kern' : 'not-exported'},outputs:[{name:`${project.familyName.replace(/\s+/g,'-')}.${format}`,kind:'font',blob}]}};
       }
-      const output = await client.request('resource.derive',pendingExport.payload,{requestId:pendingExport.requestId}); pendingExport = null; return output;
+      if(busy)throw fail('SAVE_PENDING','Wait for the current operation.');busy=true;try { const output = await client.request('resource.derive',pendingExport.payload,{requestId:pendingExport.requestId}); pendingExport = null; return output; }catch(error){if(pendingExport && error.hostRejected && error.code==='QUOTA')pendingExport.requestId=`glyph-export:${crypto.randomUUID()}`;throw error;}finally{busy=false;}
     }
     return Object.freeze({openGranted,replaceProject,restoreRecovery,saveBack,exportFont,
       getProject:()=>project ? structuredClone(project) : null,

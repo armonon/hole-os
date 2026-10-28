@@ -1,10 +1,20 @@
 # Current continuation qualification
 
-Latest pushed implementation: `e5be235` (556 passing tests). Latest byte-verified review: [417-file review](https://6ae1e609c41c4e9cc58caec2--hole-os-armonon.netlify.app), receipt `review-e5be235.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `bfbb60f` (572 passing tests). Latest byte-verified review: [419-file review](https://6ae1ebdb4406cb99974c5309--hole-os-armonon.netlify.app), receipt `review-bfbb60f.json`. Production remains unchanged; the master brief is not complete.
 
-## Twelfth increment — 28 October 2026 (qualified locally)
+## Thirteenth increment — 28 October 2026 (qualified locally; delivery pending)
 
-Settled572tests and serial build pass. Publish now creates private authored press kits from explicitly reviewed exact versions, with inspected original ZIP bytes, immutable parents and duplicate-free retry after ambiguous ACK. Drafts drain edits arriving during a write; failed storage refuses navigation. Actual generated-shell320px/keyboard and cancellation/reload checks pass. See `press-kit.md`.
+Settled 591 tests and serial build pass. Exact-version previews and Quick Tools preserve selected bytes through Carry, Download and independent copies, including canonical lineage, MIME changes, readonly native previews and concurrent placement retarget refusal. Final generated-browser check passes without source overrides; see `pinned-tools.md`.
+
+Relay explicitly reviews and retains a bounded immutable restore journal, restores remote history into one local asset and reconciles committed output before remote rereads after lost acknowledgements. Two persistent profiles verify interrupted restore/reopen, revocation and duplicate prevention. Core checks optional expectedProjectRevision inside the output transaction after hashing; concurrent destination changes leave zero outputs. Same-project batches and receipt replay remain valid. See `relay-restore.md` and shared contracts.
+
+Luma exposes bounded retained native translate/scale/rotate/flip with real asymmetric pixel, Undo, native reopen and partial-field recovery checks. Final generated browser passes; full transformed painting remains unsupported. See `luma-transforms.md`.
+
+Glyph adds retained pair kerning/layout preview, native Undo/reopen and real TTF kern output. OTF omission is explicit. Independent review corrected unfinished-field switching, early close admission and completed-stroke loss on failed recovery. Final generated-browser check passes without source overrides, including injected recovery refusal; independent stroke retry also passes. See `glyph-kerning.md`. Final close also freezes input and flushes again after the outer runtime checkpoint; actual delayed-write keyboard/pointer, failed-final-flush retention and retry checks pass. Full studio parity and physical-device gates remain open.
+
+## Twelfth increment — 28 October 2026 (delivered)
+
+Settled 572 tests and serial build pass. Publish now creates private authored press kits from explicitly reviewed exact versions, with inspected original ZIP bytes, immutable parents and duplicate-free retry after ambiguous ACK. Drafts drain edits arriving during a write; failed storage refuses navigation. Actual generated-shell320px/keyboard and cancellation/reload checks pass. See `press-kit.md`.
 
 Tongue uses actual local transcription captions or SRT with explicit pinned audio, media-clock cue playback, durable written attempts, JSON/SRT exports and missing-audio written recovery. Malformed provenance is refused without overwriting the original record. Independent review reproduced and fixed orphan dialogs from malformed lessons and opens racing workspace Close. Final built full journey and navigation regression pass, with a separate independent recheck. See `tongue-practice.md`.
 

@@ -1,0 +1,27 @@
+# Resumable exact-snapshot Relay restore
+
+`src/relay-restore.js` provides an explicit reviewed local copy of authorized remote file history. It uses the existing authenticated Relay client and Core; it adds no endpoint, grant, publication or remote write.
+
+## Interface and invariants
+
+Load `relay-restore.js` before `relay.js`. `HoleRelayRestore.create({core, client})` exposes `review(snapshot, {name, spaceId})`, `list()` and `resume(journalId)`. `mount({client, ctx, host, projectId?, snapshot?})` supplies review, resume and explicit restart-as-separate-copy controls. Relay mounts retained journals outside the selected remote project so a revoked project does not hide a partial local copy.
+
+Review saves a versioned Core settings record before creating the destination project. The journal contains only service origin, account identity, a stable new destination ID and the exact authorized asset/version selection. It contains no token, password, auth header, runtime state or draft. Names, MIME types, sizes, hashes and visible remote parent IDs are retained. A separate copy receives a fresh journal and destination; the original remains untouched.
+
+Each selected version uses a deterministic job ID derived from journal identity and ordered asset/version indices. Core `commitJobOutputs` atomically writes the local version and completed job receipt. The first version creates one asset; subsequent jobs advance that same asset with the preceding local version as the optimistic base. On reload or an ambiguous acknowledgement, completed jobs are reconciled before a remote byte request. This prevents an uncertain acknowledgement from creating a second asset or duplicate version. Interrupted journal progress is advisory; atomic job receipts determine actual completed work.
+
+Later remote heads and renames never alter the reviewed selection. Every downloaded version must match its reviewed SHA-256 hash and byte size. Current service authorization is enforced on each exact-version request. Destination ownership is rechecked after download/hash, and its revision is passed as an atomic Core output precondition so a concurrent destination change cannot redirect the copy. A prior completed receipt can still replay without requiring the original project revision. Account or endpoint changes refuse resume. An intervening local content edit, move or trash blocks further advances, retaining that work; a local rename is preserved. Existing drafts, placements and application state are not modified.
+
+Local parent links describe the restored sequence. Original remote parent IDs remain inert `remoteParentVersionIds` in version parameters/provenance, never resolved against coincidentally matching local IDs. The module does not claim to recreate inaccessible remote ancestry or a full cross-device desktop.
+
+## Bounds
+
+Review permits up to 100 files, 500 total authorized versions, 16 MiB per version and 64 MiB total. It validates version ownership, unique identities, hash format, size and approved head order. Malformed restored journals stop without replacing their stored data. No network tiles, external providers, implicit publication or background synchronization are added. Downloaded copies remain local after remote permission is revoked.
+
+## Verification
+
+Eight targeted unit tests pass: partial resume with one asset/history; ambiguous atomic acknowledgement; local edit conflict and explicit separate copy; hash/account/bounds refusal; review-only persistence; local rename preservation; and an account switch during asynchronous hashing; and destination ownership changing during download. Existing Relay layout and local service regressions also pass (28 combined tests before addition of the destination regression).
+
+The final generated-shell run passed in Chrome 156.0.8078.48 with two disposable persistent profiles and the real local service, without source overrides. It verified review before destination creation, a guarded double Retain click during delayed Core persistence, partial failure followed by profile close/reopen/resume into one asset with two exact versions, exclusion of a later remote head, exact bytes and local/foreign parent references, lost atomic acknowledgement reconciliation, and revoked unfinished downloads with readable local partial copies and a visible retained journal after reload. A mutation inserted after Relay's destination check but before actual Core commit produced CONFLICT and zero output assets. The first restored asset had exactly two versions containing “first exact bytes” and “second exact bytes”; the separately interrupted/revoked copy retained exactly one version containing “first exact bytes”.
+
+Independent review reproduced a destination-ownership race during download. The pre-dispatch ownership recheck and root-owned atomic Core project-revision guard fixed it. An independent actual Core probe additionally changed the project during Core's own prepared-content hashing: it produced CONFLICT with zero assets; retrying the same journal produced one asset and preserved the renamed local destination. Eight journal unit tests passed independently. The harness is `scripts/verify-relay-restore-browser.mjs`; it binds the local service to port 8787 only if available and uses disposable persistent Chrome profiles. It never stops an unrelated listener. No physical second-device or production-service qualification is claimed.

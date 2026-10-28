@@ -13,7 +13,7 @@ try {
  const page=await browser.newPage();page.setDefaultTimeout(10000);await page.goto(`http://127.0.0.1:${web.address().port}`);
  await page.evaluate(async()=>{globalThis.core=HoleCoreFactory.create({localStorage:null,broadcast:false});const project={schema:'glyph-studio/1',familyName:'Browser Proof',styleName:'Regular',metrics:{unitsPerEm:1000,ascender:800,descender:-200,xHeight:500,capHeight:700,defaultAdvance:600},glyphs:{A:{advanceWidth:600,strokes:[{kind:'brush',width:40,points:[[0,0],[300,700],[600,0]]}]}},kerning:[{left:'A',right:'V',value:-50}],curveSmoothing:.35};globalThis.input=await core.importAsset({name:'Browser.glyph.json',blob:new Blob([JSON.stringify(project)],{type:'application/json'})});globalThis.mount=HoleGlyph.create({core});globalThis.context={assetId:input.asset.id,versionId:input.version.id};globalThis.handle=await mount.mount({id:'glyph-browser',context},document.querySelector('main'));});
  let frame=await (await page.locator('iframe').elementHandle()).contentFrame();await frame.waitForFunction(()=>globalThis.HoleGlyphMounted);
- const bounds=await frame.locator('canvas').boundingBox();assert.ok(bounds);
+ const bounds=await frame.locator('#drawing').boundingBox();assert.ok(bounds);
  await page.mouse.move(bounds.x+100,bounds.y+160);await page.mouse.down();await page.mouse.move(bounds.x+180,bounds.y+100,{steps:8});await page.mouse.up();
  await frame.waitForFunction(()=>HoleGlyphMounted.adapter.getProject().glyphs.A.strokes.length===2 && !document.querySelector('#save').disabled);
  await frame.locator('#advance').fill('750');await frame.locator('#advance').press('Tab');await frame.waitForFunction(()=>globalThis.HoleGlyphMounted.adapter.isDirty());
