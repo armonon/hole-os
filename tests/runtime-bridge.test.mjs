@@ -117,6 +117,7 @@ test('derived outputs are bound to original inputs and project and duplicated on
   assert.equal(outputWrites.length, 1);
   assert.equal(outputWrites[0].outputs[0].projectId, 'project:original');
   assert.equal(outputWrites[0].outputs[0].provenance.inputVersionId, 'version:1');
+  assert.deepEqual(plain(outputWrites[0].outputs[0].parentVersionIds), ['version:1']);
 });
 
 test('oversized metadata, fake binaries and fake completion are rejected', async () => {
@@ -189,6 +190,7 @@ test('bridge and real Core commit outputs atomically and recover them after reop
   const connected = bridge.connectExternal({ origin: 'https://studio.test', source, instanceId: 'instance:real', projectId: 'p', resources: [{ assetId: input.asset.id, versionId: input.version.id, operations: ['resource.derive'] }], operations: ['resource.derive'] });
   const hello = outbound[0], event = data => ({ source, origin: 'https://studio.test', data });
   await bridge.receive(event({ ...hello, type: 'ready' }));
+  await core.commitAsset({ assetId: input.asset.id, baseVersionId: input.version.id, blob: new Blob(['newer source'], { type: 'image/png' }) });
   const request = { ...hello, type: 'request', grantId: connected.grantId, requestId: 'derive:real', operation: 'resource.derive', payload: { assetId: input.asset.id, versionId: input.version.id, operation: 'studio-export', outputs: [{ name: 'Cover.webp', kind: 'image', blob: new Blob(['converted'], { type: 'image/webp' }) }] } };
   await bridge.receive(event(request));
   const response = outbound.at(-1);
@@ -200,6 +202,9 @@ test('bridge and real Core commit outputs atomically and recover them after reop
   const saved = await reopened.readAsset(response.result.outputs[0].asset.id);
   assert.equal(await saved.blob.text(), 'converted');
   assert.equal(saved.asset.projectId, 'p');
+  assert.deepEqual(saved.version.parentVersionIds, [input.version.id]);
+  assert.equal(saved.version.operation, 'studio-export');
+  assert.equal(await (await reopened.readAsset(input.asset.id, input.version.id)).blob.text(), 'source');
   assert.equal((await reopened.get('projects', 'p')).assetIds.length, 2);
   bridge.dispose(); reopened.close();
 });
@@ -266,4 +271,23 @@ test('opening instances refuse checkpoints, view changes and close without losin
   assert.equal(runtime.get('instance:opening').status,'opening');gate.resolve();await opened;
   await runtime.checkpoint('instance:opening');assert.equal((await core.get('settings','runtime:instance:opening')).value.editorState.retained,'ready');
   await runtime.close('instance:opening');assert.equal(runtime.get('instance:opening'),null);
+});
+
+test('SDK distinguishes definitive host rejection from ambiguous request timeout', async () => {
+  const context = vm.createContext({ URL, crypto: webcrypto, structuredClone, setTimeout, clearTimeout });
+  vm.runInContext(await readFile(new URL('../sdk/bridge-client.js', import.meta.url), 'utf8'), context);
+  let listener, respond = true;
+  const surface = { addEventListener(_, fn) { listener = fn; }, removeEventListener() {} };
+  const packet = { channel: 'hole.bridge', version: 1, sessionId: 'test-session', nonce: 'test-nonce' };
+  const deliver = data => listener({ source: host, origin: 'https://hole.test', data: { ...packet, ...data } });
+  const host = { postMessage(data) {
+    if (data.type === 'ready') deliver({ type: 'grant', grantId: 'grant', operations: ['resource.derive'], resources: [], expiresAt: Date.now() + 10000 });
+    else if (data.type === 'request' && respond) deliver({ type: 'response', requestId: data.requestId, ok: false, error: { code: 'QUOTA', message: 'Storage full' } });
+  } };
+  const client = context.HoleBridgeClient.createClient({ surface, hostWindow: host, hostOrigin: 'https://hole.test', timeoutMs: 30 });
+  deliver({ type: 'hello' }); await client.ready;
+  await assert.rejects(client.request('resource.derive', {}), e => e.code === 'QUOTA' && e.hostRejected === true);
+  respond = false;
+  await assert.rejects(client.request('resource.derive', {}), e => e.code === 'REQUEST_TIMEOUT' && e.hostRejected === undefined);
+  client.dispose();
 });

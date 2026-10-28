@@ -31,7 +31,7 @@
         const request = pending.get(data.requestId);
         pending.delete(data.requestId); clearTimeout(request.timer);
         if (data.ok === true) request.resolve(data.result);
-        else request.reject(error(data.error?.code || 'OPERATION_FAILED', data.error?.message || 'The Hole request failed.'));
+        else request.reject(Object.assign(error(data.error?.code || 'OPERATION_FAILED', data.error?.message || 'The Hole request failed.'), { hostRejected: true }));
       } else if (data.type === 'revoked') dispose(error('GRANT_REVOKED', data.reason || 'Hole revoked this connection.'));
     }
     function listener(event) {

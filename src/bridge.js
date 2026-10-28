@@ -197,7 +197,7 @@
         const job = await db.put('jobs', { id: jobId, idempotencyKey: jobId, status: 'running', progress: 0, label: payload.operation, projectId: session.projectId, inputs: [{ assetId: payload.assetId, versionId: payload.versionId }], origin: 'studio-bridge' });
         try {
           check(); work.committing = true;
-          return await db.commitJobOutputs({ jobId, idempotencyKey: jobId, outputs: payload.outputs.map(output => ({ name: output.name, kind: output.kind, blob: binary(output.blob), projectId: session.projectId, provenance: { operation: payload.operation, parameters: metadata(payload.parameters || {}), inputAssetId: payload.assetId, inputVersionId: payload.versionId, instanceId: session.instanceId } })) });
+          return await db.commitJobOutputs({ jobId, idempotencyKey: jobId, outputs: payload.outputs.map(output => ({ name: output.name, kind: output.kind, blob: binary(output.blob), projectId: session.projectId, parentVersionIds: [payload.versionId], operation: payload.operation, parameters: metadata(payload.parameters || {}), provenance: { operation: payload.operation, parameters: metadata(payload.parameters || {}), inputAssetId: payload.assetId, inputVersionId: payload.versionId, instanceId: session.instanceId } })) });
         } catch (error) {
           // Cleanup must never replace the original error or claim completion.
           try { await db.put('jobs', { ...job, status: ['CANCELLED', 'GRANT_REVOKED', 'GRANT_EXPIRED'].includes(error.code) ? 'cancelled' : 'failed', error: error.message }, { expectedRevision: job.revision }); } catch {}

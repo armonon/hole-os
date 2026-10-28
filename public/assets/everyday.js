@@ -125,10 +125,18 @@
     }
     return { id: uid(), at, values };
   }
+  function paperworkDraftKey(kind, assetId, instanceId) {
+    if (!['document', 'table', 'form'].includes(kind)) throw new Error('Unknown Paperwork draft kind.');
+    const prefix = 'paper-' + kind + ':';
+    if (assetId) return prefix + assetId;
+    if (instanceId === undefined || instanceId === null) return prefix + 'new';
+    if (typeof instanceId !== 'string' || !instanceId.length || instanceId.length > 200) throw new Error('A Paperwork instance needs a stable identity of 1–200 characters.');
+    return prefix + 'new:instance:' + encodeURIComponent(instanceId);
+  }
   async function draftSession(core, id, initial, onStatus = () => {}) {
     let record = await core.get('settings', id), value = record?.value || initial, pending = 0, failed = false, queue = Promise.resolve();
     return {
-      get value() { return value; }, get pending() { return pending; }, get failed() { return failed; }, get recovered() { return !!record; },
+      get id() { return id; }, get value() { return value; }, get pending() { return pending; }, get failed() { return failed; }, get recovered() { return !!record; },
       save(next) {
         value = structuredClone(next); const snapshot = structuredClone(next); pending++; onStatus('Saving draft…');
         queue = queue.catch(() => {}).then(async () => { record = await core.put('settings', { id, value: snapshot }, { expectedRevision: record?.revision || 0 }); failed = false; onStatus('Draft saved locally'); }).catch(e => { failed = true; onStatus(e.message); throw e; }).finally(() => { pending--; });
@@ -145,7 +153,7 @@
   function dayExport({ events = [], tasks = [], contacts = [] }, exportedAt = Date.now()) {
     return JSON.stringify({ format: 'hole-day', version: 1, exportedAt, events, tasks, contacts }, null, 2);
   }
-  const model = Object.freeze({ DOC_MIME, SHEET_MIME, FORM_MIME, wallTimeToInstant, validateEvent, calendarICS, documentHTML, validateSheet, evaluateSheet, sheetCSV, validateForm, formResponse, draftSession, setDayDeleted, dayExport });
+  const model = Object.freeze({ DOC_MIME, SHEET_MIME, FORM_MIME, wallTimeToInstant, validateEvent, calendarICS, documentHTML, validateSheet, evaluateSheet, sheetCSV, validateForm, formResponse, paperworkDraftKey, draftSession, setDayDeleted, dayExport });
   globalThis.HoleEverydayModel = model;
   if (typeof document === 'undefined') return;
 
@@ -240,7 +248,7 @@
     const format = (prefix, suffix = '') => { const input = editor.input, start = input.selectionStart, end = input.selectionEnd; input.setRangeText(prefix + input.value.slice(start, end) + suffix, start, end, 'select'); input.dispatchEvent(new Event('input')); input.focus(); };
     toolbar.append(ctx.button('Heading', 'heading', () => format('## ')), ctx.button('Bold', 'bold', () => format('**', '**')), ctx.button('Italic', 'italic', () => format('*', '*')), ctx.button('List', 'list', () => format('- ')), ctx.button('Quote', 'quote', () => format('> ')));
     let current = existing, draftRecord = null, queue = Promise.resolve(), dirty = false;
-    let draftId = 'paper-document:' + (existing?.asset.id || 'new');
+    let draftId = paperworkDraftKey('document', existing?.asset.id, ctx.paperworkInstanceId);
     const draft = await ctx.C.get('settings', draftId);
     if (draft) { draftRecord = draft; editor.input.value = draft.text; name.input.value = draft.name; if (draft.assetId) current = await ctx.C.readAsset(draft.assetId, draft.baseVersionId); dirty = true; feedback.textContent = 'Recovered draft saved locally.'; }
     const draw = () => { try { preview.innerHTML = documentHTML(editor.input.value, name.input.value, false); } catch (error) { preview.textContent = error.message; } };
@@ -262,7 +270,7 @@
     const saving = savingGuard(d);
     const name = ctx.input('Table name', 'text', existing?.asset.name || 'Project table.hole-sheet.json'), work = ctx.el('div', 'he-table-scroll'), chart = ctx.el('div', 'he-chart'); chart.setAttribute('aria-label', 'Bar chart from columns A and B');
     const feedback = ctx.el('p', 'hc-status'); feedback.setAttribute('role', 'status'); let current = existing, dirty = false;
-    let draft = await draftSession(ctx.C, 'paper-table:' + (existing?.asset.id || 'new'), { sheet, name: name.input.value, assetId: existing?.asset.id || null, baseVersionId: existing?.version.id || null }, message => { feedback.textContent = message; });
+    let draft = await draftSession(ctx.C, paperworkDraftKey('table', existing?.asset.id, ctx.paperworkInstanceId), { sheet, name: name.input.value, assetId: existing?.asset.id || null, baseVersionId: existing?.version.id || null }, message => { feedback.textContent = message; });
     if (draft.recovered) { sheet = validateSheet(draft.value.sheet); name.input.value = draft.value.name; if (draft.value.assetId) current = await ctx.C.readAsset(draft.value.assetId, draft.value.baseVersionId); dirty = true; feedback.textContent = 'Recovered draft saved locally'; }
     const storeDraft = () => { dirty = true; draft.save({ sheet, name: name.input.value, assetId: current?.asset.id || null, baseVersionId: current?.version.id || null }); };
     function draw() {
@@ -279,7 +287,7 @@
     const saving = savingGuard(d);
     const name = ctx.input('Form name', 'text', existing?.asset.name || 'My form.hole-form.json'), fields = ctx.el('div', 'he-form-fields'), fill = ctx.el('div', 'he-form-response'), feedback = ctx.el('p', 'hc-status'); feedback.setAttribute('role', 'status');
     let responseInputs = new Map(), dirty = !existing, answers = Object.create(null);
-    let draft = await draftSession(ctx.C, 'paper-form:' + (existing?.asset.id || 'new'), { form, name: name.input.value, answers, assetId: existing?.asset.id || null, baseVersionId: existing?.version.id || null }, message => { feedback.textContent = message; });
+    let draft = await draftSession(ctx.C, paperworkDraftKey('form', existing?.asset.id, ctx.paperworkInstanceId), { form, name: name.input.value, answers, assetId: existing?.asset.id || null, baseVersionId: existing?.version.id || null }, message => { feedback.textContent = message; });
     if (draft.recovered) { form = validateForm(draft.value.form, { draft: true }); name.input.value = draft.value.name; answers = Object.assign(Object.create(null), draft.value.answers || {}); if (draft.value.assetId) current = await ctx.C.readAsset(draft.value.assetId, draft.value.baseVersionId); feedback.textContent = 'Recovered form draft'; }
     const storeDraft = () => { dirty = true; draft.save({ form, name: name.input.value, answers, assetId: current?.asset.id || null, baseVersionId: current?.version.id || null }); };
     function draw() {
@@ -295,7 +303,7 @@
       });
       fill.append(ctx.el('p', '', form.responses.length + ' saved response' + (form.responses.length === 1 ? '' : 's')));
     }
-    async function save(nextForm = form, submitted = false) { await draft.flush(); const priorAssetId = current?.asset.id; validateForm(nextForm); const result = await saveObject(ctx, current, safeName(name.input.value), json(nextForm, FORM_MIME), 'form', 'form-edit'); current = await ctx.C.readAsset(result.asset.id); form = nextForm; if (submitted) { answers = Object.create(null); draw(); } const nextDraft = priorAssetId ? draft : await draftSession(ctx.C, 'paper-form:' + current.asset.id, {}, message => { feedback.textContent = message; }); await nextDraft.save({ form, name: name.input.value, answers, assetId: current.asset.id, baseVersionId: current.version.id }); if (nextDraft !== draft) { await draft.clear(); draft = nextDraft; } dirty = false; feedback.textContent = 'Form saved locally'; }
+    async function save(nextForm = form, submitted = false) { await draft.flush(); validateForm(nextForm); const result = await saveObject(ctx, current, safeName(name.input.value), json(nextForm, FORM_MIME), 'form', 'form-edit'); current = await ctx.C.readAsset(result.asset.id); form = nextForm; if (submitted) { answers = Object.create(null); draw(); } const draftValue = { form, name: name.input.value, answers, assetId: current.asset.id, baseVersionId: current.version.id }, nextKey = paperworkDraftKey('form', current.asset.id); if (draft.id !== nextKey) await draft.save(draftValue); const nextDraft = draft.id === nextKey ? draft : await draftSession(ctx.C, nextKey, {}, message => { feedback.textContent = message; }); await nextDraft.save(draftValue); if (nextDraft !== draft) { await draft.clear(); draft = nextDraft; } dirty = false; feedback.textContent = 'Form saved locally'; }
     d.append(name.wrap, fields, ctx.button('Add question', 'plus', () => { if (form.fields.length >= 30) throw new Error('This form supports up to 30 questions.'); form.fields.push({ id: uid(), label: 'New question', type: 'text', required: false }); storeDraft(); draw(); }), ctx.button('Save form', 'save', () => saving(() => save()).catch(e => { feedback.textContent = e.message; }), 'hc-primary'), fill, ctx.button('Save response locally', 'check', () => saving(async () => { try { const values = Object.fromEntries([...responseInputs].map(([id, input]) => [id, input.type === 'checkbox' ? input.checked : input.value])); const response = formResponse(form, values); await save({ ...form, responses: [...form.responses, response] }, true); feedback.textContent = 'Response saved locally'; draw(); } catch (e) { feedback.textContent = e.message; } })), feedback, ctx.button('Retry draft save', 'rotate-cw', () => draft.save(draft.value)), ctx.button('Export form and responses', 'download', () => ctx.download(json(form, 'application/json'), safeName(name.input.value))), ctx.button('Keep draft and close', 'x', async () => { try { await draft.flush(); d.close(); await ctx.render(); } catch (e) { feedback.textContent = e.message; } }), ctx.button('Discard changes', 'x', async () => { await draft.clear(); d.close(); await ctx.render(); }));
     name.input.addEventListener('input', storeDraft); d.addEventListener('cancel', e => { if (dirty && (draft.pending || draft.failed)) { e.preventDefault(); feedback.textContent = 'Wait for the draft to save, or export before closing.'; } }); protectDraft(d, { get pending() { return draft.pending; }, get failed() { return draft.failed; } }); draw(); ctx.H.icons();
   }

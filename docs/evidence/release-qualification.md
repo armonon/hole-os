@@ -1,8 +1,18 @@
 # Current continuation qualification
 
-Latest pushed implementation: `ddcfc42` (522 passing tests). Latest byte-verified review: [416-file review](https://6ae1dd252914c74f0a9afd79--hole-os-armonon.netlify.app), receipt `review-ddcfc42.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `46a61bc` (543 passing tests). Latest byte-verified review: [417-file review](https://6ae1e069ad04f55b032fdb8a--hole-os-armonon.netlify.app), receipt `review-46a61bc.json`. Production remains unchanged; the master brief is not complete.
 
-## Tenth increment — 28 October 2026 (release checks)
+## Eleventh increment — 28 October 2026 (qualified for delivery)
+
+Settled integration has 556 passing tests and a serial generated build. Paperwork new documents, tables and forms have independent window draft identities; legacy main-view and saved-asset keys remain compatible. Two-window recovery, failed-save Close/Escape guards and interrupted first-save migration retaining one asset pass without overrides. See `paperwork-sessions.md`.
+
+Luma creates actual native copies from raster sources and explicit PNG/JPEG/WebP exports, with exact selected-version parents and unchanged original binding. Actual engine bytes/pixels, editable native reopen, source-save and export quota retries, ambiguous ACK duplicate prevention and pre-dispatch cancellation pass. Typing300characters uses3bridge requests; long-session256-request renewal remains open. See `luma-exports.md`.
+
+StemDeck adds retained native track gain/pan/mute/solo and audio clip move/trim/resize/rate. Actual PCM comparisons, native Undo, source archive/hash/unknown-field retention, raw-only inspector recovery and failed-storage refusal pass. Unsupported full-mix processing remains unrendered. See `stemdeck-editing.md`.
+
+Independent review corrected lost initial flush messages during editor initialization, stale failed typing queues, native-save cached quota failures, raw-only draft recovery omission and browser unload protection. Both studio parents authenticate pending-state notifications and wait for durable child flushes on close. Actual generated-shell normal journeys and separately labeled fault injection remain distinct. Shared derive now sets canonical parentVersionIds as well as provenance; real Core reopen regression verifies the exact selected earlier version even after the source head advances.
+
+## Tenth increment — 28 October 2026 (delivered)
 
 543 tests pass after the settled serial build. Luma adds actual retained-engine native raster/text layers, typed recovery and bounded paint/erase, with exact pixels, original/native reopen, failed recovery and lost-ACK retry tests. Image saves remain flattened; native layer creation is clearly limited to `.luma`. Imported transformed/oversized paint targets are refused before interpolation. See `luma-tools.md`.
 
