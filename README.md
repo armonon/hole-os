@@ -2,13 +2,13 @@
 
 **Make yourself at home.** A personal browser workspace where projects, materials, tools and unfinished thoughts stay connected.
 
-This branch implements the 26 October overhaul against the existing plain HTML/CSS/JavaScript OS. It adds a shared file and project foundation, useful local applications, spatial presentations, and a real development collaboration service. It is a review build; the complete master program still has acceptance gates. See the [program ledger](docs/implementation/backlog.md), [contracts](docs/architecture/contracts.md), and [browser qualification](docs/evidence/release-qualification.md).
+This branch implements the 26 October overhaul against the existing plain HTML/CSS/JavaScript OS. It adds a shared file and project foundation, useful local applications, spatial presentations, and a real development collaboration service. It is a review build; the complete master program still has acceptance gates. See the [28 October feature audit](docs/evidence/feature-audit-20261028.md), [program ledger](docs/implementation/backlog.md), [contracts](docs/architecture/contracts.md), and [browser qualification](docs/evidence/release-qualification.md).
 
 To continue the remaining program, use the [autonomous completion prompt](docs/implementation/autonomous-completion.md).
 
 ## Open and develop
 
-- [Overhaul review build](https://6adfa58acfc5e0940a9e0685--hole-os-armonon.netlify.app/)
+- [Overhaul review build](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app/)
 - [Existing production app](https://hole-os-armonon.netlify.app/)
 - [Private source repository](https://github.com/armonon/hole-os)
 - [Overhaul branch](https://github.com/armonon/hole-os/tree/codex/hole-os-overhaul)
@@ -38,7 +38,7 @@ Netlify publishes **only `public/`**. Source modules in `src/` are copied by the
 - **Actions and Flow:** real image crop/resize/PNG/WebP conversion; audio trim/normalize/WAV; browser-decoded video thumbnails and audio extraction; reusable Flow runs; and a Release Asset Pack with three PNG sizes and a ZIP manifest. Jobs use pinned input versions and report actual progress, failures, cancellation and retries. Browser codec and resource limits are visible.
 - **Day and Paperwork:** zoned events, tasks, contacts and ICS/JSON export; formatted documents, sheets with bounded formulas and charts, local forms/responses, and PDF annotation, drawn signatures and image-only redacted copies. PDF engines are vendored for local operation. PDF limits and destructive rasterization are disclosed before export.
 - **Create and WebLab:** bounded counter/checklist/timer/calculator tools with durable state, plus versioned HTML/CSS/JavaScript projects, an isolated code preview and source ZIP export. These tools do not receive ambient access to private files or accounts.
-- **Lab, Crew and Momentous:** a saved pendulum experiment with CSV output; bounded local job workflows with previews and review; and validated local tool-package install, update and rollback. No AI activity, autonomous publishing, paid transaction or arbitrary-code permission is simulated.
+- **Lab, Crew and Momentous:** saved pendulum, synthetic signal/audio and generative-visual experiments; scoped workflows with budgets/checkpoints/revocation; and zero-grant tools, compositions, themes, objects, workflows and Space templates with update/rollback. No AI activity, autonomous publishing, paid transaction or arbitrary-code permission is simulated.
 - **Atlas, Tongue and Rack:** offline vector cartography, local itineraries and privacy-reviewed trip export/import with deliberate OpenStreetMap handoff; browser-qualified translation, available system voices, phrase practice and manually timed subtitles; and a real browser oscillator/filter/envelope/delay instrument that exports presets and stereo WAV. Translation availability depends on the browser. Rack is explicitly a technical prototype.
 - **Recovery and offline delivery:** integrity-checked private backup/restore, versioned static shell caching, and user-initiated updates that flush and protect open drafts. Loopback development disables caching unless `?offline-test=1` is supplied. The full backup contains private content; portable setup JSON remains layout-only.
 
@@ -54,7 +54,7 @@ The static client does not make Netlify an account or file-sync backend. Start t
 HOLE_DATA_DIR=/absolute/private/data/path node server/start.mjs
 ```
 
-Shared spaces can connect to `http://127.0.0.1:8787` (or `http://localhost:8787`). The service implements actual accounts, expiring sessions, recovery, roles, invitations, version-scoped content grants, revocation, presence, bounded sync and curated public manifests. The UI transfers selected file versions and restores authorized copies. Complete bidirectional application-state sync and all public publishing controls remain unfinished.
+Shared spaces can connect to `http://127.0.0.1:8787` (or `http://localhost:8787`). The service implements actual accounts, expiring sessions, recovery, roles, invitations, version-scoped content grants, revocation, presence, bounded sync and curated public manifests. The UI transfers selected file versions and restores authorized copies. Guest preview, publication/revocation and selected preference/layout/memory adapters work against the local service; complete bidirectional application-state sync and production operations remain unfinished.
 
 Production Relay needs an approved HTTPS destination, durable storage, deployment operations and identity/email configuration. Its private data directory must stay outside the published site. See [service contracts and limits](docs/architecture/service.md) and [bridge qualification](docs/compatibility/bridges.md). NOW/Circle and other provider integrations still need their upstream contracts.
 

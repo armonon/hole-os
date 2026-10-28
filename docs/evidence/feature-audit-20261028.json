@@ -1,0 +1,1093 @@
+{
+  "date": "2026-10-28",
+  "baselineRevision": "8361b32",
+  "branch": "codex/hole-os-overhaul",
+  "programComplete": false,
+  "implementationRowsReviewed": 38,
+  "acceptanceRowsReviewed": 8,
+  "automated": {
+    "command": "npm test",
+    "passed": 659,
+    "failed": 0,
+    "skipped": 0,
+    "logSha256": "8b7a66d18401a052676a903950d27246fbd1b6becbc0ab799e514d33fd32e110"
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "files": [
+      {
+        "path": "public/index.html",
+        "sha256": "a392708bef9bd09219e2deb291c9b75166fae8e9716d6dc7f7c0322e08af88cb"
+      },
+      {
+        "path": "public/assets/continuity.js",
+        "sha256": "676992f3e66116057b26ff22a25031352e930ecf849c56a20fa9fc08f7a885f8"
+      },
+      {
+        "path": "public/assets/capabilities.js",
+        "sha256": "37eddeca7831d0e614ddb1566428534ad8ed3c1f3607280d81f74d887dde9458"
+      },
+      {
+        "path": "public/assets/bridge.js",
+        "sha256": "f3946dc82c974d5ecb595c64acfd4d40c7d622359d7c7e797e15909858605ada"
+      },
+      {
+        "path": "public/service-worker.js",
+        "sha256": "368e72fc248f028be4ed2b1aa6d49ecc6f75f5df6b4877acb12ff8fcf2b1abca"
+      }
+    ]
+  },
+  "browser": {
+    "engine": "Chrome 156.0.8078.48",
+    "distinctScripts": 25,
+    "latestPassing": true,
+    "initialSourceNote": "Initial default source overrides were used by Glyph/Form/ScenePilot/WebLab/window scripts; affected scripts replayed with HOLE_QA_SOURCE_OVERRIDE=0. The initial Libraries failure is retained and was repaired with a correct selector, then passed.",
+    "results": [
+      {
+        "name": "continuity",
+        "file": "scripts/verify-continuity-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 4.2,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-continuity-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "universe200MountMs": 36.90000003576279,
+          "checks": [
+            "200 indexed/30 mounted Universe materials",
+            "pinned Carry linking",
+            "snippet reload",
+            "text diff",
+            "place search",
+            "cross-Space project link",
+            "snapshot schema 2",
+            "multi-step Flow shell mount",
+            "Carry to Flow to pinned Publish export",
+            "320px reduced motion overflow"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "view-continuity",
+        "file": "scripts/verify-view-continuity-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.1,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-view-continuity-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "passed": [
+            "two simultaneous native editors retain identity and independent dirty content",
+            "flat/canvas/smart/universe/flat transitions preserve committed originals",
+            "resume one studio and save leaves other dirty state intact"
+          ]
+        }
+      },
+      {
+        "name": "semantic",
+        "file": "scripts/verify-semantic-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.8,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-semantic-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "anchored semantic zoom into pinned preview without editing",
+            "durable departure camera and return anchor",
+            "high-boundary reentry hysteresis",
+            "Ctrl wheel/ordinary scroll/editor exemptions",
+            "semantic exit to current Space",
+            "missing material recovery + explicit parent route"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "smart-crew",
+        "file": "scripts/verify-smart-crew-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.1,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-smart-crew-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "study source coverage/self recall/source-linked note",
+            "saved exact source + notes after reload/head change",
+            "listening loop/position/level persisted",
+            "travel saved Atlas records",
+            "deterministic command rejection",
+            "Crew inspected grants/output budget rejection/no outputs",
+            "Crew completed output export/reopen",
+            "failed-task grant revocation",
+            "320px overflow"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "paperwork-formats",
+        "file": "scripts/verify-paperwork-formats-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.5,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-paperwork-formats-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "markdownHTML": true,
+          "calculatedCSV": true,
+          "formUnsubmittedRecovery": true,
+          "responseExport": true,
+          "incompleteDraftRepair": true,
+          "saveRefusalPreservesWork": true,
+          "draftRefusalBlocksCloseAndRecovers": true,
+          "delayedSaveLocksReplacementControls": true,
+          "keyboard": true,
+          "width320": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "tool-windows",
+        "file": "scripts/verify-tool-windows-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-tool-windows-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "independent identities",
+            "actual task create and reload",
+            "open-dialog close refusal preserves input",
+            "resize checkpoint",
+            "minimize resume navigation",
+            "refresh shared Core",
+            "closing one leaves other running",
+            "repeated arrangement restore reuses identities",
+            "320px window bounds"
+          ]
+        }
+      },
+      {
+        "name": "luma-selection",
+        "file": "scripts/verify-luma-selection-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 6.2,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-luma-selection-browser.mjs",
+        "observed": {
+          "logFile": "/tmp/hole-feature-audit-20261028/luma-selection.log",
+          "sha256": "69983e31952b03799b2acbfc8c7dad8a5c161678c4920c568d7ea4311833ab70"
+        }
+      },
+      {
+        "name": "luma-exports",
+        "file": "scripts/verify-luma-exports-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 8.5,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-luma-exports-browser.mjs",
+        "observed": {
+          "logFile": "/tmp/hole-feature-audit-20261028/luma-exports.log",
+          "sha256": "da213e44465db90ad100b4f8c17e75ede939b9ccb1c2bf5ff178964e07de9a10"
+        }
+      },
+      {
+        "name": "glyph-kerning",
+        "file": "scripts/verify-glyph-kerning-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 4,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-glyph-kerning-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": true,
+          "retainedPairLayoutAndUndo": true,
+          "realTTFKernAndOTFLimit": true,
+          "nativeExactReload": true,
+          "originalRetained": true,
+          "exactExportParents": true,
+          "unblurredCloseRecovery": true,
+          "unfinishedFieldsAndPreviewRecovery": true,
+          "unfinishedCharacterSwitchRefused": true,
+          "pointerCloseGuard": true,
+          "releasedStrokeSurvivesQuotaWithoutDuplicate": true,
+          "failedRecoveryCloseGuard": true,
+          "forgedPendingMessagesRejected": true,
+          "phone320Keyboard": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "form-seams",
+        "file": "scripts/verify-form-seams-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-form-seams-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": true,
+          "nativeSeamRatio": 1.2,
+          "dxfNotchSegments": 2,
+          "undoDisableRemoveNativePreserved": true,
+          "postACKRecoveryNoDuplicate": true,
+          "rawFieldsSelectionGuard": true,
+          "closeFailureRetainsAuthority": true,
+          "phone320": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "scenepilot-split",
+        "file": "scripts/verify-scenepilot-split-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-scenepilot-split-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": true,
+          "realVideoClock": {
+            "time": 2.1,
+            "rate": 2,
+            "paused": true,
+            "color": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "nativeSplitUndoExport": true,
+          "rawRecovery": true,
+          "closeFailureRetained": true,
+          "phone320": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "stemdeck-transport",
+        "file": "scripts/verify-stemdeck-transport-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.1,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-stemdeck-transport-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "staged": false,
+          "built": false,
+          "shell": false,
+          "pcm": {
+            "error": 0,
+            "early": 0,
+            "audio": 0.0707106962800026,
+            "gap": 0,
+            "midi": 0.07722745835781097,
+            "duration": 1.8,
+            "dirty": false
+          },
+          "passed": [
+            "actual two-track embedded audio plus native MIDI PCM equals isolated sum",
+            "timing silence and separate nonzero source regions",
+            "loop/stop/seek/monitor control",
+            "missing/unsupported/out-of-range audio refuses playback without document mutation",
+            "cancel during preparation prevents late playback",
+            "parent stop disposes playback",
+            "native save/close/reopen preserves document and never autoplays"
+          ]
+        }
+      },
+      {
+        "name": "libraries",
+        "file": "scripts/verify-libraries-browser.mjs",
+        "code": 1,
+        "timedOut": false,
+        "seconds": 31.1,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-libraries-browser.mjs",
+        "observed": {
+          "logFile": "/tmp/hole-feature-audit-20261028/libraries.log",
+          "sha256": "f547437be25305fae4b872f91702aaac3352b0c9be92ee2405ccaa845d49c7e6"
+        }
+      },
+      {
+        "name": "library-collections",
+        "file": "scripts/verify-library-collections-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 3.6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-library-collections-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "sourceOverrides": false,
+          "passed": [
+            "actual create/curate/reorder/save/reload",
+            "picker and pending file read refuse navigation",
+            "canonical collection graph retains prior collection and exact source parents",
+            "exact reader bytes survive source head advance",
+            "invalid raw metadata explicit recovery",
+            "storage failure refuses navigation/unload and recovers",
+            "navigation-record failure restores editable session and unload guard",
+            "stale collection head retains draft and latest",
+            "historical view does not consume newer draft",
+            "private native download/import requires explicit source mapping",
+            "retained Librarian metadata and foreign identity preserved after explicit mapping",
+            "actual Core creation ACK retry produces one asset",
+            "actual Core lost ACK produces one version",
+            "close during async mount waits and prevents detached edits",
+            "pending move/remove keeps controls frozen; cancelled leave redraws and persists new edits",
+            "320px field bounds"
+          ],
+          "bounds": {
+            "width": 258,
+            "scroll": 258
+          }
+        }
+      },
+      {
+        "name": "relay",
+        "file": "scripts/verify-relay-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 3.1,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-relay-browser.mjs",
+        "observed": {
+          "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+          "profiles": 2,
+          "verified": [
+            "Core IndexedDB queue",
+            "real browser offline failure",
+            "profile close/reopen",
+            "conflict preservation",
+            "explicit resolution",
+            "other-profile pull",
+            "mounted Relay review dialog and keep-remote control",
+            "guest preview UI creation and review",
+            "anonymous pinned bytes exclude private future version",
+            "guest revocation blocks subsequent download",
+            "public publish/discovery/preview/unpublish UI",
+            "member audience edit/ownership transfer/leave UI"
+          ],
+          "limits": "Actual browser transport and mounted Relay review UI; full shell navigation, Safari and physical devices not exercised."
+        }
+      },
+      {
+        "name": "lab-memory",
+        "file": "scripts/verify-lab-memory-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 2.6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-lab-memory-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "Lab signal UI version/reload and exact WAV export",
+            "invalid frequency rejection",
+            "generative visual UI and 640×360 PNG export",
+            "pendulum save/reopen samples",
+            "memory UI enable/pinned source/save/reload/correct/export/exclude/disable/forget",
+            "disabled memory write rejection",
+            "320px reduced-motion overflow"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "package-shell",
+        "file": "scripts/verify-package-shell-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 1.8,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-package-shell-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "actual shell theme apply/undo",
+            "Space template new identity/zones/provenance/reload",
+            "workflow install does not run; explicit review/run produces original text branch",
+            "320px reduced motion no page overflow"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "weblab-script",
+        "file": "scripts/verify-weblab-script-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 3.6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-weblab-script-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "sourceOverride": true,
+          "integratedWebLab": true,
+          "basic": {
+            "type": "done",
+            "result": {
+              "sum": 5
+            },
+            "logs": [
+              [
+                "hello",
+                4
+              ]
+            ],
+            "outputBytes": 20,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "denied": {
+            "type": "done",
+            "result": [
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined"
+            ],
+            "logs": [],
+            "outputBytes": 193,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "codes": {
+            "capability": "CAPABILITY_DENIED",
+            "logs": "OUTPUT_LIMIT",
+            "bytes": "OUTPUT_LIMIT",
+            "syntax": "SCRIPT_ERROR",
+            "async": "SCRIPT_ERROR",
+            "bigint": "SCRIPT_ERROR",
+            "loop": "TIMEOUT",
+            "cancel": "CANCELLED"
+          },
+          "ticks": 30,
+          "loopMs": 301.69999998807907,
+          "cancelMs": 102.09999996423721,
+          "recovery": {
+            "type": "done",
+            "result": 42,
+            "logs": [],
+            "outputBytes": 2,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "remote": [],
+          "errors": []
+        }
+      },
+      {
+        "name": "tongue-practice",
+        "file": "scripts/verify-tongue-practice-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 3.5,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-tongue-practice-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "realGeneratedAudioCuePlayback": true,
+          "exactNativeCaptionAndAudioVersions": true,
+          "explicitPinnedAudioChoice": true,
+          "missingAudioWrittenRecovery": true,
+          "phone320KeyboardClose": true,
+          "inspectableWrittenAttempt": true,
+          "draftFailureCloseAndNavigationGuard": true,
+          "reloadRecovery": true,
+          "realSRTImportRoundtrip": true,
+          "trashedSourceDenied": true,
+          "malformedProvenanceRetainedWithoutModal": true,
+          "noRemoteRequests": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "press-kit",
+        "file": "scripts/verify-press-kit-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 1.6,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-press-kit-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "passed": [
+            "actual Publish UI curates exact versions and authored text",
+            "ZIP stores exact original bytes/hash manifest and immutable parents after head/name advance",
+            "reload retry reuses one output",
+            "draft storage failure refuses navigation/unload then durable recovery",
+            "ambiguous Core commit ACK replay works after source trash with one output",
+            "cancel during ZIP prevents material output",
+            "leave drains newer edits during pending real Core write",
+            "320px bounds and keyboard field navigation"
+          ],
+          "proof": {
+            "sources": 2,
+            "jobId": "press-kit:1eb1ee4d-f081-447b-aba6-867fb0145cd2"
+          },
+          "bounds": {
+            "width": 292,
+            "scroll": 292
+          }
+        }
+      },
+      {
+        "name": "window-checkpoint",
+        "file": "scripts/verify-window-checkpoint-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 1.5,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-window-checkpoint-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": true,
+          "initialCheckpointRefusalKeepsVisibleEditor": true,
+          "actualReloadWarningRetainsWindow": true,
+          "retryReleasesGuard": true,
+          "retryPreservesEditing": true,
+          "closeRemovesRuntimeAndFrame": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "extension-unload",
+        "file": "scripts/verify-extension-unload-browser.mjs",
+        "code": 0,
+        "timedOut": false,
+        "seconds": 1.8,
+        "phase": "initial",
+        "command": "HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-extension-unload-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "sourceOverride": false,
+          "passed": [
+            "undurable draft protects unload",
+            "actual reload warning dismissed retains editor",
+            "retry saves canonical name and releases guard",
+            "reload reopens saved content"
+          ]
+        }
+      },
+      {
+        "name": "libraries",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 2,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-libraries-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "actual PDF raster",
+            "page/bookmark/note reload",
+            "source-pinned note export",
+            "real WAV playback across navigation",
+            "playhead reload without autoplay",
+            "320px layout"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "accessibility",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 2.6,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-accessibility-browser.mjs",
+        "observed": {
+          "browser": "153.0.8010.12",
+          "evidence": [
+            {
+              "name": "Librarian 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Bounce 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Smart 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Crew 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Package dialog 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Librarian 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Bounce 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Smart 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Crew 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Package dialog 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Librarian 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "Bounce 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "Smart 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "Crew 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "Package dialog 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "WebLab isolated preview 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "WebLab isolated preview 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "WebLab isolated preview 400%",
+              "width": 320,
+              "pageWidth": 320
+            },
+            {
+              "name": "Studio layout 100%",
+              "width": 1280,
+              "pageWidth": 1280
+            },
+            {
+              "name": "Studio layout 200%",
+              "width": 640,
+              "pageWidth": 640
+            },
+            {
+              "name": "Studio layout 400%",
+              "width": 320,
+              "pageWidth": 320
+            }
+          ],
+          "findings": [],
+          "errors": [],
+          "limits": [
+            "No screen-reader/physical touch/contrast certification",
+            "Safari26.0.1 installed; WebDriver blocked by disabled Allow remote automation"
+          ]
+        }
+      },
+      {
+        "name": "continuity",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 3.6,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-continuity-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "universe200MountMs": 35.89999997615814,
+          "checks": [
+            "200 indexed/30 mounted Universe materials",
+            "pinned Carry linking",
+            "snippet reload",
+            "text diff",
+            "place search",
+            "cross-Space project link",
+            "snapshot schema 2",
+            "multi-step Flow shell mount",
+            "Carry to Flow to pinned Publish export",
+            "320px reduced motion overflow"
+          ],
+          "errors": []
+        }
+      },
+      {
+        "name": "view-continuity",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 2,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-view-continuity-browser.mjs",
+        "observed": {
+          "browser": "156.0.8078.48",
+          "passed": [
+            "two simultaneous native editors retain identity and independent dirty content",
+            "flat/canvas/smart/universe/flat transitions preserve committed originals",
+            "resume one studio and save leaves other dirty state intact"
+          ]
+        }
+      },
+      {
+        "name": "glyph-kerning",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 3.9,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-glyph-kerning-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "retainedPairLayoutAndUndo": true,
+          "realTTFKernAndOTFLimit": true,
+          "nativeExactReload": true,
+          "originalRetained": true,
+          "exactExportParents": true,
+          "unblurredCloseRecovery": true,
+          "unfinishedFieldsAndPreviewRecovery": true,
+          "unfinishedCharacterSwitchRefused": true,
+          "pointerCloseGuard": true,
+          "releasedStrokeSurvivesQuotaWithoutDuplicate": true,
+          "failedRecoveryCloseGuard": true,
+          "forgedPendingMessagesRejected": true,
+          "phone320Keyboard": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "form-seams",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 1.9,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-form-seams-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "nativeSeamRatio": 1.2,
+          "dxfNotchSegments": 2,
+          "undoDisableRemoveNativePreserved": true,
+          "postACKRecoveryNoDuplicate": true,
+          "rawFieldsSelectionGuard": true,
+          "closeFailureRetainsAuthority": true,
+          "phone320": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "scenepilot-split",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 5.9,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-scenepilot-split-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "realVideoClock": {
+            "time": 2.1,
+            "rate": 2,
+            "paused": true,
+            "color": [
+              0,
+              0,
+              255,
+              255
+            ]
+          },
+          "nativeSplitUndoExport": true,
+          "rawRecovery": true,
+          "closeFailureRetained": true,
+          "phone320": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "weblab-script",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 3.2,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-weblab-script-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "sourceOverride": false,
+          "integratedWebLab": true,
+          "basic": {
+            "type": "done",
+            "result": {
+              "sum": 5
+            },
+            "logs": [
+              [
+                "hello",
+                4
+              ]
+            ],
+            "outputBytes": 20,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "denied": {
+            "type": "done",
+            "result": [
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined",
+              "undefined"
+            ],
+            "logs": [],
+            "outputBytes": 193,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "codes": {
+            "capability": "CAPABILITY_DENIED",
+            "logs": "OUTPUT_LIMIT",
+            "bytes": "OUTPUT_LIMIT",
+            "syntax": "SCRIPT_ERROR",
+            "async": "SCRIPT_ERROR",
+            "bigint": "SCRIPT_ERROR",
+            "loop": "TIMEOUT",
+            "cancel": "CANCELLED"
+          },
+          "ticks": 30,
+          "loopMs": 301.7999999523163,
+          "cancelMs": 101.80000001192093,
+          "recovery": {
+            "type": "done",
+            "result": 42,
+            "logs": [],
+            "outputBytes": 2,
+            "engine": "QuickJS / PDF.js 6.4.299 retained WASM"
+          },
+          "remote": [],
+          "errors": []
+        }
+      },
+      {
+        "name": "window-checkpoint",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 1.4,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-window-checkpoint-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "initialCheckpointRefusalKeepsVisibleEditor": true,
+          "actualReloadWarningRetainsWindow": true,
+          "retryReleasesGuard": true,
+          "retryPreservesEditing": true,
+          "closeRemovesRuntimeAndFrame": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "runtime-close",
+        "code": 0,
+        "timedOut": false,
+        "sourceOverride": false,
+        "seconds": 1,
+        "phase": "final",
+        "command": "HOLE_QA_SOURCE_OVERRIDE=0 HOLE_PLAYWRIGHT_MODULE=<installed-playwright-core> node scripts/verify-runtime-close-browser.mjs",
+        "observed": {
+          "passed": true,
+          "sourceOverride": false,
+          "textAndOpaqueIframeInputBlocked": true,
+          "failedCheckpointRestoresEditing": true,
+          "retryCloses": true,
+          "errors": []
+        }
+      },
+      {
+        "name": "text-recovery",
+        "phase": "final",
+        "code": 0,
+        "sourceOverride": false,
+        "command": "node scripts/verify-text-recovery-browser.mjs",
+        "observed": {
+          "passed": true,
+          "browser": "156.0.8078.48",
+          "checks": [
+            "immediate and refused-draft unload warning",
+            "actual reload dialog dismissal retains editing",
+            "durable draft releases warning",
+            "close refusal preserves acknowledged base",
+            "continued editing saves without conflict",
+            "concurrent Done creates one version",
+            "reopen retains final bytes"
+          ],
+          "errors": []
+        }
+      }
+    ]
+  },
+  "deploymentSample": [
+    {
+      "label": "production",
+      "url": "https://hole-os-armonon.netlify.app",
+      "path": "index.html",
+      "status": 200,
+      "sha256": "f5d8e0cc871bda09495d099e3b18c9f02b3c8c852fb3b456d328d0644ef8f06c",
+      "localSha256": "a392708bef9bd09219e2deb291c9b75166fae8e9716d6dc7f7c0322e08af88cb",
+      "matchesCurrentLocalBuild": false
+    },
+    {
+      "label": "production",
+      "url": "https://hole-os-armonon.netlify.app",
+      "path": "assets/continuity.js",
+      "status": 200,
+      "sha256": "076b3405c194bf4d0427ea5a15ca663c4b5c7ad80f818947c4967d481552285d",
+      "localSha256": "676992f3e66116057b26ff22a25031352e930ecf849c56a20fa9fc08f7a885f8",
+      "matchesCurrentLocalBuild": false
+    },
+    {
+      "label": "production",
+      "url": "https://hole-os-armonon.netlify.app",
+      "path": "assets/bridge.js",
+      "status": 200,
+      "sha256": "a3276c46a174fd4ed97303e36961c9477a49c49f56ae6107bc2131fae4b3ff02",
+      "localSha256": "f3946dc82c974d5ecb595c64acfd4d40c7d622359d7c7e797e15909858605ada",
+      "matchesCurrentLocalBuild": false
+    },
+    {
+      "label": "production",
+      "url": "https://hole-os-armonon.netlify.app",
+      "path": "assets/capabilities.js",
+      "status": 200,
+      "sha256": "0c26467a35affbf2efff102eb2370cf134385998cb1dd1f7773edb2f40573158",
+      "localSha256": "37eddeca7831d0e614ddb1566428534ad8ed3c1f3607280d81f74d887dde9458",
+      "matchesCurrentLocalBuild": false
+    },
+    {
+      "label": "previous-review",
+      "url": "https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app",
+      "path": "index.html",
+      "status": 200,
+      "sha256": "a392708bef9bd09219e2deb291c9b75166fae8e9716d6dc7f7c0322e08af88cb",
+      "localSha256": "a392708bef9bd09219e2deb291c9b75166fae8e9716d6dc7f7c0322e08af88cb",
+      "matchesCurrentLocalBuild": true
+    },
+    {
+      "label": "previous-review",
+      "url": "https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app",
+      "path": "assets/continuity.js",
+      "status": 200,
+      "sha256": "bd2d3ac2761df288bb7bae28caab53b9237200c8815f9f33cbcd39f4deb74818",
+      "localSha256": "676992f3e66116057b26ff22a25031352e930ecf849c56a20fa9fc08f7a885f8",
+      "matchesCurrentLocalBuild": false
+    },
+    {
+      "label": "previous-review",
+      "url": "https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app",
+      "path": "assets/bridge.js",
+      "status": 200,
+      "sha256": "f3946dc82c974d5ecb595c64acfd4d40c7d622359d7c7e797e15909858605ada",
+      "localSha256": "f3946dc82c974d5ecb595c64acfd4d40c7d622359d7c7e797e15909858605ada",
+      "matchesCurrentLocalBuild": true
+    },
+    {
+      "label": "previous-review",
+      "url": "https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app",
+      "path": "assets/capabilities.js",
+      "status": 200,
+      "sha256": "0c26467a35affbf2efff102eb2370cf134385998cb1dd1f7773edb2f40573158",
+      "localSha256": "37eddeca7831d0e614ddb1566428534ad8ed3c1f3607280d81f74d887dde9458",
+      "matchesCurrentLocalBuild": false
+    }
+  ],
+  "limits": [
+    "No full studio parity claim",
+    "No fresh model-quality or full codec matrix",
+    "No physical touch/microphone/audio/screen-reader/Safari/user-study certification",
+    "No new whole-deployment certification or production promotion"
+  ]
+}

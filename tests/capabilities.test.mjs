@@ -30,9 +30,9 @@ test('every actual app has one explicit, human-readable classification', () => {
 });
 
 test('classification distinguishes local tools, sample previews, external launchers and future systems', () => {
-  for (const name of ['Notes', 'Files', 'Clock']) assert.equal(capabilities.get(name).status, 'local');
+  for (const name of ['Notes', 'Files', 'Clock', 'Browser', 'Bounce', 'Librarian']) assert.equal(capabilities.get(name).status, 'local');
   for (const name of ['Music', 'Photos']) assert.equal(capabilities.get(name).status, 'partial');
-  for (const name of ['Browser', 'Luma', 'Bounce', 'Librarian']) assert.equal(capabilities.get(name).status, 'external');
+  for (const name of ['Luma', 'Glyph', 'Form', 'StemDeck']) assert.equal(capabilities.get(name).status, 'external');
   for (const name of ['Windows', 'Linux', 'Mac']) assert.equal(capabilities.get(name).status, 'future');
   for (const name of ['Settings', 'Messages', 'Books', 'Canvas']) assert.equal(capabilities.get(name).status, 'concept');
   assert.match(capabilities.get('Clock').description, /captured when opened/);

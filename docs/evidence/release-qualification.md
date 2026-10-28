@@ -1,5 +1,9 @@
 # Current continuation qualification
 
+## 28 October feature audit and text recovery repair
+
+The [current feature audit](feature-audit-20261028.md) reviews all 38 implementation rows and eight acceptance/delivery gates. All 659 tests and the build pass; 25 distinct browser scripts ultimately pass, including targeted final generated-asset replays. Text now warns before an undurable draft is lost, preserves its acknowledged base after a refused close, and serializes concurrent Done requests. Reader/accessibility selectors and stale capability descriptions/classifications are corrected. [Exact audit receipt](feature-audit-20261028.json). These fixes are locally qualified; the prior deployment receipt below remains the latest release evidence until a new deployment is verified. The full program remains incomplete.
+
 Latest pushed implementation: `6f516a4` (659 full tests). Latest byte-verified review: [422-file review](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app), receipt `review-6f516a4.json`. Production unchanged; master brief incomplete.
 
 ## Sixteenth increment — 28 October 2026 (delivered)

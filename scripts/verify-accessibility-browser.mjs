@@ -41,7 +41,7 @@ try {
   for (const factor of [1,2,4]) {
     await zoom(factor);
     await page.evaluate(ids=>HoleContinuity.open('librarian',{assetId:ids.text,versionId:ids.version}),ids);
-    await page.getByLabel('Page',{exact:true}).waitFor(); await page.getByLabel('Page',{exact:true}).fill('1'); await keyboardButton('Go to page'); await keyboardButton('Next page'); await page.waitForFunction(()=>document.querySelector('.hc-reader [role=status]')?.textContent.includes('Page 2'));
+    await page.getByLabel('Page',{exact:true}).waitFor(); await page.getByLabel('Page',{exact:true}).fill('1'); await keyboardButton('Go to page'); await keyboardButton('Next page'); await page.waitForFunction(()=>document.querySelector('.hc-reader-session [role=status]')?.textContent.includes('Page 2'));
     await reflow(`Librarian ${factor*100}%`);
     await page.evaluate(()=>HoleContinuity.open('bounce',{assetId:null})); await reflow(`Bounce ${factor*100}%`);
     await page.evaluate(ids=>HoleContinuity.open('projects',{projectId:ids.project,assetId:null,presentation:'smart'}),ids);

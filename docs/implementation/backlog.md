@@ -6,6 +6,8 @@ Updated 28 October 2026 against the accepted [master brief](master-build-brief.t
 
 Sixteenth increment is locally qualified with 659 passing tests and generated-browser evidence: explicit same-scope access expiry renewal, Luma native selections, orphan recovery and unload guards. Delivery is byte verified in release evidence; request-budget rollover and broader required parity remain open. See release qualification for exact scope.
 
+The [28 October feature audit](../evidence/feature-audit-20261028.md) rechecks every row, with 659 passing tests and 25 distinct passing browser scripts across the audit/replays. It repairs inline text unload/commit-close recovery and stale reader checks, and refreshes capability classifications. These fixes are locally qualified; no remaining requirement is reclassified as complete. Full studio parity, universal runtime continuity, continuous sync, providers, Vault and human/device gates remain open.
+
 ## Foundation, navigation and workflow
 
 | Package / owner | Current implementation and evidence | Remaining acceptance or release gate |
@@ -70,7 +72,7 @@ Sixteenth increment is locally qualified with 659 passing tests and generated-br
 | **Wave 6: everyday/extensibility** | Useful local documents/tools/source projects, pendulum, bounded packages, Rack prototype. | Remaining capability rows, every product's reopen/export/error journey, broader installation surface and Vault review. |
 | **P11 · Lead/reviewer** | New Core/actions/bridge/service/everyday/PDF/extensions/spatial/Universe/offline tests plus legacy regressions. Real ZIP/WAV/redacted-PDF bytes, draft/tool/WebLab/Day reload and sandbox DOM/storage denial observed locally. | Final build/test/browser evidence is recorded in [release qualification](../evidence/release-qualification.md). Complete keyboard, screen-reader, contrast/focus/browser-zoom, touch, Safari/Chromium, performance and permission/adversarial browser checks. A harness is not device coverage. |
 | **Research · participants/design** | Labeled disposable Night garden experiment/tasks exist. | Actual formative participants, task outcomes/mistakes/recovery and identity explanations. No research results fabricated. |
-| **Delivery · Lead** | Latest pushed `638568e`: 640 full tests plus18 final affected checks and [422-file byte-verified review](https://6ae217b6114162684843d73b--hole-os-armonon.netlify.app/). Sixteenth integration is active; release evidence distinguishes delivery. | Full-program delivery remains open; production promotion and separately configured service release require their acceptance gates. Current README/catalog describe bounded engines; latest checkpoint identifies upcoming work. |
+| **Delivery · Lead** | Latest recorded implementation release `6f516a4`: 659 tests and [422-file byte-verified review](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app/), followed by checkpoint commit `8361b32`. Feature-audit repairs have local evidence; they require a new deployment receipt to claim delivery. | Full-program delivery remains open; production promotion and separately configured service release require their acceptance gates. Current README/catalog describe bounded engines; latest checkpoint identifies upcoming work. |
 
 ## Resume order
 

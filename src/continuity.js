@@ -304,7 +304,31 @@
     if (current.changed && !current.failed) return flushDraft(current);
     if (current.instanceId) await HoleRuntime.checkpoint(current.instanceId);
   }
-  async function finishEditing() { if (!editor) return true; const current = editor; current.input.readOnly = true; try { if (current.dirty) { await flushDraft(current); current.label.textContent = 'Creating version…'; await C.commitDraft(current.id); } if (current.instanceId) await HoleRuntime.close(current.instanceId, { checkpoint: false }); editor = null; navigation.scope = 'OBJECT_PREVIEW'; return true; } catch (error) { current.input.readOnly = false; current.label.textContent = `${error.message} Keep this draft open, retry Done, or export it.`; current.label.dataset.error = 'true'; return false; } }
+  function finishEditing() {
+    if (!editor) return Promise.resolve(true);
+    const current = editor;
+    if (current.finishing) return current.finishing;
+    current.input.readOnly = true;
+    current.finishing = (async () => {
+      try {
+        if (current.dirty) {
+          await flushDraft(current); current.label.textContent = 'Creating version…';
+          const saved = await C.commitDraft(current.id);
+          // A later close refusal must retain the acknowledged head as the next edit's base.
+          current.baseVersionId = saved.version.id; current.id = uid(); current.revision = 0;
+          current.dirty = false; current.changed = false; current.failed = false;
+        }
+        if (current.instanceId) await HoleRuntime.close(current.instanceId, { checkpoint: false });
+        editor = null; navigation.scope = 'OBJECT_PREVIEW'; return true;
+      } catch (error) {
+        current.input.readOnly = false; current.label.textContent = `${error.message} Keep this draft open, retry Done, or export it.`; current.label.dataset.error = 'true'; return false;
+      } finally { current.finishing = null; }
+    })();
+    return current.finishing;
+  }
+  window.addEventListener('beforeunload', event => {
+    if (editor && (editor.changed || editor.failed || editor.dirty && !editor.revision)) { event.preventDefault(); event.returnValue = ''; }
+  });
   async function quickTools(asset, placement, selectedVersionId) {
     const versionId=selectedVersionId || (placement?.policy==='pinned'?placement.versionId:asset.headVersionId);
     const d=modal(asset.name,'Tools use selected version '+versionId+'. Moving to Trash affects the whole asset.');

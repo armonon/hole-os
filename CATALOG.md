@@ -1,6 +1,6 @@
 # Hole app capability audit
 
-Updated 2026-10-26 against the local overhaul source and `src/capabilities.js`. The registry covers **68 entries**; tests compare its names to the shell and ecosystem source. This audit describes the pending local implementation, not a declaration that it has already been published to the live Netlify site. The external public-page observations below are retained from the 2026-10-23 audit at baseline `5e70e95`; they were not rechecked as live product behavior in this update.
+Updated 2026-10-28 against the local overhaul source and `src/capabilities.js`. The registry covers **68 entries**; tests compare its names to the shell and ecosystem source. See the [current feature audit](docs/evidence/feature-audit-20261028.md) for fresh checks and remaining requirements. Local implementation and review deployments do not imply production promotion. The external public-page observations below are retained from the 2026-10-23 audit at baseline `5e70e95`; they were not rechecked as live product behavior in this update.
 
 ## What the categories mean
 
@@ -10,7 +10,7 @@ Updated 2026-10-26 against the local overhaul source and `src/capabilities.js`. 
 - **Concept**: the tile opens an explicitly labeled concept window, without the named app's working features.
 - **Future capability**: the visible system concept has no connected computer or execution service.
 
-Counts: **19 local utilities/client surfaces, 16 external launchers, 2 partial previews, 28 concepts and 3 future capabilities**. The installed App Drawer and shell search expose local/external entries. Partial previews, concepts and future entries remain explicitly classified in the catalog; they do not become working apps because another Hole surface implements a related feature. Existing placements or pinned shortcuts may still reach legacy previews.
+Counts: **22 local utilities/client surfaces, 13 external launchers, 2 partial previews, 28 concepts and 3 future capabilities**. The installed App Drawer and shell search expose local/external entries. Partial previews, concepts and future entries remain explicitly classified in the catalog; they do not become working apps because another Hole surface implements a related feature. Existing placements or pinned shortcuts may still reach legacy previews.
 
 ## Every launcher entry
 
@@ -22,14 +22,14 @@ Counts: **19 local utilities/client surfaces, 16 external launchers, 2 partial p
 | Paperwork | Local utility | Markdown documents/HTML export; bounded tables/formulas/bar charts/CSV; local forms/responses; actual PDF annotations, drawn signatures and image-only redacted exports. See engine limits below. |
 | Actions | Local utility | Typed image crop/resize/conversion; browser-decoded audio trim/peak normalization/WAV; video thumbnails and supported-container audio extraction; reusable Flow recipes and Release Asset Pack ZIP. Bounded real MODNet cutout/mask, WebCodecs video trim, explicit local-model stems and speech/caption review; experimental ranked key/tempo analysis. Model accuracy and full codec/browser coverage remain unqualified. |
 | History | Local utility | Immutable content versions, restore as a new version, branch, and placement arrangement checkpoints. Restoring an arrangement does not roll back file bytes or reopen every app. |
-| Create | Local utility | Forge creates real bounded counters, checklists, timers and calculators; saved instruments retain project/navigation references. No general AI-generated app engine or arbitrary resource grants. |
+| Create | Local utility | Compose counters, checklists, timers and calculators; save tools and source-linked study/listening/travel instruments. No unrestricted generated-app privileges. |
 | Publish | Local utility | Prepare/download real release files and ZIP packages. The work surface does not deploy websites or expose private projects publicly. |
 | WebLab | Local utility | Saved HTML/CSS/JavaScript projects, durable drafts, isolated previews and source ZIP export. Existing website checkup opens the separate WebLab service. No automatic hosting. |
-| Lab | Local utility | A nonlinear pendulum experiment with visible assumptions, saved state/sample data and CSV export. No general science engine or engineering certification. |
+| Lab | Local utility | Saved/reopened pendulum, synthetic signal/audio and generative-visual experiments, with recovery and real CSV/WAV/PNG exports. Synthetic signals are not physical measurements. |
 | Atlas | Local utility | Saved places, coordinates, itinerary dates/zones, related material, Day event creation and JSON export; deliberate OpenStreetMap handoff. Offline Natural Earth vector map and privacy-reviewed resumable trip copy/import. No street tiles, geocoding or computed routes. |
-| Tongue | Local utility | Saved authored/actually translated phrases, written-answer practice, available local speech voices, manual subtitle timing and valid SRT export. Translation is feature-detected and requires a compatible on-device browser model; no fabricated fallback or automatic transcription. |
-| Crew | Local utility | Inspect and execute a saved local Actions flow with a pinned input, size/step budget and cancellation. No language-model provider, autonomous network actions or publishing grants. |
-| Momentous | Local utility | Review/install compatible bounded tool manifests; updates retain a rollback version. No arbitrary executable installation, purchase/payment service or native app runtime. |
+| Tongue | Local utility | Saved phrases, conditional browser translation, local voices and timed lessons from actual captions/imported SRT paired with exact audio; written drafts and exports. Richer conversation/pronunciation qualification remains. |
+| Crew | Local utility | Review scoped plans, pinned inputs, input/output/runtime budgets, checkpoints, cancellation, revocation and actual results. No configured AI provider or automatic sending/publishing. |
+| Momentous | Local utility | Install zero-grant tools, compositions, themes, objects, workflows and Space templates with provenance/update/rollback. No arbitrary executable installation, commerce or native execution. |
 | Relay | Local utility / service client | Connect deliberately to the separate local account service; real accounts, project upload/authorized-version restore, durable queues, invitations, revocation and expiring presence. No production endpoint is configured; this is not continuous account-wide synchronization. |
 | Rack | Local utility / technical prototype | Original Web Audio oscillator/filter/envelope/LFO/delay instrument, versioned `.hole-rack.json` presets and actual offline stereo WAV render. No AU/VST hosting, native Sattari preset parity or completed StemDeck integration. |
 | Notes | Local utility | Browser-saved scratchpad with separate text snapshots saved to Files. |
@@ -37,14 +37,14 @@ Counts: **19 local utilities/client surfaces, 16 external launchers, 2 partial p
 | Clock | Local utility | Local time captured when opened; not a continuously updating clock. |
 | Music | Partial preview | Soundless playback interface; user audio can be played through Files. |
 | Photos | Partial preview | Sample color gallery; user images can be previewed through Files. |
-| Browser | External app | Opens the existing [Hole workspace](https://thecreatingco.com/community/hole); no embedded browser or query handoff. |
+| Browser | Local utility | Search/address entry, actual outbound query handoff, project-scoped saved Trails, local history and JSON export. External pages open in separate tabs. |
 | Luma | External app | Separate image editor; see evidence below. |
 | Glyph | External app | Separate font editor, distinct from the experiment inside Luma. |
 | Form | External app | Separate browser 3D/CAD studio. |
 | ScenePilot | External app | Separate Browser Lite video editor. |
 | StemDeck | External app | Separate stem-remix studio; no Hole stem separation. |
-| Bounce | External app | Separate browser audio player. |
-| Librarian | External app | Separate PDF reader and book discovery. |
+| Bounce | Local utility | Exact-version queue/player, loop/level/playhead recovery, native-library browsing and explicit source mapping. Full external player retained; native DSP parity remains open. |
+| Librarian | Local utility | PDF/text reading, independent windows, position/bookmark/note recovery and ordered native collections with explicit source mapping. Full external catalog retained. |
 | Locker | External app | Separate browser-local library, with a different storage origin. |
 | NOW | External app | Separate messaging service. |
 | Circle | External app | Separate community service. |
@@ -102,13 +102,13 @@ Implementation evidence: `src/hole-fluid-os.html` lists base apps, installed fil
 | Runtime and studio bridge | Stable app instances, scoped origin/source/nonce/resource/operation grants, revocation, write ACK after Core commit and retry idempotency | Installable SDK and local engine qualification do not connect deployed studios automatically. See retained studio ledger. |
 | PDF tools | Real vector text/ink annotations; derived image-only PDF redaction; actual bytes reopened for structural validation before output commit | 30 MiB/30 pages, 24 MP per page, 200 marks. Redaction removes searchability/forms/links/original signatures; users must choose/review regions. Drawn ink is not a verified digital signature. Password/XFA and general PDF parity are unsupported. |
 | Offline shell | Versioned complete static cache, integrity verification, per-document release pinning and explicit update with editing/flush checks across tabs | External apps/services still need a connection. Browser network-offline cold start, mobile installation/storage behavior and device matrix remain separately qualified. |
-| Shared service / Relay | Real local HTTP accounts/sessions/recovery, scoped version access, queues, conflicts, roles, invitations, revocation and presence; API also implements pinned guest/public World manifests | Separate loopback backend, not part of Netlify static deployment. UI is explicit upload/restore, not continuous bidirectional merge. Guest/World API coverage is not a shipped public publishing UI or production hosting. |
+| Shared service / Relay | Local accounts, scoped versions, conflict review, invitations/revocation, presence, guest/publication UI, selected preference/layout/memory adapters and resumable restore | Separate backend required. Two profiles qualify selected local paths; full application-state sync and production operations remain incomplete. |
 
 Document/table limits and PDF evidence are in [storage and everyday qualification](docs/evidence/storage-everyday.md). Media action limits are in [media evidence](docs/evidence/media-actions.md); spatial limits are in [Universe evidence](docs/evidence/universe.md); account/service gates are in [service architecture](docs/architecture/service.md).
 
 ## Retained studios and native execution
 
-The existing external launch routes remain. Source inspection identifies `.luma`, `.glyph.json`, `.form`, `.cut` and portable `.sattari` contracts. Luma's actual production editing engine passed PNG open/crop/save and native `.luma` edit/save/reopen through Hole's SDK/Core using simulated transport. That is concrete engine evidence, not an enabled production browser connection. Mounted studio controls, real origin/opener policies, broader feature parity and each studio's authorized release remain gates. Other retained studio adapters have not passed an equivalent Hole browser round trip. See the [source/parity ledger](docs/compatibility/studio-parity.md) and [bridge contract](docs/compatibility/bridges.md).
+The original external studio routes remain. Mounted Luma, Glyph, Form, ScenePilot and portable StemDeck surfaces now use actual native formats with browser save/reopen/recovery/output evidence. Moodboard, Ghost, Animate and Portfolio have bounded native consolidation paths. Full original tool parity, external-window opener qualification, long-session request rollover and device matrices remain open. Earlier simulated Luma transport evidence is historical. See the [studio parity ledger](docs/compatibility/studio-parity.md), [bridge contract](docs/compatibility/bridges.md) and [current audit](docs/evidence/feature-audit-20261028.md).
 
 Rack is recommended as a mode inside the existing StemDeck studio after integration qualifies. Its current browser prototype is separate from the GPLv3 native Sattari JUCE/AU/VST engine; that native code was not copied into Hole. Downloading a Windows/macOS/Linux executable or an AU/VST plugin does not make it run in the browser. Native application/plugin hosting remains future work requiring a real native or remote execution service, permissions and isolation.
 

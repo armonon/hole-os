@@ -4,7 +4,9 @@
 
 ## Delivered
 
-Latest pushed `638568e` (fifteenth increment):640 full tests plus18 affected checks; all422 review files and worker CSP byte verified at https://6ae217b6114162684843d73b--hole-os-armonon.netlify.app. Receipt `docs/evidence/review-638568e.json` awaits next commit; exact archive `/tmp/hole-release-638568e/public`. PR1 updated. Production unchanged.
+**Latest audit, 28 October:** starting from clean/fetched `8361b32`, all 38 implementation rows and eight release/acceptance gates reviewed. See `docs/evidence/feature-audit-20261028.md` and its JSON receipt. All 659 tests/build pass; 25 distinct browser scripts ultimately pass across audit/replays. New inline text regression qualifies immediate/failed-draft unload warning, durable-warning release, acknowledged-base retention after close refusal, concurrent Done, lineage and reopen. Reader/a11y selectors and stale capability descriptions/classifications are repaired. These changes are locally qualified and need a new deployment receipt; production was not promoted. Resume from the remaining work below. Older increment entries remain historical.
+
+Fifteenth increment `638568e`:640 full tests plus18 affected checks; all422 review files and worker CSP byte verified at https://6ae217b6114162684843d73b--hole-os-armonon.netlify.app. Receipt `docs/evidence/review-638568e.json`; exact archive `/tmp/hole-release-638568e/public`. PR1 updated. Production unchanged.
 
 Delivered Form seam bind/disable/remove/Undo with actual DXF notches; Luma tone with unchanged source rasters; native Bounce library import/browsing/exact mapping; navigation refusal retains reader/Publish/WebLab/Tongue usability. Catalog editing remains in shared workspace; independent queue/player windows now refuse late renders during close and recover from checkpoint refusal. Source and final generated-browser proofs plus independent review are in evidence docs. Prior increments preserve original native formats/routes and exact immutable lineage.
 
