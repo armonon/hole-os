@@ -4,6 +4,8 @@
 
 This branch implements the 26 October overhaul against the existing plain HTML/CSS/JavaScript OS. It adds a shared file and project foundation, useful local applications, spatial presentations, and a real development collaboration service. It is a review build; the complete master program still has acceptance gates. See the [28 October feature audit](docs/evidence/feature-audit-20261028.md), [program ledger](docs/implementation/backlog.md), [contracts](docs/architecture/contracts.md), and [browser qualification](docs/evidence/release-qualification.md).
 
+The [28 October visual delivery](docs/evidence/visual-overhaul-20261028.md) carries the shared design through project desktops, workspaces and native editor interiors.
+
 To continue the remaining program, use the [autonomous completion prompt](docs/implementation/autonomous-completion.md).
 
 ## Open and develop
@@ -44,7 +46,7 @@ Netlify publishes **only `public/`**. Source modules in `src/` are copied by the
 
 Bounded native consolidations now connect Moodboard boards to editable Luma layers, Ghost garments to source-preserving Form scenes, Animate cels to ScenePilot frame cuts, and Portfolio documents to private website ZIPs in Publish. Originals and native formats remain retained; these connected workflows do not replace the full original studios. Day and Paperwork also support independent runtime windows with explicit refresh and content-safe arrangement restoration.
 
-The existing circular App Drawer, dock recents, desktop shortcuts, Clusters, resizable legacy windows and fullscreen dock gestures remain available. Single-click opens; right-click or stationary long-press opens Quick Tools. Existing studio routes and native formats stay available until their replacements pass parity. Canonical workspace applications are not yet all independently resizable runtime windows. The [catalog](CATALOG.md) distinguishes local tools, external launchers, partial previews, concepts and explicitly future capabilities.
+The existing circular App Drawer, dock recents, desktop shortcuts, Clusters, resizable legacy windows and fullscreen dock gestures remain available. Single-click opens; right-click or stationary long-press opens Quick Tools. Existing studio routes and native formats stay available until their replacements pass parity. Canonical apps share a draggable, resizable workspace with fullscreen controls; native studios have matching window controls. Independent simultaneous runtime instances for every canonical app remain unfinished. The [catalog](CATALOG.md) distinguishes local tools, external launchers, partial previews, concepts and explicitly future capabilities.
 
 ## Local collaboration service
 

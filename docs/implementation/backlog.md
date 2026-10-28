@@ -84,3 +84,7 @@ The [28 October feature audit](../evidence/feature-audit-20261028.md) rechecks e
 Day, Capture and Paperwork consolidate everyday use; Paper remains the document engine. Create/Forge, Actions/Flow and History/Time are shared capabilities. NOW and Circle remain distinct. Single-click opens; right-click/long-press shows tools. All presentations share identity. Implementation authorization does not make the product automatically send or publish on its users' behalf.
 
 **Explicit future:** Care and remote native Windows/macOS/Linux application execution are not supplied by the browser runtime. Downloads cannot execute those apps; a future native/remote host needs authorization, isolation, lifecycle and qualification. Rich Universe furniture/interactive objects/physics remain the brief's explicit later capability packages. No other required row above is silently moved to “future.”
+
+## Visual continuation — 28 October
+
+[Visual delivery evidence](../evidence/visual-overhaul-20261028.md) records the shared project/workspace/native-editor redesign and verified desktop/phone interactions. This resolves the presentation gaps recorded in the earlier visual inspection within the implemented app surfaces. Full studio parity, independent multi-instance runtime coverage, physical-device/accessibility qualification and other program gates above remain open.

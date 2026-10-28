@@ -2,6 +2,10 @@
 
 28 October 2026. Active instruction: finish accepted master brief on `codex/hole-os-overhaul`, preserve work, implement/test/push increments and continue available work. Program incomplete. No automation, merge or production promotion.
 
+## Visual delivery — 28 October 2026
+
+The shared design now reaches real project desktops, circular previews, immersive Universe, contextual strips, workspace/native window controls, native editor workbenches and useful welcome widgets. See [visual evidence](../evidence/visual-overhaul-20261028.md). 660 tests pass. Review delivery is recorded separately; production is unchanged. This visual increment does not complete the master program.
+
 ## Delivered
 
 **Latest audit, 28 October:** starting from clean/fetched `8361b32`, all 38 implementation rows and eight release/acceptance gates reviewed. See `docs/evidence/feature-audit-20261028.md` and its JSON receipt. All 659 tests/build pass; 25 distinct browser scripts ultimately pass across audit/replays. New inline text regression qualifies immediate/failed-draft unload warning, durable-warning release, acknowledged-base retention after close refusal, concurrent Done, lineage and reopen. Reader/a11y selectors and stale capability descriptions/classifications are repaired. These changes are locally qualified and need a new deployment receipt; production was not promoted. Resume from the remaining work below. Older increment entries remain historical.

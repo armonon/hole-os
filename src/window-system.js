@@ -154,9 +154,9 @@
   }
   function scheduleHideDock() {
     clearTimeout(dockTimer);
-    if (os.dataset.appFullscreen !== 'true') return;
+    if (os.dataset.appFullscreen !== 'true' && os.dataset.hdFullscreen !== 'true') return;
     dockTimer = setTimeout(() => {
-      if (swipe || dock.matches(':hover') || handle.matches(':hover') || dock.contains(document.activeElement)) return;
+      if (swipe || api.isDrawerOpen || dock.matches(':hover') || handle.matches(':hover') || dock.contains(document.activeElement)) return;
       os.dataset.dockRevealed = 'false';
       dock.inert = true;
       handle.setAttribute('aria-expanded', 'false');
@@ -304,6 +304,7 @@
     return [...windows.values()].filter(rec => !rec.el.hidden && !rec.minimized && !rec.closing).sort((a, b) => Number(b.el.style.zIndex) - Number(a.el.style.zIndex));
   }
   function minimizeToDesktop(destination = lastSpace) {
+    if (!root.dispatchEvent(new CustomEvent('hole:desktop-travel', { detail: { destination }, cancelable: true }))) return;
     exitFullscreen(false);
     if (api.isDrawerOpen) api.closeDrawer({ restoreFocus: false });
     visibleRecords().forEach(rec => api.minimize(rec));
@@ -351,6 +352,7 @@
     if (!swipe) return;
     const finished = swipe;
     swipe = null;
+    finished.restoreFrames?.();
     if (handle.hasPointerCapture(finished.id)) handle.releasePointerCapture(finished.id);
     const rec = finished.rec;
     if (rec) {
@@ -376,10 +378,16 @@
   }
   handle.addEventListener('pointerdown', event => {
     if (event.button !== 0 || swipe || geometryDrag) return;
+    handle.focus({ preventScroll: true });
+    // Chromium may hand hit testing to a nested editor while the edge pointer
+    // crosses it. Freeze only the editor frames for this deliberate gesture.
+    const frames=[...(root.querySelectorAll?.('.hc-studio-host:not([hidden]) iframe')||[])].map(frame=>({frame,inert:frame.inert,pointer:frame.style.getPropertyValue('pointer-events'),priority:frame.style.getPropertyPriority('pointer-events')}));
+    for(const {frame}of frames){frame.inert=true;frame.style.setProperty('pointer-events','none','important');}
     const rec = api.isDrawerOpen ? null : visibleRecords()[0];
     rec?.holeLayoutAnimation?.cancel();
     rec?.animation?.cancel();
-    swipe = { id: event.pointerId, startY: event.clientY, height: Math.max(240, field.clientHeight), fraction: 0, stage: 0, rec, transform: rec?.el.style.transform || '', opacity: rec?.el.style.opacity || '', wasFullscreen: os.dataset.appFullscreen === 'true', wasDockVisible: os.dataset.dockRevealed === 'true' };
+    swipe = { id: event.pointerId, startY: event.clientY, height: Math.max(240, field.clientHeight), fraction: 0, stage: 0, rec, transform: rec?.el.style.transform || '', opacity: rec?.el.style.opacity || '', wasFullscreen: os.dataset.appFullscreen === 'true' || os.dataset.hdFullscreen === 'true', wasDockVisible: os.dataset.dockRevealed === 'true' };
+    swipe.restoreFrames=()=>{for(const {frame,inert,pointer,priority}of frames){frame.inert=inert;if(pointer)frame.style.setProperty('pointer-events',pointer,priority);else frame.style.removeProperty('pointer-events');}};
     clearTimeout(dockTimer); clearTimeout(hoverTimer);
     handle.setPointerCapture(event.pointerId);
     event.preventDefault();

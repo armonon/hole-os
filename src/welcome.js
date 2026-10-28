@@ -299,6 +299,7 @@
       if (target.matches('.hf-brand')) openWelcome(); else openControls(); return;
     }
     if (!target || !(welcome.contains(target) || controls.contains(target) || about.contains(target))) return;
+    if (target.dataset.hwWidget === 'true') return;
     event.stopPropagation();
     if (target.dataset.hwSpace) { enterSpace(target.dataset.hwSpace); return; }
     if (target.dataset.hwApp) { launch(target.dataset.hwApp, target); return; }

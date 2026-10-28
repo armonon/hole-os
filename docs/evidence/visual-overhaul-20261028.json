@@ -1,0 +1,484 @@
+{
+  "qualifiedAt": "2026-10-28T17:39:40.803281+00:00",
+  "unit": {
+    "passed": 660,
+    "failed": 0,
+    "skipped": 0
+  },
+  "visual": {
+    "passed": true,
+    "browser": "156.0.8078.48",
+    "checks": [
+      "private recent titles require reveal and can be hidden",
+      "quiet motion switch",
+      "compact desktop icons; actual drag/keyboard/cancel placement and touch single-open; disclosed settings",
+      "workspace drag and keyboard geometry",
+      "fullscreen workspace Escape",
+      "selected-version contextual strip",
+      "shared opaque editor theme",
+      "studio fullscreen/minimal dock/hover/10-30-50 travel and refused-checkpoint retention",
+      "drawer foreground and inert editors",
+      "dock resumes same dirty studio",
+      "immersive Universe stage",
+      "15 app surfaces at 390px and 320px reduced motion",
+      "unchanged original content"
+    ],
+    "observations": [
+      {
+        "name": "welcome",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "project",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "quick-tools",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "studio-dark",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "studio-fullscreen",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "drawer",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "universe",
+        "width": 1440,
+        "height": 1000,
+        "documentWidth": 1440
+      },
+      {
+        "name": "phone-projects",
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390
+      },
+      {
+        "name": "phone-actions",
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390
+      },
+      {
+        "name": "phone-day",
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390
+      }
+    ],
+    "errors": []
+  },
+  "regressions": [
+    {
+      "name": "continuity",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "view-continuity",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "semantic",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "smart-crew",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "paperwork-formats",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "tool-windows",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "luma-selection",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "luma-exports",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "glyph-kerning",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "form-seams",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "scenepilot-split",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "stemdeck-transport",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "libraries",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "library-collections",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "relay",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "lab-memory",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "package-shell",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "weblab-script",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "tongue-practice",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "press-kit",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "window-checkpoint",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "extension-unload",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "text-recovery",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "runtime-close",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "name": "accessibility",
+      "code": 0,
+      "timedOut": false,
+      "repairedReplay": true,
+      "initialFailure": "Project tools menu exceeded 320px at400% zoom; anchored right and bounded scrolling."
+    }
+  ],
+  "accessibility": {
+    "browser": "153.0.8010.12",
+    "evidence": [
+      {
+        "name": "Librarian 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Bounce 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Smart 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Crew 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Package dialog 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Librarian 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Bounce 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Smart 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Crew 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Package dialog 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Librarian 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "Bounce 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "Smart 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "Crew 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "Package dialog 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "WebLab isolated preview 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "WebLab isolated preview 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "WebLab isolated preview 400%",
+        "width": 320,
+        "pageWidth": 320
+      },
+      {
+        "name": "Studio layout 100%",
+        "width": 1280,
+        "pageWidth": 1280
+      },
+      {
+        "name": "Studio layout 200%",
+        "width": 640,
+        "pageWidth": 640
+      },
+      {
+        "name": "Studio layout 400%",
+        "width": 320,
+        "pageWidth": 320
+      }
+    ],
+    "findings": [],
+    "errors": [],
+    "limits": [
+      "No screen-reader/physical touch/contrast certification",
+      "Safari26.0.1 installed; WebDriver blocked by disabled Allow remote automation"
+    ]
+  },
+  "finalReplays": {
+    "semantic": {
+      "passed": true,
+      "sourceOverride": false,
+      "browser": "156.0.8078.48",
+      "checks": [
+        "anchored semantic zoom into pinned preview without editing",
+        "durable departure camera and return anchor",
+        "high-boundary reentry hysteresis",
+        "Ctrl wheel/ordinary scroll/editor exemptions",
+        "semantic exit to current Space",
+        "missing material recovery + explicit parent route"
+      ],
+      "errors": []
+    },
+    "continuity": {
+      "passed": true,
+      "browser": "156.0.8078.48",
+      "universe200MountMs": 32.5,
+      "checks": [
+        "200 indexed/30 mounted Universe materials",
+        "pinned Carry linking",
+        "snippet reload",
+        "text diff",
+        "place search",
+        "cross-Space project link",
+        "snapshot schema 2",
+        "multi-step Flow shell mount",
+        "Carry to Flow to pinned Publish export",
+        "320px reduced motion overflow"
+      ],
+      "errors": []
+    }
+  },
+  "sourceSHA256": {
+    "src/actions-codecs.js": "da0761cc811279b41282a1c3901e8e8ccc9b6c5557a639d50749476829b88cdc",
+    "src/actions.js": "c41321ce9df778154fe5c988abea636077e467dd5e7f4c8088c0be72eb7510a3",
+    "src/animate-editor.js": "7c67c64b082ee4e9d85359a232508bd1d09e07e1ba065c0fc893b52f413665a5",
+    "src/animate.js": "959540a53624141d4cdb9c34710a9377407e9593e2d3149e849128a3b8835ee9",
+    "src/atlas-map.js": "3a74aee735c12e5c210dbe05043116b4ae063a2ed26a06cea0689ae48bfbe580",
+    "src/audio-key-worker.js": "d388c4279fb8eccd136c50af0a2108eb6806353030a5d02308ac4066cedea842",
+    "src/audio-key.js": "efd4532b5203d4edf3874ba8e173fec6758a4344aa5eac274b55db6e0f17b4cf",
+    "src/bounce-library.js": "102f85d740fa5f02f0d0b79323f1bfc3b87d960259e6ae7bc72fbd830db6b8a1",
+    "src/bridge.js": "f3946dc82c974d5ecb595c64acfd4d40c7d622359d7c7e797e15909858605ada",
+    "src/browser.css": "22ea36a9e784903c2242b9c53dd2b7bc2c46191482cd69a847f56574bc4a4353",
+    "src/browser.js": "5af60fd72f6f4a6d024fa5746bc127b4f1221fd069415761120fa68fbe829ea6",
+    "src/capabilities.js": "37eddeca7831d0e614ddb1566428534ad8ed3c1f3607280d81f74d887dde9458",
+    "src/caption-editor.js": "04df9f50d58d3e7f355f9e21592e50d1e8e6ef15fccd669f31f2adc104a25ef1",
+    "src/clusters-model.js": "bf999f6c4f0679051dd058d11b8d84083d820914451aa1b17db15e8ce2a0cf7d",
+    "src/clusters.css": "5892bff3b20491bc2dcc108a55aae7de6d44d29deb4cd5704afe17a47e8e5967",
+    "src/clusters.js": "08f422e6da48e131ef2967a32e3f6f754c58057dd1c37e16b66729b088b61e51",
+    "src/content-search.js": "1d1c2fe93609104e099dc704197c261e01196b78715fbd365980badbfa566b59",
+    "src/continuity-model.js": "92199b0915f91ad41802a59d44cea42a6e84161c7945b7965b607beceb624a58",
+    "src/continuity.css": "2e2f62b71f3c3eb0ddd47ea33239aed59d01ff0d83221e59ca6903f75ea26853",
+    "src/continuity.js": "fad85fba36b0c4069953a0d9fcd8c126175501660bc3885d4d8899c035ebc1c7",
+    "src/continuum.css": "6ebce97c4ea3c64f14cda3016442934de0917136996399e7186670a7d419af43",
+    "src/core.js": "b78a7a44ccc266753864084da4bc2c46760cbf88828e99c4b346a5407e6afd33",
+    "src/crew-runner.js": "f7480f64ca36ca4de83f18cdd966f35b53a40346c95158a0c9182d933e86dbbf",
+    "src/cutout-worker.js": "fcb87f4db9775f9b099b38b2ee1f914c2d7be4993cc7079e1cf6f35430011e91",
+    "src/cutout.js": "af0e9df1feff060bf1bec4330d0fd1f4a411503c25546b2fef82adf4a02fc374",
+    "src/ecosystem.js": "992724952e495ef74fd8ea8f07a0d67fdeab7bfb9873e337dbc0e7048672ed92",
+    "src/everyday.css": "85cf658412a92a38085ba3bc9810378cdab71af35bfc4f033f1caf88dc810214",
+    "src/everyday.js": "7ef019ca2a6a3d2143aa9b4ebc6752538630135fa19272d20c511be2ffa2ccfa",
+    "src/extensions-model.js": "7990492e6f6fa13f53ef4024526645688675e7d380a497872539430bc0511bd1",
+    "src/extensions.css": "8b4be1d399b90be3c8940565c31807ab7abe6ffad1beb88398899f8c478600ee",
+    "src/extensions.js": "efc47a9bfe017d1e8228358ae3fc5b638fb835cdb8448eb84e2f1f168a280e61",
+    "src/file-platform.css": "77f5d08e017a3417a90a96d33262656afe1f3b94044fa41cba7dcb07717e4512",
+    "src/file-platform.js": "64086ca8fb1929df10f3f9e3ed8c21dc65eb25422f8865667214efb2ad7571fb",
+    "src/flow-authoring.css": "94dd139e48809c4f9d44192c5047a172aa6a18308bf37555a0a44668e13ad6a2",
+    "src/flow-authoring.js": "bdfa6c249cd803a482282e3fca34f06221db4c0de4b6f1e99203f68df4b2ce0f",
+    "src/form-editor.js": "5bb1c190ccc62d372a0c016dc9ffd877b9c93241ee13b7ae5a15213d007a60d4",
+    "src/form.js": "45be61fc84e643b337cc393500872568e9bd2bca9429a897bf3f516b3e600b86",
+    "src/ghost-authoring.js": "538c2c1790aeac68db6ec0397f037225cb4cd5fa2375a4f2482028226e428aad",
+    "src/ghost-editor.js": "178b6a981c32d8ca7acb079c3f4eab7f9d01610cd0d57eed1a894de50d091c08",
+    "src/ghost-native.js": "da0a9a2a5f2f7572b1e5312139f1007692deb5cc16a9f4f604c53b1282d04e5f",
+    "src/ghost.js": "9f88ad298d17c328f433639c39984abb94cc22e6533036c61f2e5e903d23108a",
+    "src/glyph-editor.js": "f62f226beef2ae6316ee785e5c9787bffbc8a188a0b56604b9ebd3cffa2fd955",
+    "src/glyph.js": "f9abc41cde81d7508f0c1d570de17e05ed38a28ffe65a8c6717d55d1d2cdb00a",
+    "src/hole-fluid-os.html": "223e9a6bae1205f050dd7effa45b7928e5a52c80afe3d63c292be4705049f5cc",
+    "src/libraries.js": "943fd885ca97eba6ee044416acb26c41f96e3fcdfcc6063e9947d7d01450a24a",
+    "src/library-collections.js": "1f90d92c0bb9b9cc69fe2a41abfdb08fe15b9a6e9b37b85348a0953f821f1f31",
+    "src/library-model.js": "970f52c627d06eab37c929205c22610705bd64cc2ba4cfe26095d347f77153dd",
+    "src/luma-editor.js": "340712fa7624c5b66f61ae5a71e99433c0669441a5ad781a429b3d268e6929a1",
+    "src/luma.js": "897b9385b2d142cdb4a0450f4f380501a1defbe39133269cbe28c3f416175084",
+    "src/media-models.js": "abe5981580900bdcaacd839759e5974b2d5735fb9341d483aea05bb82c681d8d",
+    "src/model-preview-model.js": "b8e8f16ae8cc110eaff447c690bcaf65891495a5a454f6709e44935d59e8da40",
+    "src/model-preview.js": "df8eb6d2f3336037220e688d2ff9077e242f3c82abb3d47de07608fd2170e035",
+    "src/model-store.js": "5fa5db5717b97609729a3b269caf4d4e9629c2167ecb98d3f7709204952eb993",
+    "src/moodboard-drafts.js": "ef9e8b71152aa93566754d93720d8adc5ff0fd83d9a303da06cc13085ddb965a",
+    "src/moodboard-export.js": "18bd4db814ed5510bf47f32c06b9a3fefd3ded5b208119d052b58fff67c3b93f",
+    "src/moodboard-model.js": "3bf4e9b322d4070e63df4f82df6acead2fe48ffb545279b54fd3631bc784f835",
+    "src/moodboard-ui.js": "aacfd7e2f587744742e8d2e9a641d6ec863890f4f2526e852e9082e9d51ce2b6",
+    "src/offline.js": "b975f21f855c677f2975e8e3d0fb3f53704b9a029950e9a0b0904c5cd926ee81",
+    "src/optional-memory.css": "a6e5f126db199aba8d0655852e8a408f56a861d1a1ccb4a2b8b989e29c4c916b",
+    "src/optional-memory.js": "d4b1cb7851e400411ebe0ecb6d92bfdafb7188c7edb1f66e15b41d8bbc80fa86",
+    "src/os-design.css": "3c763a5aad6dd5d26e60f027f8a0b509f5c2a19e57b203dcb4bbe4283fbfa656",
+    "src/os-design.js": "f41b55a88864e6ed1b594531a10bb27d4d0ac058bfadce57539b17a2b3f38264",
+    "src/package-model.js": "4b68db2f6f3b2c1bcb6105195a6b9fd8407c2ab9605b47129990fe197bfce6d1",
+    "src/package-studio.js": "b131d3a19a9bece3e149868b0e515fef909718fd768488f0b92a6113203f3998",
+    "src/pdf-tools.js": "9fa09c119f856bbb2e11a28967cb53382a90b175c380c21af738be7309235cc7",
+    "src/persistence.js": "741d8b5d87a77a66f8a756e387c09e45f588a56765fc80a6ff34fec4cf696888",
+    "src/portfolio-editor.js": "c04ee5125ef8df92a75cc79aea66ad5b3fa8bb9b04d6b852ecf2648dc3a42c87",
+    "src/portfolio.js": "3fc954bf01bdb6fae3e0d39a6c576ab966ebf9db725876e1d7f0a001a8e2b767",
+    "src/press-kit.js": "f1502d15c072960de1815bc3ef20c785567ff40226f5c4086d48e845699658e7",
+    "src/public-forms.js": "fd1b66f381ea3ef9cb3e6ded81c595a6b22f742de0c16f1997e8aec52d0ea92d",
+    "src/rack.css": "2c8b14f0258fa4e3386ecbcb1c733272cac86807bd8897fa7c48f3980517bb0e",
+    "src/rack.js": "8bda7572792179db0be1882157bc5c58f9dad0018b0fa8f4979fa66495960737",
+    "src/relay-layout.js": "4395bf9f664079f7ac5a4cfe3d43505225f55d877673e2e38405f8a7412c0a0f",
+    "src/relay-restore.js": "eacf754b561ec9d6870ef60bcadf5e11a8ad5e78e8d18b507ee8242be9b4fa56",
+    "src/relay.js": "13fa16c82c392c462c4c5bdaa5f10652555729bb3e13b1e842f598186e39ef4b",
+    "src/runtime.js": "18fba3161d64543b770bf64070d5eb199bc98506b56f7bc2f20ace33d78f998a",
+    "src/scenepilot-editor.js": "1d40e20a6445629e8e7d3a91bd3da3328a2db3eb5f873879ae3b736e4ca71afa",
+    "src/scenepilot.js": "2740e1edd9b02ae2a22eb0b542934deefd9e8fb3ca500a0bcc09cf8083fb7b89",
+    "src/service-worker.js": "91c4d370d7fdf4bbcf986ee64f4880229705158eede1cdac7fbe80d104b8ba05",
+    "src/shell.html": "858381b4e5b2d88ad15e390bdb119792ade569236400aeae1d1785676d9dc87d",
+    "src/smart-tools.css": "979d6c64dd449608381418bb3a620f65be79b89323f3eb25302678a51e5d12b4",
+    "src/smart-tools.js": "28ad8a2ca30daa7a71225bd44b6089b4736caa8f871f0c685d7511fed3d20f7a",
+    "src/spatial-surface.js": "0b6dfc05d442bf716eb6ba7b18a65aead4115e9ac451c651dd8505345f635c1d",
+    "src/standalone.css": "e1f27a21cd6be4a26af2e042adeaee844239b3b4fcc9eadfa71721fd7391b7b7",
+    "src/stem-model.js": "0f6228ca4b51a9497459b9d387cf115d848ac6a9380ff9b7f542f5d17fb5c868",
+    "src/stem-separation.js": "511fc48a0b952de77ba52bbdbe093453fe3cf121a50583811ff02bafbedbd3bf",
+    "src/stem-worker.js": "f94e682550dc01387965436a0e43d85c6d83ab3c600f3a688fef87c4610d3ae4",
+    "src/stemdeck-editor.js": "68756771b384f20f1cd9313661fc21522ce060e72dd70b7a2937d57d16be4465",
+    "src/stemdeck.js": "eeda907c289bab9f5999f848f6d0192db5fedabcd0b4f32b590008eae7c49826",
+    "src/studio-recovery.js": "977f65eddd38f3056a7a6fae30de95e6d51079d8033d21c4b2dbc270d9ca6d13",
+    "src/studio-window.js": "e860e4d4add0ae01aef7a931513760254dbaf2a38d95e1b44cff0133262b2f2c",
+    "src/tempo-analysis.js": "2840581a4099b4cffac465e351dd8b31c6274095d1a5b52074fe104d85563e20",
+    "src/text-files.js": "40cfa159250d137bc83e49005803c0c3beaf74d4a93d7c6343b7cec710519e4c",
+    "src/tongue-practice.js": "a57cd73cf75ad57f231d6faaa159f95783eaeea7c8f7cbb04816f3b1c6de28a1",
+    "src/tool-windows.js": "7fa0caae3cad5aed6accefd0c9f21a8a56f037d91c35e550615a3e6dcc3a1ee4",
+    "src/transcription-cues.js": "e43a9949cce6a405caba091fa1a479cc44d2580855ff864d6b11455ec604e7b9",
+    "src/transcription-model.js": "92f30de0bec690478335be14e10cdc06666dd85bf25531949dcdd9e0f31cd76d",
+    "src/transcription-worker.js": "55f4bb717c386caf5d125e475394533dba0325f45ad3625462ae4157fd468ada",
+    "src/transcription.js": "b37d1c65450462175171ba669ad179dc725a46c2c6a62da873a65b294c52265f",
+    "src/universe.css": "1fc9113cc49a2a94912645b6af281d123c43735d8aebb17578d89286118b5517",
+    "src/universe.js": "2fd5b17d91abe219788c488b4dd1a8fb67a92f3efd4e801260695ab7bdcfbaf1",
+    "src/video-trim-worker.js": "ea38377593edd67583e720fd9759ea4daa08c9572b4af03a2bd7d9b398114e0d",
+    "src/video-trim.js": "c1399fa2c8386945327120f2ae603b9562ee79907ff4d69ad2783a396f7fbef5",
+    "src/voice-capture.js": "d0378e80f38b1a56896526c3f38defcfbcac823ab64548c8d709074429d0156d",
+    "src/weblab-script-worker.js": "c311f020d8551f6e097c79712170df234bf10d6448ebf3a97845f1bd0d36cded",
+    "src/weblab-script.js": "0839bf4a4253adcfb2e385dd5316665c85b5a8ee723db0981ab68477cc01ffc6",
+    "src/welcome-widgets.js": "5361f5d87473e9c21f03ad3bf595522b54b237d536fb12b86e9525cde886fd5b",
+    "src/welcome.css": "5e89eae35509effafe6067bf8557e0e2a318187c185ed0644a57814eb820143d",
+    "src/welcome.js": "92d0a13dcf7408daad4cbb70ff118c888847e79f2e3af7369164513b9ea542bf",
+    "src/window-system.css": "051fc383491cdfbbaf0007bb4185ac39b1192484fc84bfde9479382df839395a",
+    "src/window-system.js": "9a934b338215841c7a0df778d3e581da5651594b2aa31f74676c8df1df709954",
+    "src/workspace-setup.js": "40edc9cdce2af9a3e5e7094c3ab5c02b30b00de58a5a421c8e1297e9be2a2018",
+    "src/world-tools.js": "94a4023cbbc1b1000a3f05acc47d690404b01dee07a863c17b58d89d1fdd6357"
+  }
+}

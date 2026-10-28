@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="/assets/everyday.css">
   <link rel="stylesheet" href="/assets/extensions.css">
   <link rel="stylesheet" href="/assets/rack.css">
+  <link rel="stylesheet" href="/assets/os-design.css">
   <script src="/assets/core.js"></script>
   <script src="/assets/persistence.js"></script>
   <script src="/assets/lucide-1.17.0.js"></script>
@@ -617,11 +618,14 @@
     if(rect.left<area.left+6)dockApps.scrollLeft+=rect.left-area.left-6;
     else if(rect.right>area.right-6)dockApps.scrollLeft+=rect.right-area.right+6;
   }
+  const runtimeNames={'hole.luma':'Luma','hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck','hole.ghost':'Ghost','hole.animate':'Animate','hole.tool.day':'Day','hole.tool.paperwork':'Paperwork','hole.tool.bounce':'Bounce','hole.tool.librarian':'Librarian'};
+  function rememberApp(name){if(!byName.has(name))return;if(!pinnedApps.includes(name))state.recentApps=[name,...state.recentApps.filter(n=>n!==name)];updateRunning(name);save();}
   function updateRunning(arriving){
-    nodes.forEach(n=>n.button.classList.toggle('is-running',windows.has(n.name)));
+    const running=new Set([...windows.keys(),...(window.HoleRuntime?.list?.()||[]).map(instance=>runtimeNames[instance.appId]).filter(Boolean)]);
+    nodes.forEach(n=>n.button.classList.toggle('is-running',running.has(n.name)));
     // Keep every live window accessible, plus three shortcuts after apps close.
     let closed=0;
-    state.recentApps=[...new Set([...state.recentApps,...windows.keys()])].filter(name=>byName.has(name)&&['local','external'].includes(window.HoleCapabilities?.get(name)?.status)&&!pinnedApps.includes(name)).filter(name=>windows.has(name)||closed++<3);
+    state.recentApps=[...new Set([...state.recentApps,...running])].filter(name=>byName.has(name)&&['local','external'].includes(window.HoleCapabilities?.get(name)?.status)&&!pinnedApps.includes(name)).filter(name=>running.has(name)||closed++<3);
     const names=[...pinnedApps,...state.recentApps],focused=document.activeElement,hadFocus=dockApps.contains(focused),scroll=dockApps.scrollLeft;
     const children=[];
     for(const name of names){
@@ -634,8 +638,8 @@
         dockButtons.set(name,button);
         if(name===arriving&&motion())button.animate([{opacity:0,transform:'translateY(12px) scale(.55)'},{opacity:1,transform:'translateY(-2px) scale(1.05)',offset:.75},{opacity:1,transform:'none'}],{duration:460,easing:'cubic-bezier(.2,.85,.25,1)'});
       }
-      button.querySelector('.hf-running-dot').hidden=!windows.has(name);
-      button.title=name+' · '+(pinnedApps.includes(name)?'Pinned':windows.has(name)?'Open':'Recent');
+      button.querySelector('.hf-running-dot').hidden=!running.has(name);
+      button.title=name+' · '+(pinnedApps.includes(name)?'Pinned':running.has(name)?'Open':'Recent');
       children.push(button);
     }
     for(const [name,button] of dockButtons)if(!names.includes(name)){button.remove();dockButtons.delete(name);}
@@ -832,7 +836,8 @@
     return id;
   }
 
-  window.HoleOS={createSpaceFromTemplate,root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
+  window.HoleOS={rememberApp,createSpaceFromTemplate,root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
+  window.addEventListener('hole:runtime-change',()=>updateRunning());
   const previousSession=state.session.map(r=>({...r})),previousSpace=state.desk.view;document.addEventListener('DOMContentLoaded',()=>{for(const entry of previousSession){visitSpace(entry.space,false);openApp(entry.name);const rec=windows.get(entry.name);rec.animation?.cancel();rec.minimized=entry.minimized;rec.el.hidden=entry.minimized;}visitSpace(previousSpace,false);save();},{once:true});
   renderSpaces();
   new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();
@@ -846,6 +851,7 @@
   <script src="/assets/browser.js"></script>
   <script src="/assets/clusters.js"></script>
   <script src="/assets/welcome.js"></script>
+  <script src="/assets/os-design.js"></script>
   <script src="/assets/actions-codecs.js"></script>
   <script src="/assets/tempo-analysis.js"></script>
   <script src="/assets/video-trim.js"></script>
@@ -915,6 +921,7 @@
   <script src="/assets/tool-windows.js"></script>
   <script src="/assets/voice-capture.js"></script>
   <script src="/assets/continuity.js"></script>
+  <script src="/assets/welcome-widgets.js"></script>
   <script src="/assets/offline.js"></script>
   <noscript>This workspace needs JavaScript enabled to open apps and save your changes.</noscript>
 </body>

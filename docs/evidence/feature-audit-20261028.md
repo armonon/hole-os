@@ -66,7 +66,9 @@ Starting revision: `8361b32` on `codex/hole-os-overhaul`, clean and aligned with
 
 The eight cross-cutting gates remain open: waves 1–2 need the complete input/browser recovery matrix; wave 3 needs universal app continuity; wave 4 needs specialist parity; wave 5 needs full sync/providers/hosted service; wave 6 needs remaining app/install/Vault gates; P11 needs complete physical/browser/accessibility/security qualification; Research needs actual participants; Delivery needs verified releases of the accepted scope. Passing one bounded path does not close these gates.
 
-## Visual completeness — follow-up inspection
+## Visual completeness — historical follow-up inspection
+
+This section records the pre-overhaul inspection. The subsequent [visual delivery](visual-overhaul-20261028.md) supersedes the presentation gaps below; broader runtime, device and program gates remain open.
 
 Inspected nine actual screens from the current overhaul build at 1440×1000 and 390×844: Welcome, circular space manager, desktop, drawer, Control Center, project Desktop, Universe, phone Welcome and phone drawer. No horizontal document overflow was observed at those captured sizes. Static screenshots do not qualify animation feel, touch hardware or all screens.
 

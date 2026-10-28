@@ -35,6 +35,7 @@ function fixture({ width = 1200, layout = 'desktop', initialGeometry } = {}) {
       if (!this.listeners.has(type)) this.listeners.set(type, []);
       this.listeners.get(type).push(callback);
     }
+    dispatchEvent(event) { for (const callback of this.listeners.get(event.type) || []) callback(event); return !event.defaultPrevented; }
     fire(type, values = {}) {
       const event = {
         type, target: this, currentTarget: this, pointerId: 1, pointerType: 'mouse',
@@ -109,7 +110,7 @@ function fixture({ width = 1200, layout = 'desktop', initialGeometry } = {}) {
   const window = new Element(); window.HoleOS = api;
   document = new Element(); document.createElement = tag => new Element(tag); document.activeElement = null;
   vm.runInNewContext(source, {
-    window, document, performance,
+    window, document, performance, CustomEvent,
     localStorage: {
       getItem: key => storage.get(key) ?? null,
       setItem: (key, value) => { writes.push({ key, value }); storage.set(key, value); }
@@ -253,4 +254,12 @@ test('another pointer losing capture cannot cancel the fullscreen edge preview',
   f.handle.fire('pointerup');
   assert.equal(f.rec.minimized, true, 'owning pointer can still commit all spaces');
   assert.equal(f.window.HoleOS.state.desk.view, 'overview');
+});
+
+test('a canonical editor may refuse desktop travel until its checkpoint succeeds', () => {
+  const f=fixture();f.window.HoleWindows.toggleFullscreen(f.rec);
+  f.root.addEventListener('hole:desktop-travel',event=>event.preventDefault());
+  f.handle.fire('pointerdown',{clientY:780});f.handle.fire('pointermove',{clientY:340});f.handle.fire('pointerup');
+  assert.equal(f.rec.minimized,false);assert.equal(f.rec.holeFullscreen,true);
+  assert.equal(f.window.HoleOS.state.desk.view,'desk');
 });
