@@ -45,7 +45,7 @@
       if (!id(instanceId) || instances.has(instanceId)) throw fail('INSTANCE_EXISTS', 'The instance ID is invalid or already running.');
       const presentation = options.presentation || 'window';
       if (!presentations.has(presentation)) throw fail('INVALID_PRESENTATION', 'Unknown app presentation.');
-      const entry = { id: instanceId, appId, context, presentation, status: 'opening', editorState: json(options.editorState ?? {}), handle: null };
+      const entry = { id: instanceId, appId, context, presentation, status: 'opening', editorState: json(options.editorState ?? {}), handle: null, root: options.root || null };
       instances.set(instanceId, entry);
       try {
         entry.handle = await adapter.mount({ ...inspect(entry), editorState: json(entry.editorState) }, options.root || null) || {};
@@ -94,13 +94,36 @@
     function close(instanceId, { checkpoint: save = true } = {}) {
       return queue(instanceId, async () => {
         const entry = requireReady(requireInstance(instanceId));
-        if (save) await persist(entry, await serializeEntry(entry));
-        const unmount = entry.handle.close || apps.get(entry.appId).unmount;
-        if (unmount) await unmount.call(entry.handle, inspect(entry));
-        entry.status = 'closed';
-        instances.delete(instanceId);
-        announce(entry);
-        return inspect(entry);
+        // Freeze native user input through serialization, durable checkpoint and unmount.
+        // The editor remains live and becomes editable again if any stage refuses close.
+        const root = entry.root, canFreeze = root && typeof root.inert === 'boolean';
+        const wasInert = canFreeze ? root.inert : false;
+        const focused = canFreeze && root.contains?.(root.ownerDocument?.activeElement) ? root.ownerDocument.activeElement : null;
+        const frames = canFreeze ? [...(root.querySelectorAll?.('iframe') || [])].map(frame => ({ frame, inert: frame.inert, pointerEvents: frame.style.getPropertyValue('pointer-events'), priority: frame.style.getPropertyPriority('pointer-events') })) : [];
+        if (canFreeze) {
+          root.inert = true;
+          for (const { frame } of frames) { frame.inert = true; frame.style.setProperty('pointer-events', 'none', 'important'); }
+          if (focused) { const body = root.ownerDocument.body, priorTabIndex = body.getAttribute('tabindex'); body.setAttribute('tabindex', '-1'); body.focus({ preventScroll: true }); if (priorTabIndex === null) body.removeAttribute('tabindex'); else body.setAttribute('tabindex', priorTabIndex); }
+        }
+        try {
+          // Let nested browsing-context hit testing observe the frozen surface before taking its snapshot.
+          const view = canFreeze && root.ownerDocument?.defaultView;
+          if (frames.length && view?.requestAnimationFrame) await new Promise(resolve => {
+            let first, second; const finish = () => { clearTimeout(timer); view.cancelAnimationFrame(first); view.cancelAnimationFrame(second); resolve(); };
+            const timer = setTimeout(finish, 100); first = view.requestAnimationFrame(() => { second = view.requestAnimationFrame(finish); });
+          });
+          if (save) await persist(entry, await serializeEntry(entry));
+          const unmount = entry.handle.close || apps.get(entry.appId).unmount;
+          if (unmount) await unmount.call(entry.handle, inspect(entry));
+          entry.status = 'closed';
+          instances.delete(instanceId);
+          announce(entry);
+          return inspect(entry);
+        } finally {
+          if (canFreeze) root.inert = wasInert;
+          for (const { frame, inert, pointerEvents, priority } of frames) { frame.inert = inert; if (pointerEvents) frame.style.setProperty('pointer-events', pointerEvents, priority); else frame.style.removeProperty('pointer-events'); }
+          if (entry.status !== 'closed' && !wasInert && focused?.isConnected) focused.focus?.({ preventScroll: true });
+        }
       });
     }
     return Object.freeze({ register, open, present, serialize, checkpoint, restore, close, get: instanceId => instances.has(instanceId) ? inspect(instances.get(instanceId)) : null, list: () => [...instances.values()].map(inspect) });

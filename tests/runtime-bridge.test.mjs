@@ -291,3 +291,29 @@ test('SDK distinguishes definitive host rejection from ambiguous request timeout
   await assert.rejects(client.request('resource.derive', {}), e => e.code === 'REQUEST_TIMEOUT' && e.hostRejected === undefined);
   client.dispose();
 });
+
+test('runtime close freezes mounted input through delayed persistence and restores it on refusal', async () => {
+  const f = fixture(), put = f.core.put; let release, unmounts = 0, reject = false, entered;
+  const held = new Promise(resolve => { entered = resolve; });
+  f.core.put = async (...args) => { entered(); await new Promise(resolve => { release = resolve; }); if (reject) throw Object.assign(Error('Full'), { code: 'QUOTA' }); return put(...args); };
+  const root = { inert: false }, runtime = createRuntime({ core: f.core });
+  runtime.register('frozen', { mount() { return { serialize() { assert.equal(root.inert, true); return { text: 'Retain' }; }, close() { assert.equal(root.inert, true); unmounts++; } }; } });
+  const entry = await runtime.open('frozen', { root });
+  reject = true; const failed = runtime.close(entry.id); await held;
+  assert.equal(root.inert, true); assert.equal(unmounts, 0); release();
+  await assert.rejects(failed, { code: 'QUOTA' }); assert.equal(root.inert, false); assert.equal(runtime.get(entry.id).status, 'running');
+  reject = false; const done = runtime.close(entry.id); await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(root.inert, true); release(); await done;
+  assert.equal(root.inert, false); assert.equal(unmounts, 1); assert.equal(runtime.get(entry.id), null);
+});
+
+test('runtime close restores input after adapter refusal and preserves an existing inert state', async () => {
+  const f = fixture(), root = { inert: false }; let reject = true;
+  const runtime = createRuntime({ core: f.core });
+  runtime.register('refusal', { mount() { return { serialize: () => ({}), close() { assert.equal(root.inert, true); if (reject) throw Error('Keep pending work'); } }; } });
+  const entry = await runtime.open('refusal', { root });
+  await assert.rejects(runtime.close(entry.id, { checkpoint: false }), /Keep pending/);
+  assert.equal(root.inert, false); assert.ok(runtime.get(entry.id));
+  root.inert = true; reject = false; await runtime.close(entry.id, { checkpoint: false });
+  assert.equal(root.inert, true);
+});

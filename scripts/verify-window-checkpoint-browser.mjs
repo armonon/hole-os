@@ -1,0 +1,17 @@
+/* Failed initial runtime checkpoints retain visible editors and retry controls. */
+import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {pathToFileURL}from'node:url';
+const{chromium}=await import(pathToFileURL('/Users/lillypad/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs'));
+const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+try{const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+if(process.env.HOLE_QA_SOURCE_OVERRIDE!=='0')for(const name of['continuity.js','runtime.js'])await page.route('**/assets/'+name,async r=>r.fulfill({contentType:'text/javascript',body:await readFile(new URL('../src/'+name,import.meta.url),'utf8')}));
+await page.addInitScript(()=>{let core;Object.defineProperty(window,'HoleCore',{configurable:true,get:()=>core,set:value=>{core={...value,put:(kind,record,opts)=>window.failWindowCheckpoint&&record.id?.startsWith('runtime:')?Promise.reject(Object.assign(Error('Injected initial window checkpoint refusal'),{code:'QUOTA'})):value.put(kind,record,opts)};}});});
+await page.goto('http://127.0.0.1:5193');await page.waitForFunction(()=>globalThis.HoleContinuity&&globalThis.HoleCore);
+await page.evaluate(async()=>{const data={schema:'glyph-studio/1',familyName:'Retained window',styleName:'Regular',metrics:{unitsPerEm:1000,ascender:800,descender:-200,xHeight:500,capHeight:700,defaultAdvance:500},glyphs:{A:{advanceWidth:500,strokes:[]}},kerning:[],curveSmoothing:.35};const r=await HoleCore.importAsset({name:'Window.glyph.json',blob:new Blob([JSON.stringify(data)],{type:'application/json'})});await HoleContinuity.open('projects',{assetId:r.asset.id});failWindowCheckpoint=true;});
+await page.getByRole('button',{name:'Open in Glyph',exact:true}).click();await page.getByText(/Injected initial window checkpoint refusal/).first().waitFor();
+assert.equal(await page.locator('.hc-studio-host iframe').count(),1,'failed initial checkpoint retains visible frame');
+const f=await(await page.locator('.hc-studio-host iframe').elementHandle()).contentFrame();await f.waitForFunction(()=>globalThis.HoleGlyphMounted);await f.getByLabel('Family',{exact:true}).fill('Still editable');
+await page.evaluate(()=>failWindowCheckpoint=false);await page.getByRole('button',{name:'Retry window checkpoint',exact:true}).click();await page.getByRole('button',{name:'Retry window checkpoint',exact:true}).waitFor({state:'detached'});
+const stored=await page.evaluate(async()=>{const id=HoleRuntime.list().find(i=>i.appId==='hole.glyph').id;const record=await HoleCore.get('settings','bridge-state:'+id);return JSON.parse(new TextDecoder().decode(Uint8Array.from(record.recovery.hex.match(/../g),x=>parseInt(x,16)))).familyName;});assert.equal(stored,'Still editable');
+assert.equal(await f.getByLabel('Family',{exact:true}).inputValue(),'Still editable');await page.getByRole('button',{name:'Close Glyph',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.hc-studio-host iframe'));
+assert.equal(await page.evaluate(()=>HoleRuntime.list().filter(i=>i.appId==='hole.glyph').length),0);assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,sourceOverride:process.env.HOLE_QA_SOURCE_OVERRIDE!=='0',initialCheckpointRefusalKeepsVisibleEditor:true,retryPreservesEditing:true,closeRemovesRuntimeAndFrame:true,errors}));
+}finally{await browser.close();}

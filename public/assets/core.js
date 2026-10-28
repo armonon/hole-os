@@ -108,7 +108,11 @@
       if (!asset) throw error('NOT_FOUND', 'This asset is unavailable.');
       if (asset.state === 'trashed') throw error('TRASHED', 'Restore this item from Trash before editing it.');
       if (asset.headVersionId !== input.baseVersionId) throw error('CONFLICT', 'A newer version exists. Your draft is retained; compare it with the latest version or create a branch.');
-      const at = now(), version = { id: uid(), assetId: asset.id, parentVersionIds: [asset.headVersionId], mime: content.mime, size: content.size, hash: content.hash, operation: input.operation || 'edit', parameters: jsonValue(input.parameters || {}), createdAt: at, provenance: jsonValue(input.provenance || {}), ...(input.jobId ? { jobId: input.jobId } : {}) };
+      const additional = input.parentVersionIds || [];
+      if (!Array.isArray(additional) || additional.length > 100 || additional.some(id => !validId(id)) || new Set(additional).size !== additional.length) throw error('INVALID', 'Version parents must be valid, distinct identities.');
+      const parents = [...new Set([asset.headVersionId, ...additional])];
+      if (parents.length > 100) throw error('INVALID', 'A version supports at most 100 parents including its previous head.');
+      const at = now(), version = { id: uid(), assetId: asset.id, parentVersionIds: parents, mime: content.mime, size: content.size, hash: content.hash, operation: input.operation || 'edit', parameters: jsonValue(input.parameters || {}), createdAt: at, provenance: jsonValue(input.provenance || {}), ...(input.jobId ? { jobId: input.jobId } : {}) };
       return { asset: { ...asset, ...(input.name ? { name: name(input.name) } : {}), mime: content.mime, headVersionId: version.id, revision: asset.revision + 1, updatedAt: at }, version };
     }
     async function migrateLegacy() {
@@ -196,7 +200,7 @@
     }
     async function commitAsset(input) {
       await ready; const content = await preparedContent(input.blob);
-      const result = await transaction(['assets', 'versions', 'versionContents', 'files', 'contents'], 'readwrite', async tx => { const result = nextVersion(await request(tx.objectStore('assets').get(input.assetId)), input, content); writeAsset(tx, result, content.blob, false); await projectLegacy(tx, result, content.blob); return result; });
+      const result = await transaction(['assets', 'versions', 'versionContents', 'files', 'contents'], 'readwrite', async tx => { const result = nextVersion(await request(tx.objectStore('assets').get(input.assetId)), input, content); await verifyParents(tx, result.version); writeAsset(tx, result, content.blob, false); await projectLegacy(tx, result, content.blob); return result; });
       emit({ type: 'assets', id: result.asset.id, revision: result.asset.revision }); return result;
     }
     async function saveDraft(draft) {

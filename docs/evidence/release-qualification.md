@@ -1,8 +1,18 @@
 # Current continuation qualification
 
-Latest pushed implementation: `bfbb60f` (572 passing tests). Latest byte-verified review: [419-file review](https://6ae1ebdb4406cb99974c5309--hole-os-armonon.netlify.app), receipt `review-bfbb60f.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `506526e` (591 passing tests, then22 affected lifecycle tests after the final close fix). Latest byte-verified review: [420-file review](https://6ae1f48498c44683a3ac6a2f--hole-os-armonon.netlify.app), receipt `review-506526e.json`. Production remains unchanged; the master brief is not complete.
 
-## Thirteenth increment — 28 October 2026 (qualified locally; delivery pending)
+## Fourteenth increment — 28 October 2026 (integration; not yet delivered)
+
+Combined616tests and serial build pass. Native Luma rectangles/ellipses use retained geometry/fill/stroke editing with actual pixel, sparse-field, Undo and native reopen checks. Completed brush strokes survive recovery refusal; unfinished gestures are retained on blur and explicit close refusal. Generated-browser qualification passes; full paths, masks and transformed painting remain separate. See `luma-shapes.md`.
+
+ScenePilot uses retained clip splitting and granted exact-source clocks for paused 1×/2× inspection. Actual generated red/blue video pixels, pinned media after head advance, split/Undo, native save/copy, missing-source recovery, raw fields, storage refusal and320px controls pass. Locked tracks and fragments below the editable duration minimum are refused. This is not full composition rendering or movie export. See `scenepilot-split.md`.
+
+The runtime freezes mounted user input through serialization, checkpoint and unmount, retaining live editors on failure. Actual text/opaque-iframe checks cover late input, restored editability and retry; exact prior opaque-child caret restoration is not claimed. Initial window checkpoint refusal retains a visible editor and retry controls, with durable recovered Glyph bytes observed. Final generated checks pass. See `runtime-close.md`.
+
+Librarian native collections preserve ordered exact source versions and imported metadata, with immutable edits, historical readonly views, explicit foreign-source mapping and staged creation/save receipts. Core edits now retain their previous head plus validated additional exact parents; transactional missing-parent rollback and replay tests pass independently. Main generated collection journey passes; the independent Move/Remove→pending-navigation rerender regression is repaired and independently rechecked; final generated replay passes all 16 checks without source overrides. See `library-collections.md`.
+
+## Thirteenth increment — 28 October 2026 (delivered)
 
 Settled 591 tests and serial build pass. Exact-version previews and Quick Tools preserve selected bytes through Carry, Download and independent copies, including canonical lineage, MIME changes, readonly native previews and concurrent placement retarget refusal. Final generated-browser check passes without source overrides; see `pinned-tools.md`.
 

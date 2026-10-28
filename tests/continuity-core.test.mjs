@@ -324,3 +324,26 @@ test('destination guard cannot advance an asset belonging to a different project
   await assert.rejects(instance.commitJobOutputs({jobId:'wrong-destination',idempotencyKey:'wrong-destination',outputs:[{name:'Must roll back.txt',projectId:other.id,expectedProjectRevision:other.revision,blob:text('new')},{assetId:asset.asset.id,baseVersionId:asset.version.id,projectId:other.id,expectedProjectRevision:other.revision,blob:text('wrong target')}]}),{code:'CONFLICT'});
   assert.equal((await instance.list('assets')).length,1);assert.equal((await instance.list('versions')).length,1);assert.equal(await(await instance.readAsset(asset.asset.id)).blob.text(),'original');assert.deepEqual((await instance.get('projects',other.id)).assetIds,[]);instance.close();
 });
+
+test('edited assets retain their prior head and validated additional exact source parents', async () => {
+  const c=core(), base=await c.importAsset({name:'Collection',blob:text('base')}), source=await c.importAsset({name:'Source',blob:text('source')});
+  const next=await c.commitAsset({assetId:base.asset.id,baseVersionId:base.version.id,parentVersionIds:[source.version.id,base.version.id],blob:text('edited')});
+  assert.deepEqual(next.version.parentVersionIds,[base.version.id,source.version.id]);
+  await assert.rejects(c.commitAsset({assetId:base.asset.id,baseVersionId:next.version.id,parentVersionIds:['missing-version'],blob:text('bad')}),{code:'NOT_FOUND'});
+  await assert.rejects(c.commitAsset({assetId:base.asset.id,baseVersionId:next.version.id,parentVersionIds:[source.version.id,source.version.id],blob:text('bad')}),{code:'INVALID'});
+  await assert.rejects(c.commitAsset({assetId:base.asset.id,baseVersionId:next.version.id,parentVersionIds:Array.from({length:100},(_,i)=>'parent:'+i),blob:text('bad')}),{code:'INVALID'});
+  assert.equal((await c.readAsset(base.asset.id)).version.id,next.version.id);assert.equal((await c.list('versions')).length,3);c.close();
+});
+
+test('job edits verify additional source parents before committing any batch output and replay exact lineage', async () => {
+  const c=core(), base=await c.importAsset({name:'Collection',blob:text('base')}), source=await c.importAsset({name:'Source',blob:text('source')});
+  await c.put('jobs',{id:'lineage-job',status:'queued'});
+  const outputs=[{name:'New companion',blob:text('companion')},{assetId:base.asset.id,baseVersionId:base.version.id,parentVersionIds:['missing-version'],blob:text('edited')}];
+  await assert.rejects(c.commitJobOutputs({jobId:'lineage-job',idempotencyKey:'lineage-receipt',outputs}),{code:'NOT_FOUND'});
+  assert.equal((await c.list('assets')).length,2);assert.equal((await c.list('versions')).length,2);assert.equal((await c.get('jobs','lineage-job')).status,'queued');
+  outputs[1].parentVersionIds=[source.version.id];
+  const result=await c.commitJobOutputs({jobId:'lineage-job',idempotencyKey:'lineage-receipt',outputs});
+  const saved=await c.readAsset(base.asset.id);assert.deepEqual(saved.version.parentVersionIds,[base.version.id,source.version.id]);
+  const replay=await c.commitJobOutputs({jobId:'lineage-job',idempotencyKey:'lineage-receipt',outputs});assert.equal(replay.replayed,true);assert.deepEqual(replay.outputs,result.outputs);
+  assert.equal((await c.list('versions')).length,4);c.close();
+});

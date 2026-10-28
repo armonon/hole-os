@@ -52,30 +52,32 @@
     }
   }
   async function put(type, record) { return C.put(type, record, record.revision ? { expectedRevision: record.revision } : {}); }
-  async function persistNavigation() { const value = { ...navigation }; persistQueue = persistQueue.catch(() => {}).then(async () => { const record = { ...(navRecord || {}), id: 'navigation', value }; navRecord = await put('settings', record); }); return persistQueue; }
+  async function persistNavigation(candidate = navigation) { const value = { ...candidate }; persistQueue = persistQueue.catch(() => {}).then(async () => { const record = { ...(navRecord || {}), id: 'navigation', value }; navRecord = await put('settings', record); }); return persistQueue; }
   function path(next = navigation) { return '#/work/' + [next.view, next.spaceId || '-', next.projectId || '-', next.assetId || '-'].map(encodeURIComponent).join('/'); }
   function navigate(next, options = {}) { navigationQueue = navigationQueue.catch(() => {}).then(() => performNavigation(next, options)); return navigationQueue; }
   async function performNavigation(next, options = {}) {
-    await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
-    if (editor && !await finishEditing()) return false;
-    if (next.projectId) {
-      const project = await C.get('projects', next.projectId);
-      if (project) {
-        projectNames.set(project.id, project.name);
-        if (project.spaceId && !next.spaceId) next = { ...next, spaceId: project.spaceId };
+    try {
+      await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
+      if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); return false; }
+      if (next.projectId) {
+        const project = await C.get('projects', next.projectId);
+        if (project) {
+          projectNames.set(project.id, project.name);
+          if (project.spaceId && !next.spaceId) next = { ...next, spaceId: project.spaceId };
+        }
       }
-    }
-    navigation = { ...navigation, ...next, versionId: next.versionId || null }; if (next.assetId === null) navigation.scope = next.projectId ? 'PROJECT' : next.spaceId && next.spaceId !== 'overview' ? 'SPACE' : 'WORLD';
-    await persistNavigation();
-    if (!options.fromHistory && location.hash !== path()) history.pushState({ hole: true, navigation: { ...navigation } }, '', path());
-    await render(); return true;
+      const candidate = { ...navigation, ...next, versionId: next.versionId || null }; if (next.assetId === null) candidate.scope = next.projectId ? 'PROJECT' : next.spaceId && next.spaceId !== 'overview' ? 'SPACE' : 'WORLD';
+      await persistNavigation(candidate); navigation = candidate;
+      if (!options.fromHistory && location.hash !== path()) history.pushState({ hole: true, navigation: { ...navigation } }, '', path());
+      await render(); return true;
+    } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; }
   }
   async function open(view = 'projects', next = {}) {
     await C.ready; window.HoleWelcome?.close(); window.HoleWelcome?.closeControls(); window.HoleWelcome?.closeAbout(); H.closeDrawer({ restoreFocus: false });
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     await navigate({ view, ...next });
   }
-  async function close() { await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
+  async function close() { try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); return; } await window.HoleLibraryCollections?.dispose?.(); surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; } }
   function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if((['day','paperwork','bounce'].includes(navigation.view)||navigation.view==='librarian'&&navigation.assetId)&&window.HoleToolWindows)tools.append(button('Open '+({day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[navigation.view])+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
@@ -85,8 +87,8 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
-    await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.();
-    const epoch = ++renderEpoch; await window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
+    try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); await window.HoleSpatial?.unmount(); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; }
+    const epoch = ++renderEpoch; await window.HoleLibraryCollections?.dispose?.(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
       if (navigation.assetId && navigation.view === 'projects') await renderObject(epoch);
@@ -179,6 +181,7 @@
     const placement = navigation.placementId ? await C.get('placements', navigation.placementId) : null; const pinned = placement?.policy === 'pinned' || !!navigation.versionId; const record = await C.readAsset(asset.id, navigation.versionId || (pinned ? placement.versionId : undefined)); if (epoch !== renderEpoch) return;
     title(pinned ? 'PINNED VERSION' : 'LIVE OBJECT', asset.name, `Same asset across your spaces · ${date(record.version.createdAt)}`, [button('Further out', 'arrow-left', () => navigate({ assetId: null, scope: 'PROJECT' })), button('Quick Tools', 'ellipsis', () => quickTools(asset, placement, record.version.id))]);
     if (pinned) main.append(el('div', 'hc-history-label', 'This placement is pinned. Editing elsewhere will not change this approved version.'));
+    if (await window.HoleLibraryCollections?.openAsset?.(record, context())) return;
     const pinnedNativePreview=/\.moodboard$/i.test(asset.name)&&record.version.mime==='application/json'||record.version.mime==='application/vnd.hole.object+json';
     if ((!pinned||pinnedNativePreview) && await window.HoleExtensions?.openAsset?.({...record,asset:{...record.asset,mime:record.version.mime}}, context())) return;
     const actions = el('div', 'hc-row');
@@ -205,6 +208,7 @@
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
   const studios = new Map(), restoredReaderWindows = new Map();
+  function retainWindowFailure(host,instanceId,error){const notice=el('div','hc-note',`Window checkpoint failed: ${error.message}. Work remains open. Retry before leaving.`);notice.setAttribute('role','status');notice.append(button('Retry window checkpoint','save',async()=>{await HoleRuntime.checkpoint(instanceId);notice.remove();}));host.append(notice);H.icons();}
   async function openToolWindow(view,restore={}) {
     const label={day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[view], origin=document.activeElement;
     const source=view==='librarian'?await C.readAsset(restore.assetId||navigation.assetId,restore.versionId||navigation.versionId||undefined):null;
@@ -213,11 +217,11 @@
     const restoreFocus=()=>{const target=origin?.isConnected&&origin.getClientRects().length?origin:surface.hidden?H.root.querySelector('.hf-desk-stage'):main;target?.focus({preventScroll:true});};
     try {
       instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,assetId:source?.asset.id,versionId:source?.version.id,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});
-      await HoleRuntime.checkpoint(instance.id);
       studios.set(instance.id,{host,name:label+' window',instanceId:instance.id});
       controls.append(el('strong','',label),button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())),button('Minimize '+label,'minimize-2',async()=>{await HoleRuntime.checkpoint(instance.id);await HoleRuntime.present(instance.id,'minimized');restoreFocus();}),button('Close '+label+' window','x',async()=>{await HoleRuntime.close(instance.id);studios.delete(instance.id);host.remove();restoreFocus();}));
       H.icons();controls.querySelector('button')?.focus({preventScroll:true});
-    } catch(error) { if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove();restoreFocus();throw error; }
+      await HoleRuntime.checkpoint(instance.id);
+    } catch(error) { if(instance&&HoleRuntime.get(instance.id)){retainWindowFailure(host,instance.id,error);}else{host.remove();restoreFocus();}throw error; }
     return instance;
   }
   if(window.HoleToolWindows)for(const view of ['day','paperwork','bounce','librarian'])HoleRuntime.register('hole.tool.'+view,HoleStudioWindow.wrap(HoleToolWindows.create({view,context})));
@@ -250,10 +254,10 @@
     let instance;
     try {
       instance = await HoleRuntime.open(appId, { ...restore, root, assetId: record.asset.id, versionId: record.version.id, projectId: restore.projectId !== undefined ? restore.projectId : record.asset.projectId || navigation.projectId, presentation: 'window' });
-      await HoleRuntime.checkpoint(instance.id);
       studios.set(key, { host, name: record.asset.name, instanceId: instance.id });
       controls.append(el('strong', '', record.asset.name), button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); await HoleRuntime.present(instance.id,'minimized'); }), button('Close '+studioName, 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
-    } catch (error) { if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove(); throw error; }
+      await HoleRuntime.checkpoint(instance.id);
+    } catch (error) { if(instance&&HoleRuntime.get(instance.id)){retainWindowFailure(host,instance.id,error);}else host.remove();throw error; }
   }
   if (window.HoleLuma) HoleRuntime.register('hole.luma', HoleStudioWindow.wrap(HoleLuma.create({ core: C })));
   if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleStudioWindow.wrap(HoleGlyph.create({ core:C })));
