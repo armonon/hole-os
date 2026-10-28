@@ -8,11 +8,11 @@ Latest pushed `638568e` (fifteenth increment):640 full tests plus18 affected che
 
 Delivered Form seam bind/disable/remove/Undo with actual DXF notches; Luma tone with unchanged source rasters; native Bounce library import/browsing/exact mapping; navigation refusal retains reader/Publish/WebLab/Tongue usability. Catalog editing remains in shared workspace; independent queue/player windows now refuse late renders during close and recover from checkpoint refusal. Source and final generated-browser proofs plus independent review are in evidence docs. Prior increments preserve original native formats/routes and exact immutable lineage.
 
-## Sixteenth increment — verified, preparing delivery
+## Sixteenth increment — delivered 6f516a4
 
 All source frozen; combined build and659 tests pass `/tmp/hole-wave16-full-tests.log`. Final generated Chrome journeys pass `/tmp/hole-wave16-{extension,window,access,orphan,bridge,selection}-final.log`. Explicit Form expiry renewal preserves same exact scope/count/receipts and requires live authenticated acknowledgment; request257 still refused. Independent Relay cleared exact-job derive resumption with cancellation/concurrency guards. Initial failed runtime checkpoints and undurable WebLab/Lab drafts protect reload. Existing supported orphan native recovery is offered only after exact single-resource validation with no discovery writes. Luma rectangle/ellipse selections, invert/deselect and clipped paint/erase retain native state; independent review cleared. A qualifier timing race was corrected to await explicit completion, not merely retry-enabled Save.
 
-Root owns shared integration/releases. Flow renewal, Luma selection and Relay orphan source are frozen. Reviews complete. Evidence docs record narrow limits. Production unchanged. Next: commit/push this exact public build, archive, review deploy and hash/CSP verify, update PR1; then continue required work.
+Root owns shared integration/releases. Flow renewal, Luma selection and Relay orphan source are frozen. Reviews complete. Evidence docs record narrow limits. Pushed 6f516a4; all422 files and worker CSP verified at https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app. Archive /tmp/hole-release-6f516a4/public; receipt docs/evidence/review-6f516a4.json. Production unchanged. Next: continue required work below.
 
 ## Next required work
 

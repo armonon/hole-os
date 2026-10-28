@@ -1,10 +1,10 @@
 # Program ledger and release gates
 
-Updated 28 October 2026 against the accepted [master brief](master-build-brief.txt), current source, tests, and evidence. Reviewed working tree: `codex/hole-os-overhaul`, continuing pushed `638568e`. This is an implementation snapshot, not a claim that the complete program is shipped. The integrator records the final revision, settled build/test result, observed browser coverage and deployment destination in release evidence.
+Updated 28 October 2026 against the accepted [master brief](master-build-brief.txt), current source, tests, and evidence. Reviewed working tree: `codex/hole-os-overhaul`, continuing pushed `6f516a4`. This is an implementation snapshot, not a claim that the complete program is shipped. The integrator records the final revision, settled build/test result, observed browser coverage and deployment destination in release evidence.
 
 **Implemented / local checks** means the named operation exists with relevant automated or observed evidence. **Partial** means useful operations exist but accepted scope remains unfinished. **Open** means required implementation is absent. **Gated** identifies an actual engine, service, review or release dependency. Verification applies only to the demonstrated behavior/environment; delivery requires a verified release at a named destination. Missing production credentials do not block independent local implementation. No required package becomes optional because a narrower prototype works.
 
-Sixteenth increment is locally qualified with 659 passing tests and generated-browser evidence: explicit same-scope access expiry renewal, Luma native selections, orphan recovery and unload guards. Delivery remains pending; request-budget rollover and broader required parity remain open. See release qualification for exact scope.
+Sixteenth increment is locally qualified with 659 passing tests and generated-browser evidence: explicit same-scope access expiry renewal, Luma native selections, orphan recovery and unload guards. Delivery is byte verified in release evidence; request-budget rollover and broader required parity remain open. See release qualification for exact scope.
 
 ## Foundation, navigation and workflow
 

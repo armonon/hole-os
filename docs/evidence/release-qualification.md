@@ -1,8 +1,8 @@
 # Current continuation qualification
 
-Latest pushed implementation: `638568e` (640 full tests plus18 final affected tests). Latest byte-verified review: [422-file review](https://6ae217b6114162684843d73b--hole-os-armonon.netlify.app), receipt `review-638568e.json`. Production unchanged; master brief incomplete.
+Latest pushed implementation: `6f516a4` (659 full tests). Latest byte-verified review: [422-file review](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app), receipt `review-6f516a4.json`. Production unchanged; master brief incomplete.
 
-## Sixteenth increment — 28 October 2026 (qualified locally, delivery pending)
+## Sixteenth increment — 28 October 2026 (delivered)
 
 Combined build and all 659 tests pass. Final generated Chrome checks pass for explicit Form access-expiry renewal (same scope/count, durable receipt replay, request257 still denied), Luma native selections and clipped paint/erase, conservative orphan Glyph recovery without modifying its original, WebLab undurable-draft unload protection, and failed initial-window checkpoint unload protection. Independent review caught and verified the repair of an expired derive job retry conflict, including concurrent cancellation and revision races. Evidence: `bridge-renewal.md`, `luma-selection.md`, `studio-orphan-recovery.md`, `unload-recovery-guards.md`. Logs `/tmp/hole-wave16-full-tests.log` and `/tmp/hole-wave16-{access,bridge,selection,orphan,extension,window}-final.log`. These bounded checks do not establish whole-program completion or solve request-budget exhaustion.
 
