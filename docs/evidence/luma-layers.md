@@ -1,0 +1,14 @@
+# Connected Luma native layer controls
+
+The retained Luma engine at af6f0893b6b0fe28fff2be99d7f3cb39ab6aba54 supplies `duplicateLayer`, `removeLayer`, `reorderLayer`, `setLayerProp`, effective locking and history. The connected editor now exposes native-only single top-level raster/text duplicate, delete, move up/down, visibility, lock and Normal/Multiply/Screen blend controls. It calls those real engine methods rather than reimplementing document transformations.
+
+Limits: 2048 edge/four million document pixels, 64 layers, 32 million aggregate source/mask pixels for duplication; a duplicated surface may not exceed 2048 edge. The final layer cannot be deleted. Group/child controls and reordering grouped documents are explicitly refused. Other authored blend modes remain selected as preserved values until the user explicitly chooses a supported mode. Locked layers refuse structural/appearance changes, while visibility and unlocking remain available. Painting checks effective locking in addition to its existing transform/surface guard. Imported unknown layer metadata survives actual duplication, Undo and native reopen; arbitrary unknown top-level document fields remain the retained codec's existing limitation, with originals preserved.
+
+Each accepted change uses existing dirty/recovery/ACK guards. Rejected validation clears the temporary persisted busy flag only when no recovery failure occurred, so a refused action does not trap Close. Failed recovery retains changed pixels, blocks Close and can be retried with Keep recovery. If the resource save or derived export already received its durable acknowledgement and only the following recovery checkpoint fails, the UI explicitly reports the saved filename/version and asks for Keep recovery; it does not suggest exporting again. The export browser regression injects both cases and verifies no duplicate asset or source version after recovery retry.
+
+Verification:
+- Four pure admission tests cover missing/group/child/locked targets, invalid enum/flags, layer count and aggregate simultaneous bitmap/precision/mask backing-store budgets, and refusal without mutation.
+- Actual engine browser qualification verifies exact layer state and pixels after Undo, duplicate unknown metadata, deletion/reorder, red/blue→black Multiply and magenta Screen, visibility, locked-delete/paint refusal, failed recovery retained pixels, native save/reopen and original version preservation.
+- Built-shell mode uses HOLE_SHELL_URL and exercises the visible native controls, persistence, close/reopen and decoded pixels without source overrides. Passed against the generated shell: duplicate/Undo/reorder/blend/visibility/lock/refused deletion/save/close/reopen, actual magenta pixels and preserved unknown layer metadata.
+
+This is bounded native layer editing, not complete group, mask, smart-object, effect or blend-stack authoring parity. The full studio remains available.

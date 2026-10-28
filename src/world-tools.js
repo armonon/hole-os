@@ -48,7 +48,7 @@
   globalThis.HoleWorldToolsModel = Object.freeze({ place, mapURL, language, phrase, review, subtitles, translatorStatus });
   if (typeof window === 'undefined') return;
   let controller = null;
-  const dispose = () => { controller?.abort(); controller = null; window.speechSynthesis?.cancel(); };
+  const dispose = () => { controller?.abort(); controller = null; window.speechSynthesis?.cancel(); globalThis.HoleTonguePractice?.dispose(); };
   function link(ctx, text, href) { const anchor = ctx.el('a', 'hc-button', text); anchor.href = href; anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; return anchor; }
   async function atlas(ctx) {
     ctx.title('Places and plans', 'Atlas', 'Keep a private itinerary with saved coordinates and an offline world map. External maps open only when you choose.');
@@ -96,6 +96,7 @@
   }
   async function tongue(ctx) {
     ctx.title('Language and practice', 'Tongue', 'Build a phrase collection, practice exact written answers, and hear available local voices. Translation uses a real browser engine when available.');
+    if (globalThis.HoleTonguePractice) await HoleTonguePractice.mount(ctx, ctx.main);
     const compose = ctx.section('A phrase to keep'), source = ctx.input('Source language code', 'text', 'en'), target = ctx.input('Target language code', 'text', 'es'), original = ctx.input('Original phrase', 'textarea', ''), translated = ctx.input('Translation or your own target phrase', 'textarea', '');
     original.input.maxLength = 5000; translated.input.maxLength = 5000;
     const feedback = ctx.el('p', 'hc-status'); feedback.setAttribute('role', 'status');
@@ -144,7 +145,7 @@
       }), ctx.button('Stop speech', 'square', () => window.speechSynthesis?.cancel()));
     }
     if (!cards.length) ctx.main.append(ctx.empty('Save your first phrase to begin practice.'));
-    ctx.main.append(ctx.el('p', 'hc-subtitle', 'Transcription and automatic conversation/pronunciation assessment are not connected. Subtitle timing is entered by you. Language models and speech voices depend on this browser and device.'), link(ctx, 'Browser translation support', 'https://developer.chrome.com/docs/ai/translator-api'));
+    ctx.main.append(ctx.el('p', 'hc-subtitle', 'Timed practice accepts local transcription captions or SRT with source-provided timing. Automatic conversation/pronunciation assessment is not connected. Phrase-card timing is entered by you; language models and speech voices depend on this browser and device.'), link(ctx, 'Browser translation support', 'https://developer.chrome.com/docs/ai/translator-api'));
   }
-  window.HoleWorldTools = Object.freeze({ async render(view, ctx) { dispose(); if (view === 'atlas') return atlas(ctx); if (view === 'tongue') return tongue(ctx); throw fail('Unknown world tool.'); }, dispose });
+  window.HoleWorldTools = Object.freeze({ async beforeLeave() { await globalThis.HoleTonguePractice?.beforeLeave(); }, async render(view, ctx) { await globalThis.HoleTonguePractice?.beforeLeave(); dispose(); if (view === 'atlas') return atlas(ctx); if (view === 'tongue') return tongue(ctx); throw fail('Unknown world tool.'); }, dispose });
 })();

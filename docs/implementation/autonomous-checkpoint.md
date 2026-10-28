@@ -4,9 +4,9 @@
 
 ## Delivery and current integration
 
-Tenth `46a61bc` is pushed. Review https://6ae1e069ad04f55b032fdb8a--hole-os-armonon.netlify.app has all417 files byte verified and strict worker CSP; receipt `docs/evidence/review-46a61bc.json`. Exact public archived `/tmp/hole-release-46a61bc/public`. PR1 updated; production unchanged. Settled543tests and built Luma tools/Paperwork formats/StemDeck transport/Capture voice journeys passed. Evidence remains scoped to Chrome156 and generated media streams, not physical mic qualification.
+Eleventh `e5be235` is pushed. Review https://6ae1e609c41c4e9cc58caec2--hole-os-armonon.netlify.app has all417 files byte verified and strict worker CSP; receipt `docs/evidence/review-e5be235.json`. Exact public archived `/tmp/hole-release-e5be235/public`. PR1 updated; production unchanged. Settled556tests and actual generated browser journeys pass. Evidence remains scoped to Chrome156, not physical-device qualification.
 
-## Eleventh qualified; delivery next
+## Eleventh delivered
 
 Settled556tests, serial build, authored whitespace check and final generated-browser journeys pass. Luma native/raster copies, independent Paperwork drafts, native StemDeck track/audio-clip editing and canonical derive parent versions are ready. Evidence: `luma-exports.md`, `paperwork-sessions.md`, `stemdeck-editing.md`, full log `/tmp/hole-wave11-full-tests.log`. Root Luma shell regression also passed. Independent Flow review cleared the final Luma initialization/flush/unload/quota changes.
 
@@ -14,10 +14,10 @@ Both studio parents authenticate child pending state and protect browser unload 
 
 ## Next ownership and exact steps
 
-1. Root commit/push eleventh now; archive exact public, review-only deploy to Hole site, all-file byte/workerpolicy verification and PR1 update. No production promotion.
-2. Wave12 remains outside checkout until commit: Flow `/tmp/hole-wave12-tongue` actual local caption/SRT timed written/listening practice; Luma `/tmp/hole-wave12-luma` native top-level layer operations; Relay `/tmp/hole-wave12-press` private press-kit packaging proposal. Root owns shared continuity/shell lifecycle/module hooks and build/release. No agent builds/commits.
-3. Tongue planned interface `HoleTonguePractice.mount(ctx,host)/dispose`; WorldTools exposes awaited beforeLeave guard. Root must await it before navigation, close and performRender replacement. Preserve existing translation/manual phrase paths. Press-kit interfaces await proposal. Native layer controls use retained engine APIs, native-only bounded top-level scope.
-4. Continue accepted available work after each increment. Broad app/studio/format/continuity and external gates remain; no full-program completion claim.
+1. Eleventh delivered; twelfth qualified locally with572/572tests and serial build. Tongue/Press/Luma final built checks pass without overrides. Root generated-shell Portfolio integration regression also passes (exact media/parents/recovery, errors[], remote[]); ready for commit/push/review deploy. No production promotion.
+2. Tongue malformed provenance and close/open races were reproduced independently and fixed; final separate independent repros clear both. Press pending-write/new-edit race fixed by draining epochs and freezing disposal input. Evidence: tongue-practice.md, press-kit.md, luma-layers.md. Full log /tmp/hole-wave12-final-tests.log.
+3. Interfaces: WorldTools awaited beforeLeave; Tongue mount/beforeLeave/dispose with per-mount open admission. PressKit mount(target,{core,projectId,onOpen}) returns guarded beforeLeave/dispose. Root owns continuity/shell, builds and release; agents currently frozen.
+4. Next bounded proposals after release: Relay reviewed exact-snapshot restore journal (current retry duplicates partial projects); Glyph retained native kerning/type preview plus dirty-input flush; Luma next retained-tool depth pending proposal. Continue required work and retain genuine external gates.
 
 ## Working environment and gates
 

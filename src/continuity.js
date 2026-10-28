@@ -11,8 +11,8 @@
   const date = at => new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const kindIcon = a => ({ text: 'file-text', image: 'image', audio: 'audio-lines', video: 'film', link: 'link' }[a.kind] || 'file');
   let navigation = { scope: 'WORLD', spaceId: 'desk', projectId: null, assetId: null, view: 'projects', presentation: 'flat' };
-  let renderQueue=Promise.resolve(), portfolioSession=null;
-  async function leavePortfolio(){if(portfolioSession){await portfolioSession.dispose();portfolioSession=null;}}
+  let renderQueue=Promise.resolve(), portfolioSession=null, pressKitSession=null;
+  async function leavePublish(){await pressKitSession?.beforeLeave();if(portfolioSession){await portfolioSession.dispose();portfolioSession=null;}if(pressKitSession){await pressKitSession.dispose();pressKitSession=null;}}
   let navRecord, renderEpoch = 0, urls = [], editor = null, navigationQueue = Promise.resolve(), persistQueue = Promise.resolve(), toastTimer, lastFocus, restored = false, modalClosing = Promise.resolve(), renderRequested = false, projectNames = new Map();
   const surface = el('section', 'hc-workspace'); surface.hidden = true; surface.setAttribute('aria-label', 'Your Hole workspace');
   const header = el('header', 'hc-header'); const brand = el('div', 'hc-wordmark'); brand.append(el('span', 'hc-emblem', '◎'), el('span', '', 'Make yourself at home.'));
@@ -56,7 +56,7 @@
   function path(next = navigation) { return '#/work/' + [next.view, next.spaceId || '-', next.projectId || '-', next.assetId || '-'].map(encodeURIComponent).join('/'); }
   function navigate(next, options = {}) { navigationQueue = navigationQueue.catch(() => {}).then(() => performNavigation(next, options)); return navigationQueue; }
   async function performNavigation(next, options = {}) {
-    await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
+    await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
     if (editor && !await finishEditing()) return false;
     if (next.projectId) {
       const project = await C.get('projects', next.projectId);
@@ -75,7 +75,7 @@
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     await navigate({ view, ...next });
   }
-  async function close() { await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
+  async function close() { await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
   function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if((['day','paperwork','bounce'].includes(navigation.view)||navigation.view==='librarian'&&navigation.assetId)&&window.HoleToolWindows)tools.append(button('Open '+({day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[navigation.view])+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
@@ -85,7 +85,7 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
-    await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.();
+    await leavePublish(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.();
     const epoch = ++renderEpoch; await window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
@@ -185,7 +185,7 @@
     else if (asset.kind === 'image' || asset.mime?.startsWith('image/')) { const img = el('img', 'hc-media'); img.alt = asset.name; img.src = objectURL(record.blob); main.append(img); actions.append(button('Crop & resize', 'crop', () => imageTools(record), 'hc-primary'),button('Remove background','scissors',()=>cutoutTools(record))); }
     else if (asset.mime?.startsWith('audio/') || asset.mime?.startsWith('video/')) { main.append(empty('Listen or watch while moving between projects.', button('Open persistent player', 'play', () => openMedia(record)))); actions.append(button('Media tools', 'sliders-horizontal', () => mediaTools(record))); }
     else { main.append(empty(`${record.version.mime} · ${(record.blob.size / 1024).toFixed(1)} KB`, button('Download original', 'download', () => download(record.blob, asset.name)))); }
-    if (asset.mime === 'image/png' || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
+    if (['image/png','image/jpeg','image/webp'].includes(record.version.mime) || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
     if (/\.(glyph(?:\.json)?|lumaglyph\.json)$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Glyph' : 'Open in Glyph','type',()=>openStudio(record,{},'hole.glyph'),'hc-primary'));
     if (record.blob.type==='application/vnd.hole.captions+json' || /\.captions\.json$/i.test(asset.name)) actions.append(button(pinned?'Edit latest captions':'Review captions','captions',async()=>HoleCaptionEditor.open(await C.readAsset(asset.id),context()),'hc-primary'));
     if (/\.portfolio$/i.test(asset.name)) actions.append(button('Open in Publish Portfolio','layout-template',()=>open('publish',{assetId:asset.id,versionId:pinned?record.version.id:null,placementId:null}),'hc-primary'));
@@ -478,6 +478,7 @@
       selectedArea.append(el('p','',selected.asset.name+' · approved version '+selected.version.id),button('Export selected version','download',()=>download(selected.blob,selected.asset.name)));
       if (selected.version.mime.startsWith('image/')) { const img=el('img','hc-media');img.alt=selected.asset.name;img.src=objectURL(selected.blob);selectedArea.append(img); }
     }
+    if(window.HolePressKit)pressKitSession=await HolePressKit.mount(section('Press materials'),{core:C,projectId:navigation.projectId,onOpen:ref=>open('projects',{assetId:ref.assetId,versionId:ref.versionId,placementId:null})});
     const supportedMedia = ['image/png','image/jpeg','image/webp','image/gif','video/mp4','video/webm'];
     const inputs = selected && navigation.versionId && supportedMedia.includes(selected.version.mime) ? [{assetId:selected.asset.id,versionId:selected.version.id}] : [];
     portfolioSession=await HolePortfolio.mount(section('Portfolio websites'),{core:C,projectId:navigation.projectId,inputs,onOpen:ref=>open('projects',{...ref,placementId:null})});

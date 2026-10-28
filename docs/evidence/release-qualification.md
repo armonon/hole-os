@@ -1,8 +1,16 @@
 # Current continuation qualification
 
-Latest pushed implementation: `46a61bc` (543 passing tests). Latest byte-verified review: [417-file review](https://6ae1e069ad04f55b032fdb8a--hole-os-armonon.netlify.app), receipt `review-46a61bc.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `e5be235` (556 passing tests). Latest byte-verified review: [417-file review](https://6ae1e609c41c4e9cc58caec2--hole-os-armonon.netlify.app), receipt `review-e5be235.json`. Production remains unchanged; the master brief is not complete.
 
-## Eleventh increment — 28 October 2026 (qualified for delivery)
+## Twelfth increment — 28 October 2026 (qualified locally)
+
+Settled572tests and serial build pass. Publish now creates private authored press kits from explicitly reviewed exact versions, with inspected original ZIP bytes, immutable parents and duplicate-free retry after ambiguous ACK. Drafts drain edits arriving during a write; failed storage refuses navigation. Actual generated-shell320px/keyboard and cancellation/reload checks pass. See `press-kit.md`.
+
+Tongue uses actual local transcription captions or SRT with explicit pinned audio, media-clock cue playback, durable written attempts, JSON/SRT exports and missing-audio written recovery. Malformed provenance is refused without overwriting the original record. Independent review reproduced and fixed orphan dialogs from malformed lessons and opens racing workspace Close. Final built full journey and navigation regression pass, with a separate independent recheck. See `tongue-practice.md`.
+
+Luma exposes bounded native layer duplicate/delete/reorder/visibility/lock and Normal/Multiply/Screen controls using retained engine methods, real Undo and native persistence. Actual pixels/native reopen and failure guards pass. JPEG/WebP now route from exact selected versions into native copies; acknowledged-output/checkpoint-failure messaging avoids advice to create a duplicate export. See `luma-layers.md` and `luma-exports.md`. Full retained tool parity and physical/browser qualification remain open.
+
+## Eleventh increment — 28 October 2026 (delivered)
 
 Settled integration has 556 passing tests and a serial generated build. Paperwork new documents, tables and forms have independent window draft identities; legacy main-view and saved-asset keys remain compatible. Two-window recovery, failed-save Close/Escape guards and interrupted first-save migration retaining one asset pass without overrides. See `paperwork-sessions.md`.
 
@@ -150,7 +158,7 @@ These are screenshots of the final hosted review build, not design mockups. The 
 
 ## Required work still open
 
-See the full [46-row capability and acceptance ledger](../implementation/backlog.md). Major unfinished work includes platform-wide resizable runtime/editor continuity; richer Flow/Carry/Time/Publish and memory interactions; mounted retained-studio bridges and parity; missing segmentation/stems/key-BPM/transcription/video-trim engines; full Relay/shared-World/social-provider UI and production hosting; deeper Lab/package/Browser/Atlas/Tongue capabilities; Vault implementation/security review; physical-device/accessibility/performance qualification and actual formative research. These remain required where the master brief says so. Only the brief's explicit future items, including native remote application execution, are labeled future.
+See the full [46-row capability and acceptance ledger](../implementation/backlog.md). Major unfinished work includes platform-wide runtime/editor continuity and retained-studio feature parity; wider browser, format and model-quality qualification for the implemented media engines; full application-state Relay and missing social-provider adapters; production backend operations; remaining everyday capabilities; Vault implementation/security review; physical-device/accessibility/performance qualification and actual formative research. Later continuation evidence above records implemented flows and engines; this historical section must not be read as saying those implementations are absent. These remain required where the master brief says so. Only the brief's explicit future items, including native remote application execution, are labeled future.
 
 ## Continuation qualification — 26 October 2026
 

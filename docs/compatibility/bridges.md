@@ -1,6 +1,10 @@
 # Runtime and studio bridge v1
 
-Evidence date: 2026-10-26. This is source evidence and automated protocol coverage, not proof that a deployed external studio is connected. No other repository was edited or deployed.
+Original protocol evidence date: 2026-10-26. Historical adapter inventory below describes that initial boundary; current mounted-engine integration and actual generated-browser evidence are in `studio-parity.md` and the per-studio evidence files. No separately deployed external studio connection is implied.
+
+28 October continuation: fifteen bridge/runtime tests pass. `resource.derive` writes the exact authorized source version into canonical output `parentVersionIds`, as well as provenance. The SDK marks authenticated explicit negative responses `hostRejected:true`; local timeout, transport loss and revocation errors are not marked. Luma renews a failed save/export request ID only for a definitive `hostRejected && code==='QUOTA'` rejection, retaining frozen encoded bytes. Ambiguous acknowledgements keep their original request ID. This does not grant broader access or bypass the lifetime256-request cap.
+
+Mounted Luma and StemDeck parents use authenticated pending-state signals to warn on browser unload; their close checkpoint waits for child initialization and recovery flush, refusing unresolved work. These app lifecycle messages carry no resources or grant expansion. See `luma-exports.md` and `stemdeck-editing.md` under evidence for actual tested limits.
 
 ## Host integration
 
