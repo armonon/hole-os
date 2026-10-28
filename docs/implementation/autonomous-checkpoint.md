@@ -4,7 +4,7 @@
 
 ## Visual delivery — 28 October 2026
 
-The shared design now reaches real project desktops, circular previews, immersive Universe, contextual strips, workspace/native window controls, native editor workbenches and useful welcome widgets. See [visual evidence](../evidence/visual-overhaul-20261028.md). 660 tests pass. Implementation `04ddc38` is pushed. Review delivery is blocked: preview HTTP500/preparing; production HTTP503 `usage_exceeded`. See `docs/evidence/review-04ddc38.json`. No production promotion. This visual increment does not complete the master program.
+The shared design now reaches real project desktops, circular previews, immersive Universe, contextual strips, workspace/native window controls, native editor workbenches and useful welcome widgets. See [visual evidence](../evidence/visual-overhaul-20261028.md). 660 tests pass. Implementation `04ddc38` and checkpoint `c0dd763` are pushed. After the owner restored Netlify allowance and requested delivery, `c0dd763` was published to the main site, deploy `6ae23610b58e94ea5ddaf3ca`. See `docs/evidence/production-c0dd763.json` and the production visual browser receipt. The earlier quota failure remains historical. This visual increment does not complete the master program.
 
 ## Delivered
 

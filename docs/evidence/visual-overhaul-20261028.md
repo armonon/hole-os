@@ -33,8 +33,12 @@ The shared visual language now reaches working project desktops, canonical appli
 
 Canonical apps share one resizable workspace; independent simultaneous instances for every app remain a runtime requirement. The connected native editors remain bounded implementations alongside retained original studios, with feature parity still open. Universe uses CSS3D; rich furniture and physics remain future scope. Physical touch/audio, screen readers, measured contrast/performance, Safari and human research require their actual devices and participants. Browser-emulated touch is not physical-device certification.
 
-This increment adds no production backend, account sync, social provider or native Windows/macOS/Linux execution. Local browser data stays origin-specific. Production is unchanged; the review deployment and exact public-file byte receipt are recorded after the implementation commit.
+This increment adds no production backend, account sync, social provider or native Windows/macOS/Linux execution. Local browser data stays origin-specific. Production delivery and the exact public-file byte receipt are recorded below.
 
-## Delivery status
+## Initial delivery attempt — historical
 
 Implementation `04ddc38` is pushed to `codex/hole-os-overhaul`, PR1. The425-file frozen public snapshot is recorded in [delivery receipt](review-04ddc38.json). Netlify accepted review deployment `6ae233650ed57be37ce8feda`, but it remained preparing; its preview returned HTTP500, while the existing production URL returned HTTP503 `usage_exceeded`. Hosted verification could not run. The CLI wait was stopped; no production promotion occurred. Restoring Netlify usage allowance is required for a working hosted preview. The tested build remains available locally on port5193 and through `npm run dev` on5173.
+
+## Production delivery — restored hosting
+
+After the owner restored Netlify allowance and requested the latest push, `c0dd763` was deployed to [the main Hole OS site](https://hole-os-armonon.netlify.app/), deploy `6ae23610b58e94ea5ddaf3ca`. The generated-shell visual browser journey passed against that actual production URL with zero page errors, including15 app surfaces at320/390px. The [production byte receipt](production-c0dd763.json) records static-file and worker-header verification; the adjacent production browser receipt records interactions. Full-program limitations above still apply.

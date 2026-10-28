@@ -225,3 +225,5 @@ Native arrangement regression (Chrome155): older snapshot/recovery never replace
 ## Visual continuation — 28 October 2026
 
 See [visual overhaul qualification](visual-overhaul-20261028.md) for the shared workbench/window/desktop design, 660 passing tests, generated-browser regression checks and phone/zoom coverage. The prior screenshots and review links above remain historical; the visual delivery records its own revision, deployed byte receipt and limitations.
+
+Production update: Netlify allowance restored by owner; latest build `c0dd763` deployed to the main Hole site by explicit request. Hosted visual journey passes. See [425-file production receipt](production-c0dd763.json) and [hosted browser receipt](production-c0dd763-browser.json). Prior quota/preparing evidence is historical.

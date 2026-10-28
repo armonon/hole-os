@@ -1,0 +1,85 @@
+{
+  "passed": true,
+  "browser": "156.0.8078.48",
+  "checks": [
+    "private recent titles require reveal and can be hidden",
+    "quiet motion switch",
+    "compact desktop icons; actual drag/keyboard/cancel placement and touch single-open; disclosed settings",
+    "workspace drag and keyboard geometry",
+    "fullscreen workspace Escape",
+    "selected-version contextual strip",
+    "shared opaque editor theme",
+    "studio fullscreen/minimal dock/hover/10-30-50 travel and refused-checkpoint retention",
+    "drawer foreground and inert editors",
+    "dock resumes same dirty studio",
+    "immersive Universe stage",
+    "15 app surfaces at 390px and 320px reduced motion",
+    "unchanged original content"
+  ],
+  "observations": [
+    {
+      "name": "welcome",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "project",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "quick-tools",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "studio-dark",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "studio-fullscreen",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "drawer",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "universe",
+      "width": 1440,
+      "height": 1000,
+      "documentWidth": 1440
+    },
+    {
+      "name": "phone-projects",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390
+    },
+    {
+      "name": "phone-actions",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390
+    },
+    {
+      "name": "phone-day",
+      "width": 390,
+      "height": 844,
+      "documentWidth": 390
+    }
+  ],
+  "errors": [],
+  "url": "https://hole-os-armonon.netlify.app",
+  "revision": "c0dd763",
+  "deployId": "6ae23610b58e94ea5ddaf3ca"
+}

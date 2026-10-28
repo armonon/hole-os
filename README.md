@@ -10,7 +10,7 @@ To continue the remaining program, use the [autonomous completion prompt](docs/i
 
 ## Open and develop
 
-- Latest visual build: pushed on this branch; run locally below. Netlify hosting currently returns `usage_exceeded`; see [delivery status](docs/evidence/review-04ddc38.json).
+- [Latest live visual overhaul](https://hole-os-armonon.netlify.app/) — `c0dd763`; see [production receipt](docs/evidence/production-c0dd763.json).
 - [Previous review deployment](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app/)
 - [Existing production app](https://hole-os-armonon.netlify.app/)
 - [Private source repository](https://github.com/armonon/hole-os)
