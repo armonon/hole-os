@@ -201,8 +201,17 @@
   }
   const studios = new Map();
   async function openToolWindow(view,restore={}) {
-    const label=view==='day'?'Day':'Paperwork',host=el('section','hc-studio-host');host.setAttribute('aria-label',label+' independent window');const controls=el('div','hc-row'),root=el('div','hc-studio-content');host.append(controls,root);H.os.append(host);let instance;
-    try{instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});await HoleRuntime.checkpoint(instance.id);studios.set(instance.id,{host,name:label+' window',instanceId:instance.id});controls.append(el('strong','',label),button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())),button('Minimize '+label,'minimize-2',async()=>{await HoleRuntime.checkpoint(instance.id);await HoleRuntime.present(instance.id,'minimized');}),button('Close '+label+' window','x',async()=>{await HoleRuntime.close(instance.id);studios.delete(instance.id);host.remove();}));H.icons();}catch(error){if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove();throw error;}
+    const label=view==='day'?'Day':'Paperwork', origin=document.activeElement;
+    const host=el('section','hc-studio-host');host.setAttribute('aria-label',label+' independent window');
+    const controls=el('div','hc-row'),root=el('div','hc-studio-content');host.append(controls,root);H.os.append(host);let instance;
+    const restoreFocus=()=>{const target=origin?.isConnected&&origin.getClientRects().length?origin:surface.hidden?H.root.querySelector('.hf-desk-stage'):main;target?.focus({preventScroll:true});};
+    try {
+      instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});
+      await HoleRuntime.checkpoint(instance.id);
+      studios.set(instance.id,{host,name:label+' window',instanceId:instance.id});
+      controls.append(el('strong','',label),button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())),button('Minimize '+label,'minimize-2',async()=>{await HoleRuntime.checkpoint(instance.id);await HoleRuntime.present(instance.id,'minimized');restoreFocus();}),button('Close '+label+' window','x',async()=>{await HoleRuntime.close(instance.id);studios.delete(instance.id);host.remove();restoreFocus();}));
+      H.icons();controls.querySelector('button')?.focus({preventScroll:true});
+    } catch(error) { if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove();restoreFocus();throw error; }
     return instance;
   }
   if(window.HoleToolWindows)for(const view of ['day','paperwork'])HoleRuntime.register('hole.tool.'+view,HoleStudioWindow.wrap(HoleToolWindows.create({view,context})));

@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-28T11:08:49.111209+00:00",
+  "purpose": "Integrate the complete preserved OpenClaw Hole workspace source into Git main. This does not claim full product or native-release qualification.",
+  "source_base": "fdb727e82df508a568b869e32cbdc225ed677212",
+  "snapshot": "f5d5d2ad222f0ff746d5c4ecaf2ee26f148f12f9",
+  "included": "All tracked and untracked nonignored source at snapshot, plus reviewed Moodboard recovery and continuity changes captured during final checks. Generated public files rebuilt from included source.",
+  "unit_tests": {
+    "passed": 510,
+    "failed": 0
+  },
+  "build": "npm run build passed",
+  "browser_checks": [
+    "Actual generated Moodboard edit/reopen/PNG/PDF/ZIP/native Luma export",
+    "Portfolio generated-build exact-media local export",
+    "Ghost opaque-frame actual CPU cloth solve, GLB and Form round trips, spoof/cancel/revoke/deadline controls",
+    "Generated shell Ghost to Form native save/reopen/export",
+    "Independent Day and Paperwork windows; keyboard/dialog guards, resize, restore, 320px bounds"
+  ],
+  "scope_limits": [
+    "External hardware, human-research, hosted-provider and independent security gates in the backlog remain open.",
+    "No runtime credentials, session logs or personal libraries are included.",
+    "Active original checkout was not reset or checked out by this task."
+  ]
+}

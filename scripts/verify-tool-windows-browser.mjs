@@ -15,7 +15,7 @@ try {
  await page.getByRole('button',{name:'Save task',exact:true}).click();await day.getByText('Independent window task',{exact:true}).waitFor();
  await day.getByRole('button',{name:'Window layout',exact:true}).click();await page.getByLabel('Width',{exact:true}).fill('600');await page.getByLabel('Height',{exact:true}).fill('500');await page.getByRole('button',{name:'Apply window layout',exact:true}).click();
  assert.ok(Math.abs((await day.boundingBox()).width-600)<2);
- await day.getByRole('button',{name:'Minimize Day',exact:true}).click();await day.waitFor({state:'hidden'});
+ await day.getByRole('button',{name:'Minimize Day',exact:true}).click();await day.waitFor({state:'hidden'});assert.equal(await page.evaluate(()=>!!document.activeElement.closest('.hc-studio-host[hidden]')),false);
  await page.evaluate(()=>HoleContinuity.open('paperwork',{assetId:null}));await page.getByRole('button',{name:'Open Paperwork in a window',exact:true}).click();
  const paper=page.getByRole('region',{name:'Paperwork independent window',exact:true});await paper.getByRole('heading',{name:'Paperwork',exact:true}).waitFor();
  const identities=await page.evaluate(()=>HoleRuntime.list().map(i=>({id:i.id,appId:i.appId})));
