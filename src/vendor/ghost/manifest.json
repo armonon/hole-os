@@ -1,0 +1,205 @@
+{
+  "source": "owned Ghost Studio",
+  "revision": "5a6356b92626c29a3122b7c81db52d85f8522283",
+  "license": "Owned source; no open-source license asserted for app code. Three.js and fflate MIT notices retained.",
+  "modifications": [
+    "Replace engine/client.js with scoped parent computation transport; no renderer or solver algorithm changes."
+  ],
+  "sourceFiles": [
+    {
+      "path": "dist/assets/fflate.js",
+      "bytes": 90922,
+      "sha256": "b7ca4450b19559a1d50eb381adcee94b82449674be4cd17789d9beba7e6122a1"
+    },
+    {
+      "path": "dist/assets/fflate.LICENSE",
+      "bytes": 1069,
+      "sha256": "0a1df3a083d0c010560aa342e87959c8c1070e6fd54545741f083f22d0c8b551"
+    },
+    {
+      "path": "dist/assets/GLTFExporter.js",
+      "bytes": 76230,
+      "sha256": "5bed59218b42475ed4428742bd47037556ef1da9fbba83da4f1b45f1d309ea48"
+    },
+    {
+      "path": "dist/assets/model-loaders/BufferGeometryUtils.js",
+      "bytes": 31907,
+      "sha256": "139082a5ab37d63f1763275afccb2858fa495ee85d004ccf4d36703ea8487eae"
+    },
+    {
+      "path": "dist/assets/model-loaders/GLTFLoader.js",
+      "bytes": 106570,
+      "sha256": "04c2593b16ac8f1ef78f3dceea016ec46caafc9da1e6f14d8fb5058a91de0ca2"
+    },
+    {
+      "path": "dist/assets/TextureUtils.js",
+      "bytes": 2243,
+      "sha256": "d810a5ef56af4d53b79b6fc773ffa94d13e990d596444bcd77f50656d4a659e4"
+    },
+    {
+      "path": "dist/assets/THREE-LICENSE.txt",
+      "bytes": 1081,
+      "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d"
+    },
+    {
+      "path": "dist/assets/three.min.js",
+      "bytes": 651651,
+      "sha256": "3b3a1c97de3ce65ec5b28c28d9f2805a738e9651622691ba771aa95c79d41d51"
+    },
+    {
+      "path": "dist/blender-export.js",
+      "bytes": 11663,
+      "sha256": "44330980fa0cfed55419ace19efc7c25e58b7fc1fc33ab916f165fd61560f065"
+    },
+    {
+      "path": "dist/creation-quality.js",
+      "bytes": 2540,
+      "sha256": "f7a6f8ae6de86a204de9b2d4f998845f5d7da1a29db5ffdd86283ef2fc261a60"
+    },
+    {
+      "path": "dist/draped-materials.js",
+      "bytes": 13582,
+      "sha256": "ae06390f8aa57176719dbc52c2f30d3336e0af4ffb4a62561c7d32549b273a97"
+    },
+    {
+      "path": "dist/draped-materials.js",
+      "bytes": 13582,
+      "sha256": "ae06390f8aa57176719dbc52c2f30d3336e0af4ffb4a62561c7d32549b273a97"
+    },
+    {
+      "path": "dist/engine/client.js",
+      "bytes": 1517,
+      "sha256": "c675403b75b0c8564b54c4adf424e1a200bed1c822a14acdc9f33c28fecdb87d"
+    },
+    {
+      "path": "dist/engine/client.js",
+      "bytes": 1517,
+      "sha256": "c675403b75b0c8564b54c4adf424e1a200bed1c822a14acdc9f33c28fecdb87d"
+    },
+    {
+      "path": "dist/engine/drape-session.js",
+      "bytes": 1690,
+      "sha256": "34ba4673857c423b5938e4f92d7a808e62e988b5e704859672178d73e7b17858"
+    },
+    {
+      "path": "dist/engine/drape.worker.js",
+      "bytes": 1793,
+      "sha256": "f0cd2f496daa009e78366d49e76833c0d3e90ee4f528d4295f4c28819c934a56"
+    },
+    {
+      "path": "dist/engine/fitted-hood.js",
+      "bytes": 4930,
+      "sha256": "8fb9a8d000ccb2cbb6fe976cc6e1370df989d9d38bd75df8ed5357379b196abd"
+    },
+    {
+      "path": "dist/engine/form/cloth-contact-neighborhood.js",
+      "bytes": 2430,
+      "sha256": "6b87df6ff7349a68c6b471a0e077aae1846d649278f72a3acd3a7c145672f252"
+    },
+    {
+      "path": "dist/engine/form/fabric-solver.js",
+      "bytes": 28920,
+      "sha256": "d657593b579abb2f526295d59444d60f0339484cf49dbf834d23d2ee3223a1b9"
+    },
+    {
+      "path": "dist/engine/jacket.js",
+      "bytes": 17329,
+      "sha256": "a8ac11f3e39f0f4e594accca854f79a1820a5e178ebb1ee2ca3d8a063b942e9d"
+    },
+    {
+      "path": "dist/engine/jacket.js",
+      "bytes": 17329,
+      "sha256": "a8ac11f3e39f0f4e594accca854f79a1820a5e178ebb1ee2ca3d8a063b942e9d"
+    },
+    {
+      "path": "dist/engine/presentation.js",
+      "bytes": 5097,
+      "sha256": "1d65354c4d64d07f3dc9aae72d1c8721f63c7e8213df8d8e8d8ddb20be29fc80"
+    },
+    {
+      "path": "dist/engine/silhouette.js",
+      "bytes": 20187,
+      "sha256": "5c635569c3dffff200475cd921038d38247ebedb6eb33240192d380333e729c0"
+    },
+    {
+      "path": "dist/garment-atlas.js",
+      "bytes": 2615,
+      "sha256": "eae40dcfeb3302c37e352df163bf9a9a29c6bc63337afaf9fd72c6c53fea90bc"
+    },
+    {
+      "path": "dist/garment-photo.js",
+      "bytes": 1112,
+      "sha256": "a0187bd8a065b2d7ad5b8179936691654cc7d1462b22aeb0ed3e27963b3c4a56"
+    },
+    {
+      "path": "dist/garment-pipeline.js",
+      "bytes": 3921,
+      "sha256": "28962bd7e1f06258848677b06f0af453877dcb34717acc6cfbaacc901ec73913"
+    },
+    {
+      "path": "dist/garment-types.js",
+      "bytes": 3193,
+      "sha256": "9fc08abac8f83ba0ef56b2172e4d2b9243be24419611281942f7de624d52ab5a"
+    },
+    {
+      "path": "dist/garment-types.js",
+      "bytes": 3193,
+      "sha256": "9fc08abac8f83ba0ef56b2172e4d2b9243be24419611281942f7de624d52ab5a"
+    },
+    {
+      "path": "dist/hanger.js",
+      "bytes": 2644,
+      "sha256": "d98932442f73dcdbece6d504ca5b00cb3695c6f5c489efd3cbd3c4babef18366"
+    },
+    {
+      "path": "dist/hood-renderer.js",
+      "bytes": 3652,
+      "sha256": "e41a73cdad229e580b00e4f424fb9f45ddd56475806063dfa7a570d3337bb76e"
+    },
+    {
+      "path": "dist/object-photo.js",
+      "bytes": 9023,
+      "sha256": "3e77fcdb1fc668c17ecacdbf0b7e5e354f973f93e35c0e80aa049e42dd63bb74"
+    },
+    {
+      "path": "dist/photo-edits.js",
+      "bytes": 4828,
+      "sha256": "40c67876b77a6c704c6bc7b919d04f3438d797ed27d2fee7eff449570276520e"
+    },
+    {
+      "path": "dist/photo-polygons.js",
+      "bytes": 2564,
+      "sha256": "b6da8bd763f72120e2a117afc330b83b3442c1f01ddb0cb18aacf6636fffa85d"
+    },
+    {
+      "path": "dist/photo-registration.js",
+      "bytes": 6628,
+      "sha256": "96093e8485992a2f645273d26896aea65c1182b1b836ea28f147348d737d8917"
+    },
+    {
+      "path": "dist/photo-treatment.js",
+      "bytes": 2785,
+      "sha256": "b84fe63ff566393d59f3a33f52104278d6254c40d956e08f9c9a696e3bea6955"
+    },
+    {
+      "path": "dist/photos.js",
+      "bytes": 4909,
+      "sha256": "d5229cd2a16a1894312e42d3b94f4a09c5e7d2493c18f47b2baaff8a45ad4a25"
+    },
+    {
+      "path": "dist/project.js",
+      "bytes": 2329,
+      "sha256": "57b2de6483c980617015cc0d2b161f654fc8af416b9ffd664a90866d7ff865ca"
+    },
+    {
+      "path": "dist/smooth-garment.js",
+      "bytes": 3474,
+      "sha256": "aa581dc16d9d55f6f0e49466e8c819f507165b84818f880b43d1783f2732a18a"
+    },
+    {
+      "path": "dist/studio-features.js",
+      "bytes": 5146,
+      "sha256": "397bd840aad8e08f3785e2db81a66b0de9d5223620bad2c902feca79cdbe486c"
+    }
+  ]
+}

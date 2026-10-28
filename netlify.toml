@@ -31,3 +31,8 @@
   for = "/assets/weblab-script-worker.js"
   [headers.values]
     Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/vendor/ghost/drape-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'"

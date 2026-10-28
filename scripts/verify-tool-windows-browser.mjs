@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {pathToFileURL} from 'node:url';
+const {chromium}=await import(pathToFileURL(process.env.HOLE_PLAYWRIGHT_MODULE||'/Users/lillypad/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs'));
+const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+try {
+ const page=await browser.newPage();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(process.env.HOLE_QA_URL||'http://127.0.0.1:5193');await page.waitForFunction(()=>window.HoleContinuity);
+ await page.evaluate(()=>HoleContinuity.open('day',{assetId:null,projectId:null}));
+ await page.getByRole('button',{name:'Open Day in a window',exact:true}).click();
+ const day=page.getByRole('region',{name:'Day independent window',exact:true});
+ await day.getByRole('button',{name:'Add task',exact:true}).click();
+ await page.getByLabel('Task',{exact:true}).fill('Independent window task');
+ assert.equal(await page.evaluate(async()=>{const i=HoleRuntime.list().find(i=>i.appId==='hole.tool.day');try{await HoleRuntime.close(i.id);return false;}catch(e){return /open dialog/.test(e.message)&&!!HoleRuntime.get(i.id);}}),true);
+ assert.equal(await page.getByLabel('Task',{exact:true}).inputValue(),'Independent window task');
+ await page.getByRole('button',{name:'Save task',exact:true}).click();await day.getByText('Independent window task',{exact:true}).waitFor();
+ await day.getByRole('button',{name:'Window layout',exact:true}).click();await page.getByLabel('Width',{exact:true}).fill('600');await page.getByLabel('Height',{exact:true}).fill('500');await page.getByRole('button',{name:'Apply window layout',exact:true}).click();
+ assert.ok(Math.abs((await day.boundingBox()).width-600)<2);
+ await day.getByRole('button',{name:'Minimize Day',exact:true}).click();await day.waitFor({state:'hidden'});
+ await page.evaluate(()=>HoleContinuity.open('paperwork',{assetId:null}));await page.getByRole('button',{name:'Open Paperwork in a window',exact:true}).click();
+ const paper=page.getByRole('region',{name:'Paperwork independent window',exact:true});await paper.getByRole('heading',{name:'Paperwork',exact:true}).waitFor();
+ const identities=await page.evaluate(()=>HoleRuntime.list().map(i=>({id:i.id,appId:i.appId})));
+ assert.equal(identities.length,2);await page.waitForFunction(()=>HoleRuntime.list().every(i=>i.status==='running'));await page.evaluate(()=>HoleContinuity.snapshot());
+ await paper.getByRole('button',{name:'Minimize Paperwork',exact:true}).click();
+ await page.evaluate(()=>HoleContinuity.open('history',{assetId:null}));
+ assert.deepEqual(await page.evaluate(()=>HoleRuntime.list().map(i=>({id:i.id,appId:i.appId}))),identities);
+ await page.getByRole('button',{name:'Running studios',exact:true}).click();await page.getByRole('button',{name:'Day window',exact:true}).click();
+ await day.getByRole('button',{name:'Refresh Day',exact:true}).click();await day.getByText('Independent window task',{exact:true}).waitFor();
+ await day.getByRole('button',{name:'Close Day window',exact:true}).click();await day.waitFor({state:'detached'});
+ assert.equal(await page.evaluate(()=>HoleRuntime.list().length),1);
+ await page.evaluate(()=>HoleContinuity.open('history',{assetId:null}));await page.getByRole('button',{name:'Preview arrangement',exact:true}).click();await page.getByRole('button',{name:'Restore positions',exact:true}).click();
+ await page.waitForFunction(()=>HoleRuntime.list().length===2);
+ assert.equal(await page.evaluate(id=>!!HoleRuntime.get(id),identities.find(i=>i.appId==='hole.tool.paperwork').id),true);await paper.getByRole('button',{name:'Minimize Paperwork',exact:true}).click();
+ await page.evaluate(()=>HoleContinuity.open('history',{assetId:null}));await page.getByRole('button',{name:'Preview arrangement',exact:true}).click();await page.getByRole('button',{name:'Restore positions',exact:true}).click();await page.waitForFunction(()=>HoleContinuity.navigation.view==='projects');assert.equal(await page.evaluate(()=>HoleRuntime.list().length),2);
+ const restoredDay=await page.evaluate(()=>HoleRuntime.list().find(i=>i.appId==='hole.tool.day'));assert.equal(restoredDay.presentation,'minimized');
+ await page.evaluate(id=>HoleRuntime.present(id,'window'),restoredDay.id);await day.getByText('Independent window task',{exact:true}).waitFor();assert.ok(Math.abs((await day.boundingBox()).width-600)<2);
+ await page.setViewportSize({width:320,height:720});const phone=await day.boundingBox();assert.ok(phone.x>=0&&phone.x+phone.width<=321);await day.getByRole('button',{name:'Minimize Day',exact:true}).click();
+
+ await page.reload();await page.waitForFunction(()=>window.HoleContinuity);assert.equal(await page.evaluate(async()=>{await HoleCore.ready;return(await HoleCore.list('tasks')).filter(t=>t.name==='Independent window task').length;}),1);
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,browser:await browser.version(),checks:['independent identities','actual task create and reload','open-dialog close refusal preserves input','resize checkpoint','minimize resume navigation','refresh shared Core','closing one leaves other running','repeated arrangement restore reuses identities','320px window bounds']}));
+}finally{await browser.close();}

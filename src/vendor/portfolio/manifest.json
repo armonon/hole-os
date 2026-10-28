@@ -1,0 +1,22 @@
+{
+  "revision": "ae9a10e30204bcb9771272a48dc34a887b478693",
+  "source": "owned portfolio-studio checkout",
+  "files": [
+    {
+      "path": "src/lib/types.ts",
+      "sha256": "5b2a3748b6cbbe8521036451cd0daa840285227e2a856731c3b642f5ec6187a2"
+    },
+    {
+      "path": "src/lib/site-builder.ts",
+      "sha256": "3480ff1bc682c0f7fdbfb6cd1cc71d4a84855cb27f9970872f8b67ffee39adeb"
+    },
+    {
+      "path": "src/lib/data-url.ts",
+      "sha256": "bed75a25f6172b2e4c8e3ff9dc23398ee6bc1e964993461cd1d31a6a65cc127d"
+    },
+    {
+      "path": "engine.js",
+      "sha256": "cad8e48d6de5a74eb94d5ebfadfc19374699d42e2cfbd533851ed2ef61eb7d71"
+    }
+  ]
+}

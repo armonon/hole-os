@@ -1,86 +1,37 @@
 # Autonomous completion checkpoint
 
-Updated 2026-10-26. Branch: `codex/hole-os-overhaul`.
-Starting revision for this continuation: `fee8a5f91b68edbc3c98c9a0018cc23dc7559980`.
+Updated 28 October 2026. User resumed work after the 26 October pause. Branch `codex/hole-os-overhaul`; repository `armonon/hole-os`; existing PR #1. Preserve uncommitted work. No scheduled automation or production promotion is enabled.
 
-## Status
+## Delivered
 
-Implementation is in progress. The master brief is **not complete**. Preserve the existing acceptance ledger and original studio routes. No production promotion has been performed in this continuation. No scheduled background automation was enabled.
+Latest pushed commit `fdb727e`: native Animate/ScenePilot animation, explicit studio draft recovery, bounded QuickJS console, native object packages; 489 passing tests. Review https://6adfbe91b9a2c468ed41eb27--hole-os-armonon.netlify.app has 382 files byte-verified and worker CSP checked (`docs/evidence/review-fdb727e.json`). Earlier increments and exact limits remain in release qualification/evidence. The master program is not complete.
 
-## Delivered increment
+## Active eighth increment (uncommitted)
 
-`a70520d` is pushed to origin and PR #1. Review only: https://6adfae64edd42e93b11bc9c4--hole-os-armonon.netlify.app . All 262 public files matched deployed bytes; receipt `docs/evidence/review-a70520d.json`. Production unchanged.
+- Root: shell/build, native routing, Portfolio lifecycle, independent Day/Paperwork windows, arrangement restoration and release checks. Generated public is development output, not yet a qualified release.
+- Relay: Moodboard native inspector/PNG/PDF/ZIP plus actual layered Luma conversion. Initial built browser proof passes exact original/native bytes, image pixels, editable layers and source lineage. Root review found unsaved inspector loss: agent is adding durable raw-field drafts, explicit recovery, invalid-field retention, navigation failure guards and stale-head conflict tests. Load `moodboard-drafts.js` before `moodboard-ui.js`.
+- Luma: Ghost native settings/recovery, actual CPU cloth solve and textured GLB/Form exports. Built shell edit/save/reopen and actual Form scene edit/reopen pass. Flow independently found unbounded pre-worker photo cleanup and insufficient returned auxiliary geometry validation; fixes and regressions are required before release. Real cancellation, revoke, close and deadline tests pass for worker computation.
+- Flow: Portfolio original templates/native editing/private ZIP. Six tests and built workflow pass, including exact embedded bytes, pinned-version isolation from newer drafts, invalid-field navigation refusal, storage failure retention and callback disposal without deadlock. 320px layout/keyboard proof passes. Source frozen except necessary review fixes. Next wave proposal: per-instance Librarian sessions and identity-safe shared listening queues; hold implementation until release.
 
-## Delivered second increment and current third increment
+## Interfaces and verification
 
-`47eb263` pushed with 418/418 tests passing. Review https://6adfb27e5b4039d3bfa95aa6--hole-os-armonon.netlify.app has all 288 files matched; `docs/evidence/review-47eb263.json`. Includes Glyph/Form/ScenePilot native bounded editors, reading/listening, packages, Smart/Crew, Photos/Locker and semantic zoom. Actual shell checks passed. Production unchanged.
+Portfolio scripts: vendor/portfolio/engine.js → portfolio.js → portfolio-editor.js. `HolePortfolio.mount(host,{core,projectId,inputs,onOpen})` returns `open(assetId,versionId)` and awaited `dispose()`. Exact version is readonly; omitted version allows explicit draft recovery/edit. Root awaits dispose before render/navigation/close and preserves editor on rejection.
 
-`79b8656` is pushed (433/433 tests). Third increment: portable StemDeck v2–6 with retained embedded audio and real instrument C4 WAV audition; original experimental tempo Action with ambiguity/coverage report; public form schema publication/guest submission/owner export/revocation; bounded local static GLB geometry preview. Full suite 433/433 passes; build and browser qualification passed; review delivery remains the named47eb263 deployment above. Three.js MIT engine is local, no URLs/textures/extension loaders. GLB cardinality/cycle admission and concurrent-open cleanup hardened after independent review. Native Sattari GPL analysis was not copied or relicensed; key analysis remains open.
+Moodboard scripts: engine → model → export → drafts → UI. Wrapper handles native `.moodboard`; derived outputs have actual `parentVersionIds`.
 
-## Delivered fourth increment and active fifth increment
+Ghost scripts: `ghost.js` and SDK build copy; `hole.ghost` runtime adapter. Worker response CSP has no network/nested workers; exact frame+nonce compute broker. Root preserves native recovery and layout behavior.
 
-`a59f70a` pushed with444/444 tests and settled build. Review https://6adfb70c0b7b80a132947f74--hole-os-armonon.netlify.app :320files byte-matched and strictcutout-worker CSP header verified; receipt `docs/evidence/review-a59f70a.json`. Includes real cutout/video trim, studio geometry, actual100/200/400% zoom fix and current-content/live-draft-preserving arrangement restore. Production unchanged.
+Day/Paperwork use separate runtime instances over Core, owned-dialog close/checkpoint guards, keyboard window geometry, explicit refresh and minimized resume. Arrangement restore retains runtime IDs and never rolls back content. Actual browser test includes repeated restore, current task retention and 320px bounds. An opening-runtime snapshot race prompted explicit `INSTANCE_NOT_READY` guards and a regression; final run pending.
 
-Fifth increment in progress: local explicit model cache, real four-stem separation (172MiB optional verified model outsideGit), Whisper tiny.en transcription (twooptionalfiles~39MiB outsideGit), editable captions/draftrecovery and actualofflineAtlasmap/sharedtrip imports. Stem actualbuiltUI+strictCSP+four WAVs/original/lineage/reload/cancel passed17.827seconds. Whisper realspokenfixture inference passes; nativecaption edit/save/reopen/draftrecovery and pinned-original preservation passed. Atlas two-profile actualbrowsermap/export/import passes; actual service-worker offline reload passed. Do not commit upcomingexperimentalkey work into this boundary. Model weights for QA are in `/tmp/hole-stems-qa` and `/tmp/hole-transcription-models`; do not addthemtoGit.
+Full suite before latest recovery/review fixes: 504 tests pass. Existing Carry→Flow→pinned Publish/reload plus 320px reduced-motion browser journey passes; 200-indexed/30-visible Universe mount measured 78.1ms on this run (Chrome156.0.8078.48). Do not treat prior counts as final after source changes.
 
-## Ownership and active work
+## Exact next steps
 
-- Coordinator: shell/build integration, `continuity.js`, Carry, History diff, cross-Space project placements, Search, arrangement restore, Universe lazy previews, release verification and this checkpoint.
-- Luma worker: transcription/captions runtime, cue persistence/validation, actual spoken Action/UI proof; no build or commits.
-- Flow worker: generic verified model cache/stems/Actions ready; original non-GPL key estimator implementation in new audio-key modules; exclude from fifth release.
-- Relay worker: Atlas complete for bounded scope; next explicit selected-layout Relay transfer in isolated relay-layout module; existing community source gates remain explicit.
+1. Finish Moodboard draft and Ghost resource-bound fixes; independently check actual tests/evidence. Finish `verify-tool-windows-browser.mjs` after opening-state fix.
+2. Freeze source, serial build, full `npm test`, then affected generated browser journeys. No dev watcher. Static test server is loopback5193.
+3. Update backlog/release/compatibility records with exact acceptance and limits; commit/push coherent eighth increment. Deploy only public to review site, verify every deployed byte and new worker CSP, update existing PR. Do not promote production.
+4. Continue required available implementation after release: native creation/full retained-tool parity and independent canonical app sessions, format/error/accessibility/continuity matrix. A release is a checkpoint, not completion.
 
+## Genuine external gates
 
-All workers share this checkout. They do not commit, push, rebuild public output, or overwrite coordinator-owned files. Never reset uncommitted work.
-
-## New interfaces
-
-- `HoleFlowUI.mount(container, {recipe, inputs, projectId, onOpen, onCarry, onPublish})` and `mountRun` receive explicit version references. Mounted from Actions and Carry.
-- `HoleLuma.create({core}).mount(instance, root)` is registered as `hole.luma`. Persistent workspace host survives navigation. SDK scripts are copied into assets by the build.
-- `HoleContinuityModel.textDiff` performs bounded line comparison; `resolveCarry` refuses revoked/trashed resources and reads the selected immutable version.
-- `HoleWelcome.applyPreferences` validates and durably writes the whitelisted local preference subset before applying it; Relay can restore that subset.
-- Workspace snapshot schema 2 includes serialized runtime instances. Restoring retains newer material/content, restores supported app geometry, and reopens supported current resources without autoplay. Unsupported adapters are reported.
-
-## Verification so far
-
-- Latest integrated full suite: 456 passing tests, zero failures (`npm test`, ephemeral log `/tmp/hole-full-tests.log`). Final source changes are rechecked before commit.
-- Carry/diff + existing Core regression suite: 20 passing.
-- Universe existing regression suite after lazy-preview/visible-holder changes: 12 passing. Actual Chrome 200-item mount measured 33–40ms on Apple M4; <=30 spatial holders and list access to all 200 passed.
-- Flow worker: actual PNG dimensions, archive CRC and original audio equality; two-step author/review/run/reopen; cancellation/retry recovery tested.
-- Relay worker: actual Chrome two disposable profiles, offline queue close/reopen, conflict resolution and mounted controls; runnable `scripts/verify-relay-browser.mjs`.
-- Day/Browser worker: actual Chrome event create/delete/reload/restore and query/Trail/export; runnable `tests/verify-everyday-browser.mjs`.
-- Coordinator browser script `scripts/verify-continuity-browser.mjs` passed, including actual Carry → Flow → pinned Publish export and 320px reduced-motion no-overflow.
-- Luma isolated engine and actual built-shell desktop journeys passed; mounted phone layout inspected. Full Luma tool parity remains open.
-
-## Exact continuation
-
-1. Finish current real-browser checks and resolve actual failures; do not replace browser checks with model claims.
-2. Inspect workers' final diffs and evidence, integrate optional memory hook, update acceptance ledger accurately.
-3. Pause source edits briefly, run full `npm test`, `npm run build`, and source/build browser checks. No dev watcher may race the release build.
-4. Commit coherent tested increments and push this branch; update existing PR #1. Deploy only a review target after validating configured site identity and byte manifest. Preserve prior production URL.
-5. Continue remaining backlog independently: retained studios/parity, media engines, semantic zoom, Smart Screen/Crew, sharing, format matrices, isolation and performance. Do not stop at the first push.
-
-## Genuine external qualification gates
-
-These are still gates, not excuses to skip independent implementation: real human research participants, physical touch/audio/mic/assistive-technology hardware qualification, independent security review and key-lifecycle design before Vault credential storage, real authorized NOW/Circle providers/source discovery, and production Node service hosting/TLS/operations. No paid services, public customer data, invented outcomes or implied browser native AU/VST support.
-
-Fifth release boundary:456/456 tests; optional-model/caption/Atlas browser checks pass. Next key/Relay source is separate and must not leak into this generated build.
-
-## Fifth delivered; sixth in progress
-
-`fe528a4` pushed:456 passing tests; review https://6adfb9fa6416f81d7f1bc297--hole-os-armonon.netlify.app has364/364 exact files and verified speech/stem worker CSP (`docs/evidence/review-fe528a4.json`). PR1 updated. Production remains unchanged.
-
-Sixth work: original experimental key Action (real WAV/UI/cancel proof), on-demand bounded text/history/draft search (real pinned/current/draft navigation proof), explicit mapped material-position Relay exchange (two profiles/conflict/apply/undo proof; independent review found mutable-plan metadata issue, fix/regression pending). Root owns search/shell/docs; Flow key files frozen; Relay owns relay-layout and one relay.js mount. Latest broad run471tests passes before reviewer regression. Do not call this release settled until fix and final build pass.
-
-Seventh preparation: Luma worker inspecting retained owned Animate source at a189bc074f0c1c306d1029414d0c73d45f0a1b52 in /tmp/hole-animate-source; selected engine bundling/native cel editor/ScenePilot transfer approved, generated source temporarily held outside checkout through sixth release. No licensing assertion beyond source ownership; no third-party codecs copied. Keep native .animate and original route; actual frame/image .cut transfer must prove real compositor semantics and atomic lineage.
-
-Sixth validation update:472/472 tests; latest generated build includes key, search, Relay layout. Search actualbrowser passes on Chrome156.0.8078.48. Relay mutable-plan finding fixed by rebuilding metadata from fresh revision-checked Core,5 focused tests pass; final integrated browser rerun pending worker confirmation. Flow now researching bounded WebLab script execution (proposal only); Animate generation remains outside checkout until sixth commit. Existing public output must stay sixth-only.
-
-Sixth settled:473/473 tests and serial build pass. Key/search actualbrowser pass; sealed Relay review plan six regressions and actual integrated shell plus two-profile HTTP conflict/undo journey pass. Harness uses permitted free loopback8787; shell CSP unchanged. Ready coherent push, then allow Animate and QuickJS worker files into next build.
-
-
-## Seventh settled / next wave
-
-Sixth `be71f56` pushed and368reviewfiles byte-verified at https://6adfbc47c36db762a5536220--hole-os-armonon.netlify.app (`review-be71f56.json`). Seventh settled489tests+build: Animate native engine/editor/shellcreation/realScenePilot cut outputs; explicitstudio recovery with old-baseconflict preservation; bounded QuickJS worker console and no auto browser-script execution; native object packages; actual simultaneousLuma/Glyph four-view matrix. All new evidence in release qualification and dedicated records. Production unchanged.
-
-Next independent work: Relay worker implements Moodboard editor/native exports plus actual layered Luma conversion in /tmp (hold source copy until seventh committed); Luma worker inspects Ghost→Form native consolidation; Flow runner frozen pending next assignment. Root owns shell/build/recovery/qualification. No broad product completion claim: full studios/parity/canonical-instance matrix, authorized community providers/production operations and physical/human/security gates remain.
+Original NOW/Circle/Sessions source/contracts and authorized providers remain unavailable; preserve existing routes without fabricated connection. Production Node hosting/TLS/operations, physical touch/audio/mic/assistive technology, Safari remote-automation availability, real human participants and independent Vault threat/key/recovery/security review remain specific gates. They do not excuse independent local implementation. No paid services, automatic publication/messages, personal data removal, merge or production promotion is authorized by this continuation.

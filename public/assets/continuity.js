@@ -11,7 +11,8 @@
   const date = at => new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const kindIcon = a => ({ text: 'file-text', image: 'image', audio: 'audio-lines', video: 'film', link: 'link' }[a.kind] || 'file');
   let navigation = { scope: 'WORLD', spaceId: 'desk', projectId: null, assetId: null, view: 'projects', presentation: 'flat' };
-  let renderQueue=Promise.resolve();
+  let renderQueue=Promise.resolve(), portfolioSession=null;
+  async function leavePortfolio(){if(portfolioSession){await portfolioSession.dispose();portfolioSession=null;}}
   let navRecord, renderEpoch = 0, urls = [], editor = null, navigationQueue = Promise.resolve(), persistQueue = Promise.resolve(), toastTimer, lastFocus, restored = false, modalClosing = Promise.resolve(), renderRequested = false, projectNames = new Map();
   const surface = el('section', 'hc-workspace'); surface.hidden = true; surface.setAttribute('aria-label', 'Your Hole workspace');
   const header = el('header', 'hc-header'); const brand = el('div', 'hc-wordmark'); brand.append(el('span', 'hc-emblem', '◎'), el('span', '', 'Make yourself at home.'));
@@ -55,7 +56,7 @@
   function path(next = navigation) { return '#/work/' + [next.view, next.spaceId || '-', next.projectId || '-', next.assetId || '-'].map(encodeURIComponent).join('/'); }
   function navigate(next, options = {}) { navigationQueue = navigationQueue.catch(() => {}).then(() => performNavigation(next, options)); return navigationQueue; }
   async function performNavigation(next, options = {}) {
-    await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
+    await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
     if (editor && !await finishEditing()) return false;
     if (next.projectId) {
       const project = await C.get('projects', next.projectId);
@@ -74,8 +75,8 @@
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     await navigate({ view, ...next });
   }
-  async function close() { await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
-  function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); row.append(tools); main.append(row); }
+  async function close() { await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
+  function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if(['day','paperwork'].includes(navigation.view)&&window.HoleToolWindows)tools.append(button('Open '+(navigation.view==='day'?'Day':'Paperwork')+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
   function modal(name, description) { const d = el('dialog', 'hc-dialog'); d.setAttribute('aria-label', name); d.append(el('h2', '', name)); if (description) d.append(el('p', '', description)); const origin = document.activeElement; H.os.append(d); const nativeClose = d.close.bind(d); let finishClose; d.close = (...args) => { if (d.open) modalClosing = new Promise(resolve => { finishClose = resolve; }); nativeClose(...args); }; d.addEventListener('close', () => { setTimeout(() => { d.remove(); if (origin?.isConnected) origin.focus({ preventScroll: true }); finishClose?.(); if (renderRequested) { renderRequested = false; render().catch(fail); } }, 0); }); d.addEventListener('keydown', e => e.stopPropagation()); d.showModal(); return d; }
@@ -84,7 +85,7 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
-    await window.HoleExtensions?.beforeLeave?.();
+    await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.();
     const epoch = ++renderEpoch; await window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
@@ -187,16 +188,24 @@
     if (asset.mime === 'image/png' || /\.luma$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Luma' : 'Open in Luma', 'palette', () => openLuma(record), 'hc-primary'));
     if (/\.(glyph(?:\.json)?|lumaglyph\.json)$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Glyph' : 'Open in Glyph','type',()=>openStudio(record,{},'hole.glyph'),'hc-primary'));
     if (record.blob.type==='application/vnd.hole.captions+json' || /\.captions\.json$/i.test(asset.name)) actions.append(button(pinned?'Edit latest captions':'Review captions','captions',async()=>HoleCaptionEditor.open(await C.readAsset(asset.id),context()),'hc-primary'));
+    if (/\.portfolio$/i.test(asset.name)) actions.append(button('Open in Publish Portfolio','layout-template',()=>open('publish',{assetId:asset.id,versionId:pinned?record.version.id:null,placementId:null}),'hc-primary'));
     if (/\.animate$/i.test(asset.name)) actions.append(button('Open in ScenePilot Animation','clapperboard',()=>openStudio(record,{},'hole.animate'),'hc-primary'));
     if (/\.sattari$/i.test(asset.name)) actions.append(button('Open in StemDeck','audio-lines',()=>openStudio(record,{},'hole.stemdeck'),'hc-primary'));
     if (/\.glb$/i.test(asset.name)) actions.append(button('Preview 3D geometry','box',()=>HoleModelPreview.open(record,context())));
+    if (/\.ghost$/i.test(asset.name)) actions.append(button('Open in Form Garment','shirt',()=>openStudio(record,{},'hole.ghost'),'hc-primary'));
     if (/\.form$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Form' : 'Open in Form','box',()=>openStudio(record,{},'hole.form'),'hc-primary'));
     if (/\.(cut|scenepilot\.json)$/i.test(asset.name)) actions.append(button('Open in ScenePilot','film',()=>linkScenePilot(record),'hc-primary'));
     actions.append(button('Carry', 'archive', () => addCarry(asset)), button('History', 'history', () => open('history', { assetId: asset.id })), button('Export', 'download', () => download(record.blob, asset.name))); main.append(actions);
-    const drafts = (await C.list('drafts')).filter(d => d.assetId === asset.id); if (drafts.length) { const note = el('div', 'hc-note', 'A durable draft is waiting. The committed version above has not changed.'); note.append(button('Recover draft', 'pencil', async () => drafts.some(d=>d.editor==='captions')?HoleCaptionEditor.open(await C.readAsset(asset.id),context()):editText(record))); main.append(note); }
+    const drafts = (await C.list('drafts')).filter(d => d.assetId === asset.id); if (drafts.length) { const note = el('div', 'hc-note', 'A durable draft is waiting. The committed version above has not changed.'); note.append(button('Recover draft', 'pencil', async () => /\.portfolio$/i.test(asset.name)?open('publish',{assetId:asset.id,versionId:null,placementId:null}):drafts.some(d=>d.editor==='captions')?HoleCaptionEditor.open(await C.readAsset(asset.id),context()):editText(record))); main.append(note); }
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
   const studios = new Map();
+  async function openToolWindow(view,restore={}) {
+    const label=view==='day'?'Day':'Paperwork',host=el('section','hc-studio-host');host.setAttribute('aria-label',label+' independent window');const controls=el('div','hc-row'),root=el('div','hc-studio-content');host.append(controls,root);H.os.append(host);let instance;
+    try{instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});await HoleRuntime.checkpoint(instance.id);studios.set(instance.id,{host,name:label+' window',instanceId:instance.id});controls.append(el('strong','',label),button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())),button('Minimize '+label,'minimize-2',async()=>{await HoleRuntime.checkpoint(instance.id);await HoleRuntime.present(instance.id,'minimized');}),button('Close '+label+' window','x',async()=>{await HoleRuntime.close(instance.id);studios.delete(instance.id);host.remove();}));H.icons();}catch(error){if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove();throw error;}
+    return instance;
+  }
+  if(window.HoleToolWindows)for(const view of ['day','paperwork'])HoleRuntime.register('hole.tool.'+view,HoleStudioWindow.wrap(HoleToolWindows.create({view,context})));
   async function showStudios() { const d = modal('Running studios', 'Editors keep their state while you move through your workspace.'); for (const entry of studios.values()) d.append(button(entry.name, 'palette', async () => { d.close(); await HoleRuntime.present(entry.instanceId,'window'); entry.host.querySelector('button')?.focus(); })); if (!studios.size) d.append(el('p', '', 'Open a PNG or Luma project, then choose Open in Luma.')); d.append(button('Close', 'x', () => d.close())); }
   async function linkScenePilot(record) {
     if (record.blob.size > 32*1024*1024) throw new Error('Connected cuts must fit within 32 MiB.');
@@ -214,8 +223,8 @@
   }
   async function openLuma(record,restore={}) { return openStudio(record,restore,'hole.luma'); }
   async function openStudio(record, restore = {}, appId = 'hole.luma') {
-    const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck','hole.animate':'ScenePilot Animation'})[appId] || 'Luma';
-    if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot','hole.stemdeck':'HoleStemDeck','hole.animate':'HoleAnimate'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
+    const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck','hole.ghost':'Form Garment','hole.animate':'ScenePilot Animation'})[appId] || 'Luma';
+    if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot','hole.stemdeck':'HoleStemDeck','hole.ghost':'HoleGhost','hole.animate':'HoleAnimate'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
     const key = appId + ':' + record.asset.id + ':' + record.version.id, existing = studios.get(key);
     if (existing) { await HoleRuntime.present(existing.instanceId,'window'); return; }
     if(!restore.skipRecovery&&!restore.instanceId&&!restore.editorState){
@@ -235,6 +244,7 @@
   if (window.HoleGlyph) HoleRuntime.register('hole.glyph', HoleStudioWindow.wrap(HoleGlyph.create({ core:C })));
   if (window.HoleStemDeck) HoleRuntime.register('hole.stemdeck',HoleStudioWindow.wrap(HoleStemDeck.create({core:C})));
   if (window.HoleScenePilot) HoleRuntime.register('hole.scenepilot', HoleStudioWindow.wrap(HoleScenePilot.create({core:C})));
+  if (window.HoleGhost) HoleRuntime.register('hole.ghost',HoleStudioWindow.wrap(HoleGhost.create({core:C})));
   if (window.HoleAnimate) HoleRuntime.register('hole.animate',HoleStudioWindow.wrap(HoleAnimate.create({core:C})));
   if (window.HoleForm) HoleRuntime.register('hole.form', HoleStudioWindow.wrap(HoleForm.create({core:C})));
   async function editText(record) {
@@ -323,10 +333,20 @@
       if (['x','y','w','h'].every(key => Number.isFinite(saved[key]))) { rec.holeGeometry = { x:saved.x,y:saved.y,w:saved.w,h:saved.h }; window.HoleWindows?.sizeWindow(rec); }
     }
     for (const saved of snap.runtime || []) {
+      if (['hole.tool.day','hole.tool.paperwork'].includes(saved.appId)) {
+        try {
+          let instance=HoleRuntime.get(saved.id);
+          if(!instance)instance=await openToolWindow(saved.appId.slice('hole.tool.'.length),{instanceId:saved.id,projectId:saved.context?.projectId,editorState:{hostGeometry:saved.editorState?.hostGeometry}});
+          const entry=studios.get(instance.id);
+          if(entry&&saved.editorState?.hostGeometry)HoleStudioWindow.apply(entry.host,saved.editorState.hostGeometry);
+          await HoleRuntime.present(instance.id,saved.presentation==='minimized'?'minimized':'window');
+        } catch(error){unavailable.push(saved.appId+': '+error.message);}
+        continue;
+      }
       if (!saved.context?.assetId) continue;
       try {
         const current = await C.readAsset(saved.context.assetId); if (current.asset.state !== 'active') throw new Error('In Trash');
-        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot','hole.stemdeck','hole.animate'].includes(saved.appId)) {
+        if (['hole.luma','hole.glyph','hole.form','hole.scenepilot','hole.stemdeck','hole.animate','hole.ghost'].includes(saved.appId)) {
           // Arrangements restore views. Existing editors and historical recovery have separate lifetimes.
           const candidates = HoleRuntime.list().filter(instance => instance.appId === saved.appId && instance.context.assetId === current.asset.id && instance.status === 'running');
           let instance = candidates.find(instance => instance.id === saved.id) || candidates[0];
@@ -418,7 +438,26 @@
     d.addEventListener('input', () => { run.disabled = true; request = null; }); d.addEventListener('change', () => { run.disabled = true; request = null; });
     d.append(button('Preview outputs', 'scan', async () => { const r = await C.readAsset(select.value); request = { inputs: [{ assetId: r.asset.id, versionId: r.version.id }], projectId: navigation.projectId, parameters: { focalPoint: { x: Number(fx.input.value), y: Number(fy.input.value) }, allowUpscale: upscale.checked, format: 'png' } }; const preview = await HoleActions.preview('release.asset-pack', request); await paintOutputPreview(previewArea, r.blob, preview); feedback.textContent = (preview.warnings || []).join(' ') || 'Framing approved for all three sizes. Originals are retained.'; run.disabled = !!preview.requiresUpscaleConsent && !upscale.checked; }), run, button('Close', 'x', () => d.close())); H.icons();
   }
-  async function renderPublish() { title('PUBLISH', 'Ready when you are.', 'Prepare selected versions for export. A local package is not a public publication.', [button('Prepare a release pack', 'package', releaseDialog, 'hc-primary')]); if (navigation.assetId && navigation.versionId) { const selected = await C.readAsset(navigation.assetId,navigation.versionId); const selectedArea = section('Selected Flow output'); selectedArea.append(el('p','',selected.asset.name+' · approved version '+selected.version.id),button('Export selected version','download',()=>download(selected.blob,selected.asset.name))); if (selected.version.mime.startsWith('image/')) { const img=el('img','hc-media');img.alt=selected.asset.name;img.src=objectURL(selected.blob);selectedArea.append(img); } } const grid = el('div', 'hc-grid'); for (const a of (await C.list('assets')).filter(a => a.state === 'active' && (a.mime === 'application/zip' || a.provenance?.actionId === 'release.asset-pack'))) grid.append(await card(a)); main.append(grid); if (!grid.children.length) main.append(empty('Your exported collections will live here.')); main.append(el('div', 'hc-note', 'Public Worlds and hosted publishing require the authorized sharing service. Files stay private until you deliberately export or publish them.')); }
+  async function renderPublish() {
+    const selected = navigation.assetId ? await C.readAsset(navigation.assetId,navigation.versionId || undefined) : null;
+    const selectedPortfolio = selected && /\.portfolio$/i.test(selected.asset.name);
+    title('PUBLISH', 'Ready when you are.', 'Prepare selected versions for export. A local package is not a public publication.', [button('Prepare a release pack', 'package', releaseDialog, 'hc-primary')]);
+    if (selected && navigation.versionId) {
+      const selectedArea = section(selectedPortfolio ? 'Selected portfolio version' : 'Selected Flow output');
+      selectedArea.append(el('p','',selected.asset.name+' · approved version '+selected.version.id),button('Export selected version','download',()=>download(selected.blob,selected.asset.name)));
+      if (selected.version.mime.startsWith('image/')) { const img=el('img','hc-media');img.alt=selected.asset.name;img.src=objectURL(selected.blob);selectedArea.append(img); }
+    }
+    const supportedMedia = ['image/png','image/jpeg','image/webp','image/gif','video/mp4','video/webm'];
+    const inputs = selected && navigation.versionId && supportedMedia.includes(selected.version.mime) ? [{assetId:selected.asset.id,versionId:selected.version.id}] : [];
+    portfolioSession=await HolePortfolio.mount(section('Portfolio websites'),{core:C,projectId:navigation.projectId,inputs,onOpen:ref=>open('projects',{...ref,placementId:null})});
+    if(selectedPortfolio)await portfolioSession.open(selected.asset.id,navigation.versionId);
+    const grid = el('div', 'hc-grid');
+    for (const a of (await C.list('assets')).filter(a => a.state === 'active' && (a.mime === 'application/zip' || a.provenance?.actionId === 'release.asset-pack'))) grid.append(await card(a));
+    main.append(grid);
+    if (!grid.children.length) main.append(empty('Your exported collections will live here.'));
+    main.append(el('div', 'hc-note', 'Public Worlds and hosted publishing require the authorized sharing service. Files stay private until you deliberately export or publish them.'));
+  }
+
   async function renderStorage() {
     title('STORAGE & RECOVERY', 'Keep your world safe.', 'A full backup contains your private files, drafts, versions, projects, and arrangements. Setup exports remain layout-only.');
     const estimate = await navigator.storage?.estimate?.(); if (estimate) main.append(el('p', 'hc-subtitle', `Browser storage: ${(estimate.usage / 1048576).toFixed(1)} MB used of approximately ${(estimate.quota / 1048576).toFixed(0)} MB available.`));
