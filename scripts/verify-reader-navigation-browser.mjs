@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {chromium} from '/Users/lillypad/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs';
+const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+try {
+ const page=await browser.newPage({serviceWorkers:'block'}), errors=[];page.on('pageerror',e=>errors.push(e.message));
+ if(process.env.HOLE_READER_SOURCE==='1')for(const name of ['continuity.js','libraries.js','portfolio-editor.js','press-kit.js'])await page.route('**/assets/'+name,async r=>r.fulfill({contentType:'text/javascript',body:await readFile(new URL('../src/'+name,import.meta.url),'utf8')}));
+ await page.goto(process.env.HOLE_URL||'http://127.0.0.1:5193');await page.waitForFunction(()=>window.HoleContinuity);
+ const ref=await page.evaluate(async()=>{await HoleCore.ready;const r=await HoleCore.importAsset({name:'Navigation reader.txt',blob:new Blob(['Retained exact reader'],{type:'text/plain'})});await HoleContinuity.open('librarian',{assetId:r.asset.id,versionId:r.version.id});return{assetId:r.asset.id,versionId:r.version.id};});
+ const note=page.locator('.hc-reader-session textarea');await note.fill('Before refused navigation');
+ await page.evaluate(()=>{window.readerPut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(v,...args){if(v?.type==='settings'&&v.record?.id==='navigation')throw new DOMException('Navigation checkpoint refused','QuotaExceededError');return readerPut.call(this,v,...args);};});
+ assert.equal(await page.evaluate(async()=>{try{await HoleContinuity.open('projects',{assetId:null});return false;}catch(e){return e.message.includes('Navigation checkpoint refused');}}),true);
+ assert.equal(await note.count(),1,'A refused navigation must retain the reader');assert.equal(await note.isEditable(),true);
+ await note.fill('After refused navigation');await page.getByRole('button',{name:'Retry reading save',exact:true}).click();
+ await page.evaluate(()=>IDBObjectStore.prototype.put=readerPut);
+ await page.evaluate(()=>HoleContinuity.open('projects',{assetId:null}));await page.evaluate(ref=>HoleContinuity.open('librarian',ref),ref);
+ assert.equal(await note.inputValue(),'After refused navigation');
+ await page.evaluate(()=>HoleContinuity.open('publish',{assetId:null,versionId:null}));
+ await page.getByRole('button',{name:'Create blank portfolio',exact:true}).click();
+ const artist=page.getByLabel('Portfolio artist name',{exact:true}),bio=page.getByLabel('Short bio',{exact:true});
+ await artist.fill('Before navigation');await bio.fill('Press before navigation');
+ await page.evaluate(()=>{IDBObjectStore.prototype.put=function(v,...args){if(v?.type==='settings'&&v.record?.id==='navigation')throw new DOMException('Navigation checkpoint refused','QuotaExceededError');return readerPut.call(this,v,...args);};});
+ assert.equal(await page.evaluate(async()=>{try{await HoleContinuity.open('projects',{assetId:null});return false;}catch{return true;}}),true);
+ assert.equal(await artist.count(),1,'Refused navigation must retain portfolio');assert.equal(await bio.isEditable(),true);
+ await artist.fill('Portfolio after refusal');await bio.fill('Press after refusal');
+ await page.evaluate(()=>IDBObjectStore.prototype.put=readerPut);
+ await page.evaluate(()=>HoleContinuity.open('projects',{assetId:null}));await page.evaluate(()=>HoleContinuity.open('publish',{assetId:null,versionId:null}));
+ assert.equal(await bio.inputValue(),'Press after refusal');
+ await page.getByRole('button',{name:/^Edit .*portfolio/i}).first().click();assert.equal(await artist.inputValue(),'Portfolio after refusal');assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({browser:browser.version(),sourceOverride:process.env.HOLE_READER_SOURCE==='1',passed:['failed navigation retains editable reader','subsequent note is durable after leave/reopen','refused navigation retains editable Portfolio and press kit','subsequent Portfolio and press-kit edits reopen durably'],pageErrors:errors}));
+}finally{await browser.close();}

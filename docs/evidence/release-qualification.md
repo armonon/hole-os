@@ -1,8 +1,14 @@
 # Current continuation qualification
 
-Latest pushed implementation: `506526e` (591 passing tests, then22 affected lifecycle tests after the final close fix). Latest byte-verified review: [420-file review](https://6ae1f48498c44683a3ac6a2f--hole-os-armonon.netlify.app), receipt `review-506526e.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `fd8c241` (616 full tests plus 49 final affected tests). Latest byte-verified review: [421-file review](https://6ae1fdbf12f8ebe8698b26a1--hole-os-armonon.netlify.app), receipt `review-fd8c241.json`. Production unchanged; master brief incomplete.
 
-## Fourteenth increment — 28 October 2026 (integration; not yet delivered)
+## Fifteenth increment — 28 October 2026 (integration)
+
+640 full tests pass. Final generated-browser checks pass for native Form seam bind/disable/remove/Undo and real DXF notches, Luma six-parameter tone with unchanged original raster bytes, native Bounce library exact-source mapping and metadata retention, and reader/Publish/WebLab/Tongue navigation refusal recovery. Independent reviews pass. Evidence: `form-seams.md`, `luma-tone.md`, `bounce-library.md`, `navigation-refusal.md`.
+
+Independent review reproduced and repaired a listening-window lifecycle seam: catalog editing is now restricted to the shared workspace, and closing blocks checkpoint-triggered redraws. Eighteen affected tests and final rebuilt Bounce/window browser checks pass; independent review confirms failed-close recovery and no delayed opens or redraws. Increment is qualified locally, awaiting commit/push/review verification. No full studio, physical device or production claim.
+
+## Fourteenth increment — 28 October 2026 (delivered)
 
 Combined616tests and serial build pass. Native Luma rectangles/ellipses use retained geometry/fill/stroke editing with actual pixel, sparse-field, Undo and native reopen checks. Completed brush strokes survive recovery refusal; unfinished gestures are retained on blur and explicit close refusal. Generated-browser qualification passes; full paths, masks and transformed painting remain separate. See `luma-shapes.md`.
 

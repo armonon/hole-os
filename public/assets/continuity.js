@@ -12,7 +12,9 @@
   const kindIcon = a => ({ text: 'file-text', image: 'image', audio: 'audio-lines', video: 'film', link: 'link' }[a.kind] || 'file');
   let navigation = { scope: 'WORLD', spaceId: 'desk', projectId: null, assetId: null, view: 'projects', presentation: 'flat' };
   let renderQueue=Promise.resolve(), portfolioSession=null, pressKitSession=null;
-  async function leavePublish(){await pressKitSession?.beforeLeave();if(portfolioSession){await portfolioSession.dispose();portfolioSession=null;}if(pressKitSession){await pressKitSession.dispose();pressKitSession=null;}}
+  async function leavePublish(){await pressKitSession?.beforeLeave();await portfolioSession?.beforeLeave();}
+  function cancelPublishLeave(){pressKitSession?.cancelLeave();portfolioSession?.cancelLeave();}
+  async function disposePublish(){if(portfolioSession){await portfolioSession.dispose();portfolioSession=null;}if(pressKitSession){await pressKitSession.dispose();pressKitSession=null;}}
   let navRecord, renderEpoch = 0, urls = [], editor = null, navigationQueue = Promise.resolve(), persistQueue = Promise.resolve(), toastTimer, lastFocus, restored = false, modalClosing = Promise.resolve(), renderRequested = false, projectNames = new Map();
   const surface = el('section', 'hc-workspace'); surface.hidden = true; surface.setAttribute('aria-label', 'Your Hole workspace');
   const header = el('header', 'hc-header'); const brand = el('div', 'hc-wordmark'); brand.append(el('span', 'hc-emblem', '◎'), el('span', '', 'Make yourself at home.'));
@@ -57,8 +59,8 @@
   function navigate(next, options = {}) { navigationQueue = navigationQueue.catch(() => {}).then(() => performNavigation(next, options)); return navigationQueue; }
   async function performNavigation(next, options = {}) {
     try {
-      await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
-      if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); return false; }
+      await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.prepareLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
+      if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); return false; }
       if (next.projectId) {
         const project = await C.get('projects', next.projectId);
         if (project) {
@@ -70,14 +72,14 @@
       await persistNavigation(candidate); navigation = candidate;
       if (!options.fromHistory && location.hash !== path()) history.pushState({ hole: true, navigation: { ...navigation } }, '', path());
       await render(); return true;
-    } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; }
+    } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; }
   }
   async function open(view = 'projects', next = {}) {
     await C.ready; window.HoleWelcome?.close(); window.HoleWelcome?.closeControls(); window.HoleWelcome?.closeAbout(); H.closeDrawer({ restoreFocus: false });
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     await navigate({ view, ...next });
   }
-  async function close() { try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); return; } await window.HoleLibraryCollections?.dispose?.(); surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; } }
+  async function close() { try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); return; } await disposePublish(); await window.HoleLibraryCollections?.dispose?.(); await window.HoleBounceLibrary?.dispose?.(); await window.HoleLibraries?.dispose?.(); surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; } }
   function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if((['day','paperwork','bounce'].includes(navigation.view)||navigation.view==='librarian'&&navigation.assetId)&&window.HoleToolWindows)tools.append(button('Open '+({day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[navigation.view])+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
@@ -87,8 +89,8 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
-    try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); await window.HoleSpatial?.unmount(); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); throw error; }
-    const epoch = ++renderEpoch; await window.HoleLibraryCollections?.dispose?.(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
+    try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); await window.HoleSpatial?.unmount(); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; }
+    const epoch = ++renderEpoch; await disposePublish(); await window.HoleLibraryCollections?.dispose?.(); await window.HoleBounceLibrary?.dispose?.(); await window.HoleLibraries?.dispose?.(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
       if (navigation.assetId && navigation.view === 'projects') await renderObject(epoch);
@@ -182,6 +184,7 @@
     title(pinned ? 'PINNED VERSION' : 'LIVE OBJECT', asset.name, `Same asset across your spaces · ${date(record.version.createdAt)}`, [button('Further out', 'arrow-left', () => navigate({ assetId: null, scope: 'PROJECT' })), button('Quick Tools', 'ellipsis', () => quickTools(asset, placement, record.version.id))]);
     if (pinned) main.append(el('div', 'hc-history-label', 'This placement is pinned. Editing elsewhere will not change this approved version.'));
     if (await window.HoleLibraryCollections?.openAsset?.(record, context())) return;
+    if (await window.HoleBounceLibrary?.openAsset?.(record, context())) return;
     const pinnedNativePreview=/\.moodboard$/i.test(asset.name)&&record.version.mime==='application/json'||record.version.mime==='application/vnd.hole.object+json';
     if ((!pinned||pinnedNativePreview) && await window.HoleExtensions?.openAsset?.({...record,asset:{...record.asset,mime:record.version.mime}}, context())) return;
     const actions = el('div', 'hc-row');

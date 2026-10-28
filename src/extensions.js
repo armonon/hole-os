@@ -7,6 +7,7 @@
   const uid = () => crypto.randomUUID();
   const views = [['create','Create','blocks'],['weblab','WebLab','code-2'],['lab','Lab','flask-conical'],['crew','Crew','workflow'],['momentous','Momentous','package']];
   const jsonBlob = (value, type) => new Blob([JSON.stringify(value, null, 2)], { type: type || 'application/json' });
+  async function prepareLeave() { if (activeDraft) await activeDraft.flush(); for (const session of [...toolSessions]) await session.flush(); }
   async function beforeLeave() { if (activeDraft) await activeDraft.flush(); for (const session of [...toolSessions]) await session.dispose(); await dispose?.(); dispose = null; activeDraft = null; }
   async function draftController(record, read, ctx) {
     const prior = (await ctx.C.list('drafts')).filter(d => d.assetId === record.asset.id).sort((a,b)=>b.updatedAt-a.updatedAt)[0];
@@ -151,5 +152,5 @@
     for(const p of await ctx.C.list('packages')){const card=ctx.el('div','hc-note');card.append(ctx.el('h2','',p.manifest.name),ctx.el('p','',`Installed v${p.manifest.version} · no resource grants`),ctx.button('Open tool','play',()=>openPackage(p,ctx)),ctx.button('Export manifest','download',()=>ctx.download(jsonBlob(p.manifest),p.id+'.json')));if(p.id==='hole.session-counter'&&p.manifest.version<2)card.append(ctx.button('Update to v2 · step by five','arrow-up',async()=>{await install(builtInPackage(2),ctx);await ctx.render();}));if(p.history.length)card.append(ctx.button('Roll back to previous version','rotate-ccw',async()=>{const latest=await ctx.C.get('packages',p.id);await ctx.put('packages',{...latest,manifest:latest.history.at(-1),history:latest.history.slice(0,-1)});await ctx.render();}));ctx.main.append(card);}ctx.H.icons();
   }
   async function openAsset(record,ctx) {if(['application/json','application/vnd.hole.experiment+json'].includes(record.asset.mime)&&record.blob.size<=2097152){let value;try{value=JSON.parse(await record.blob.text());}catch{}if(value?.schema==='hole.experiment/1'){await labEditor(record,ctx);return true;}}if(record.asset.mime==='application/vnd.hole.tool+json'){await toolEditor(record,ctx);return true;}if(record.asset.mime==='application/vnd.hole.weblab+json'){await webEditor(record,ctx);return true;}return false;}
-  window.HoleExtensions=Object.freeze({render,beforeLeave,openAsset,install,mountTool});
+  window.HoleExtensions=Object.freeze({render,beforeLeave,prepareLeave,openAsset,install,mountTool});
 })();

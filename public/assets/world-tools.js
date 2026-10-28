@@ -147,5 +147,5 @@
     if (!cards.length) ctx.main.append(ctx.empty('Save your first phrase to begin practice.'));
     ctx.main.append(ctx.el('p', 'hc-subtitle', 'Timed practice accepts local transcription captions or SRT with source-provided timing. Automatic conversation/pronunciation assessment is not connected. Phrase-card timing is entered by you; language models and speech voices depend on this browser and device.'), link(ctx, 'Browser translation support', 'https://developer.chrome.com/docs/ai/translator-api'));
   }
-  window.HoleWorldTools = Object.freeze({ async beforeLeave() { await globalThis.HoleTonguePractice?.beforeLeave(); }, async render(view, ctx) { await globalThis.HoleTonguePractice?.beforeLeave(); dispose(); if (view === 'atlas') return atlas(ctx); if (view === 'tongue') return tongue(ctx); throw fail('Unknown world tool.'); }, dispose });
+  window.HoleWorldTools = Object.freeze({ cancelLeave() { globalThis.HoleTonguePractice?.cancelLeave(); }, async beforeLeave() { await globalThis.HoleTonguePractice?.beforeLeave(); }, async render(view, ctx) { await globalThis.HoleTonguePractice?.beforeLeave(); dispose(); if (view === 'atlas') return atlas(ctx); if (view === 'tongue') return tongue(ctx); throw fail('Unknown world tool.'); }, dispose });
 })();
