@@ -15,7 +15,7 @@ Evidence inspected on 2026-10-26. These are existing products to retain, not emp
 
 The last two are separate code paths. `sattari-plugins-suite/apps/sattari-web/assets/modular/modular.js` is a marketing tab controller, not an audio engine. The actual browser studio above is the appropriate starting point for browser session integration.
 
-Bounce, NOW, Circle, Moodboard, Ghost, Animate, Locker and other catalog destinations still require their own source-level parity ledger before merging or replacing their routes. Existing destinations remain available. The bridge inventory separately records Librarian's PDF storage and Portfolio's actual static-site ZIP export hooks. A ZIP export does not establish public publishing.
+Bounded Moodboard→Luma, Ghost→Form, Animate→ScenePilot and Portfolio→Publish integrations retain their original native sources and routes. Their dedicated evidence records qualify named operations, not full retained-product parity. NOW/Circle/Sessions still require missing original source/contracts; Bounce, Locker and other destinations retain the remaining parity gates. Existing destinations remain available. The bridge inventory separately records Librarian's PDF storage and Portfolio's actual static-site ZIP export hooks. A ZIP export does not establish public publishing.
 
 ## Qualified Luma engine round trip
 

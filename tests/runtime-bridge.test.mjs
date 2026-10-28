@@ -256,3 +256,14 @@ test('native recovery checkpoints retain exact bytes as JSON-safe records and re
   assert.equal(f.records.get('settings/bridge-state:instance:1').recovery, null);
   f.bridge.dispose();
 });
+
+
+test('opening instances refuse checkpoints, view changes and close without losing the pending mount', async () => {
+  const gate=pause(), core=fixture().core, runtime=createRuntime({core});
+  runtime.register('test.opening',{async mount(){await gate.promise;return{serialize:()=>({retained:'ready'})};}});
+  const opened=runtime.open('test.opening',{instanceId:'instance:opening'});
+  for(const operation of [()=>runtime.checkpoint('instance:opening'),()=>runtime.present('instance:opening','minimized'),()=>runtime.close('instance:opening',{checkpoint:false})])await assert.rejects(operation,{code:'INSTANCE_NOT_READY'});
+  assert.equal(runtime.get('instance:opening').status,'opening');gate.resolve();await opened;
+  await runtime.checkpoint('instance:opening');assert.equal((await core.get('settings','runtime:instance:opening')).value.editorState.retained,'ready');
+  await runtime.close('instance:opening');assert.equal(runtime.get('instance:opening'),null);
+});

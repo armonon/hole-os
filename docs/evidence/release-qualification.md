@@ -1,6 +1,18 @@
 # Current continuation qualification
 
-Latest pushed implementation: `be71f56` (473 passing tests). Latest byte-verified review: [368-file review](https://6adfbc47c36db762a5536220--hole-os-armonon.netlify.app), receipt `review-be71f56.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `fdb727e` (489 passing tests). Latest byte-verified review: [382-file review](https://6adfbe91b9a2c468ed41eb27--hole-os-armonon.netlify.app), receipt `review-fdb727e.json`. Production remains unchanged; the master brief is not complete.
+
+## Eighth increment — 28 October 2026
+
+Settled full suite: 510 tests pass; serial generated build succeeds. Imported Moodboard native editing and actual PNG/PDF/ZIP/layered Luma handoff retain original bytes and exact version lineage. Review added durable raw-field drafts, explicit recovery, failed-storage navigation refusal and in-flight operation navigation ordering. Pinned history never recovers a newer draft. See `../compatibility/moodboard-luma.md`.
+
+Ghost uses its retained CPU cloth solver, textured renderer and native codec to derive real GLB plus Form scenes preserving embedded raw Ghost source. Actual shell recovery/save/export/Form edit/reopen passes. Independent review found and fixed excessive pre-worker photo cleanup and incomplete auxiliary geometry validation; real worst-case cleanup now refuses before decoding while preserving source. The solver is hard-terminated after 90 seconds; bounded browser decode/canvas/export phases are not a process-isolation claim. See `ghost-form.md`.
+
+Portfolio's original templates now mount in Publish with native editing/recovery and private static-site ZIP export. Actual generated-shell checks inspect byte-identical media, source hash/parents, explicit pinned-version isolation, failed draft persistence, navigation retention, and completion without disposal deadlock. Narrow-screen keyboard checks pass; exporting never hosts or publishes the site. See `portfolio-publish.md`.
+
+Day/Paperwork have independent windows with owned-dialog protection, geometry, minimize/resume and content-safe arrangement restore. Repeated restoration does not duplicate identities; keyboard focus returns after minimize/close. Opening runtimes refuse lifecycle operations until mounted, retaining the pending instance. See `tool-windows.md`. Full canonical app/studio parity and physical device/human/security gates remain open.
+
+Existing Carry→Flow→pinned Publish export and 320px reduced-motion regression pass in Chrome156.0.8078.48. The 200-indexed/30-visible Universe fixture measured 78.1ms in this run; prior 33–40ms observations remain historical, not a fixed performance guarantee.
 
 ## Seventh increment
 

@@ -15,6 +15,7 @@
     const service = () => { const result = typeof core === 'function' ? core() : core; if (!result) throw fail('STORAGE_UNAVAILABLE', 'Durable storage is unavailable.'); return result; };
     const inspect = entry => json({ id: entry.id, appId: entry.appId, context: entry.context, presentation: entry.presentation, status: entry.status });
     const requireInstance = instanceId => { const entry = instances.get(instanceId); if (!entry) throw fail('INSTANCE_NOT_FOUND', 'This app instance is not running.'); return entry; };
+    const requireReady = entry => { if (entry.status !== 'running' || !entry.handle) throw fail('INSTANCE_NOT_READY', 'Wait for this app to finish opening before changing its view or saving an arrangement.'); return entry; };
     const announce = entry => onChange(inspect(entry));
     const queue = (instanceId, task) => {
       const before = pending.get(instanceId) || Promise.resolve();
@@ -58,7 +59,7 @@
     }
     function present(instanceId, presentation) {
       return queue(instanceId, async () => {
-        const entry = requireInstance(instanceId);
+        const entry = requireReady(requireInstance(instanceId));
         if (!presentations.has(presentation)) throw fail('INVALID_PRESENTATION', 'Unknown app presentation.');
         const apply = entry.handle.present || apps.get(entry.appId).present;
         if (apply) await apply.call(entry.handle, presentation, inspect(entry));
@@ -68,6 +69,7 @@
       });
     }
     async function serializeEntry(entry) {
+      requireReady(entry);
       const read = entry.handle.serialize || apps.get(entry.appId).serialize;
       if (read) entry.editorState = json(await read.call(entry.handle, inspect(entry)));
       return json({ schema: 'hole.instance/1', ...inspect(entry), editorState: entry.editorState });
@@ -81,7 +83,7 @@
       return storage.put('settings', { id: key, value: snapshot }, previous ? { expectedRevision: previous.revision } : {});
     }
     function checkpoint(instanceId) {
-      return queue(instanceId, async () => { const entry = requireInstance(instanceId); return persist(entry, await serializeEntry(entry)); });
+      return queue(instanceId, async () => { const entry = requireReady(requireInstance(instanceId)); return persist(entry, await serializeEntry(entry)); });
     }
     async function restore(snapshot, { root } = {}) {
       const value = json(snapshot);
@@ -91,7 +93,7 @@
     }
     function close(instanceId, { checkpoint: save = true } = {}) {
       return queue(instanceId, async () => {
-        const entry = requireInstance(instanceId);
+        const entry = requireReady(requireInstance(instanceId));
         if (save) await persist(entry, await serializeEntry(entry));
         const unmount = entry.handle.close || apps.get(entry.appId).unmount;
         if (unmount) await unmount.call(entry.handle, inspect(entry));
