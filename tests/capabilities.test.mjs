@@ -19,7 +19,7 @@ test('every actual app has one explicit, human-readable classification', () => {
   const external = { window: {} }; vm.runInNewContext(ecosystem, external);
   const names = [...base, ...external.window.HoleCatalog.map(app => app.name)];
   const entries = plain(capabilities.list());
-  assert.equal(names.length, 52);
+  assert.equal(names.length, 68);
   assert.deepEqual(entries.map(app => app.name).sort(), names.sort());
   assert.equal(new Set(entries.map(app => app.name)).size, entries.length);
   for (const app of entries) {

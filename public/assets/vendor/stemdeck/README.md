@@ -1,0 +1,11 @@
+# Retained browser StemDeck engine
+
+Owned browser source: `sattari-seo-20261026/source`, revision `ae9d4bfb82899e3b9d516a06d66b4915fc91b157`. Refresh explicitly with `node scripts/vendor-stemdeck.mjs`. The bundle contains the actual portable archive reader and hash verifier, session/arrangement admission, native pattern constructors, browser instrument voices, and PCM24 WAV writer. This selected source graph has no third-party runtime modules. No native JUCE/GPL implementation is copied.
+
+Native `.sattari` supports portable SATPROJ6 binary archives and legacy version 2–5 JSON, bounded to 32 MiB for connected recovery. The adapter keeps original raw manifest fields, audio chunk bytes and hashes; legacy embedded data URLs remain unchanged. Invalid or damaged archives are rejected before editing. Native arrangement records rejected by admission require the full studio's set-aside repair workflow; this surface never silently drops them. Missing audio references remain explicit and are preserved.
+
+Rack is a mode in this bounded StemDeck surface. Add a native MIDI pattern or change an ordinary unlinked pattern's modeled instrument, attack, release and cutoff. The actual browser instrument engine renders a fixed C4 audition into a three-second stereo 48 kHz PCM24 WAV; output lineage points to the saved native session version. This audition does not render the arrangement, effects, routing, automation, stem separation, microphone capture, samplers, AU/VST hosting or native DSP parity. Full original browser/native products remain available. Existing unrelated native session data is retained.
+
+Lifecycle API is `HoleStemDeck.create({core}).mount(instance,root)` with explicit `instance.context.assetId/versionId`, checkpoint serialize, close and revoke matching other studios. The child has an opaque sandbox and only scoped resource/state/Kit capabilities. No IndexedDB, worker, network media fetching or native plugin installation is required.
+
+Verification: `tests/stemdeck-adapter.test.mjs`, `scripts/verify-stemdeck-browser.mjs` (actual iframe recovery and non-silent audio render), `scripts/verify-stemdeck-shell-browser.mjs` (built shell native file action→edit/save/export/close/reopen). These tests establish the bounded flow, not whole-studio parity.

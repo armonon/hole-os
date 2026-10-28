@@ -1,0 +1,45 @@
+/* Perspective is applied to real DOM cards; editor DOM stays outside the scene. */
+#hole-fluid-os .hu-root{--hu-sky:#eeeaf3;--hu-horizon:#d9d1e5;--hu-grid:#8c7ca22b;--hu-glow:#c1a3e9;--hu-light:.55;border:1px solid var(--hc-line);border-radius:22px;overflow:hidden;background:var(--hc-surface);margin:8px 0 20px}
+#hole-fluid-os .hu-root[data-theme=void]{--hu-sky:#20242f;--hu-horizon:#343e53;--hu-grid:#c2cce52b;--hu-glow:#899bda}
+#hole-fluid-os .hu-root[data-theme=studio]{--hu-sky:#302a35;--hu-horizon:#68516b;--hu-grid:#dca0d32b;--hu-glow:#df95bd}
+#hole-fluid-os .hu-root[data-theme=library]{--hu-sky:#eae1d2;--hu-horizon:#c8b798;--hu-grid:#796d4a2b;--hu-glow:#e5b877}
+#hole-fluid-os .hu-root[data-theme=lab]{--hu-sky:#dfe9ed;--hu-horizon:#a4c2cb;--hu-grid:#426e7b2b;--hu-glow:#91bce8}
+#hole-fluid-os .hu-root[data-theme=home]{--hu-sky:#e4e8dc;--hu-horizon:#b7c6ac;--hu-grid:#627e542b;--hu-glow:#d7bca1}
+#hole-fluid-os .hu-toolbar{display:flex;flex-wrap:wrap;gap:7px;padding:14px 16px 0}
+#hole-fluid-os .hu-toolbar .hu-flat{margin-left:auto}
+#hole-fluid-os .hu-description{font-size:12px;line-height:1.65;color:var(--hc-muted);margin:10px 17px 14px;max-width:720px}
+#hole-fluid-os .hu-viewport{position:relative;height:440px;min-height:280px;isolation:isolate;overflow:hidden;perspective:900px;perspective-origin:50% 50%;background:radial-gradient(ellipse at 50% 80%,var(--hu-horizon),transparent 75%),var(--hu-sky);touch-action:none;outline-offset:-3px;contain:layout style}
+#hole-fluid-os .hu-viewport:focus-visible{outline:3px solid var(--hc-purple)}
+#hole-fluid-os .hu-world{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+#hole-fluid-os .hu-objects{display:block;position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+#hole-fluid-os .hu-object{position:absolute;left:-105px;top:-115px;width:210px;transform-style:preserve-3d;transform-origin:center center}
+#hole-fluid-os .hu-object[hidden]{display:none!important}
+#hole-fluid-os .hu-object>.hc-card{display:block;width:100%;height:230px;transform:none;filter:brightness(var(--hu-brightness,1));box-shadow:0 17px 42px #1112;transition:box-shadow .2s;backface-visibility:hidden}
+#hole-fluid-os .hu-object>.hc-card:hover{transform:none;box-shadow:0 20px 48px #1114}
+#hole-fluid-os .hu-object[data-selected=true]>.hc-card{outline:2px solid var(--hc-purple);outline-offset:4px}
+#hole-fluid-os .hu-object>.hc-card:focus-visible{outline:3px solid var(--hc-purple);outline-offset:5px}
+#hole-fluid-os .hu-object>.hc-card strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hole-fluid-os .hu-floor{position:absolute;left:-1600px;top:-1000px;width:3200px;height:2000px;transform:translate3d(0,700px,-400px) rotateX(80deg);background-image:linear-gradient(var(--hu-grid) 1px,transparent 1px),linear-gradient(90deg,var(--hu-grid) 1px,transparent 1px),radial-gradient(ellipse,var(--hu-glow),transparent 65%);background-size:100px 100px,100px 100px,100% 100%;opacity:calc(.2 + var(--hu-light)*.6);pointer-events:none;backface-visibility:hidden}
+#hole-fluid-os .hu-pad{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:12px 14px;background:var(--hc-soft)}
+#hole-fluid-os .hu-pad[hidden]{display:none}
+#hole-fluid-os .hu-pad .hc-button{min-width:38px;min-height:40px}
+#hole-fluid-os .hu-picker{display:flex;align-items:flex-end;gap:12px;padding:0 16px;flex-wrap:wrap}
+#hole-fluid-os .hu-picker .hu-field{flex:1;min-width:150px}
+#hole-fluid-os .hu-picker>.hc-button{margin-bottom:12px}
+#hole-fluid-os .hu-field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--hc-muted);min-width:0;margin:12px 0}
+#hole-fluid-os .hu-field input[type=range]{accent-color:var(--hc-purple);padding:4px;min-height:36px}
+#hole-fluid-os .hu-state{margin:3px 17px 15px;font-size:11px;line-height:1.5;color:var(--hc-muted)}
+#hole-fluid-os .hu-settings{border-top:1px solid var(--hc-line);padding:12px 17px}
+#hole-fluid-os .hu-settings summary,#hole-fluid-os .hu-position summary{cursor:pointer;font-size:12px;padding:5px 0;color:var(--hf-ink)}
+#hole-fluid-os .hu-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 16px;align-items:end}
+#hole-fluid-os .hu-settings-grid>.hc-button{margin-bottom:12px}
+#hole-fluid-os .hu-position{margin-top:12px;border-top:1px solid var(--hc-line);padding-top:10px}
+#hole-fluid-os .hu-position p{font-size:12px;line-height:1.6;color:var(--hc-muted)}
+#hole-fluid-os .hu-position-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+#hole-fluid-os .hu-root[data-list=true] .hu-viewport{height:auto;min-height:0;perspective:none;touch-action:pan-y;background:var(--hc-soft);overflow:visible;isolation:auto;padding:16px}
+#hole-fluid-os .hu-root[data-list=true] .hu-world,#hole-fluid-os .hu-root[data-list=true] .hu-objects{position:static;width:auto;height:auto;transform:none!important;transform-style:flat;will-change:auto}
+#hole-fluid-os .hu-root[data-list=true] .hu-objects{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+#hole-fluid-os .hu-root[data-list=true] .hu-object{position:static;width:auto;transform:none!important;filter:none}
+#hole-fluid-os .hu-root[data-list=true] .hu-floor{display:none}
+@media(max-width:600px){#hole-fluid-os .hu-toolbar{padding:12px 12px 0}#hole-fluid-os .hu-toolbar .hc-button{flex:1;white-space:nowrap;min-height:42px;font-size:11px;padding:7px}#hole-fluid-os .hu-toolbar .hu-flat{margin-left:0}#hole-fluid-os .hu-viewport{height:340px}#hole-fluid-os .hu-root[data-list=true] .hu-objects{grid-template-columns:1fr}#hole-fluid-os .hu-root[data-list=true] .hu-object>.hc-card{height:auto;min-height:190px}#hole-fluid-os .hu-settings-grid{grid-template-columns:1fr}#hole-fluid-os .hu-picker{gap:0}#hole-fluid-os .hu-picker .hu-field{flex-basis:100%}#hole-fluid-os .hu-position-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#hole-fluid-os .hu-root *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}

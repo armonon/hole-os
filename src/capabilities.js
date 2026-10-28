@@ -6,6 +6,22 @@
   const labels = Object.freeze({ local: 'Local utility', external: 'External app', partial: 'Partial preview', concept: 'Concept', future: 'Future capability' });
   const entry = (status, description) => Object.freeze({ status, label: labels[status], description });
   const catalog = Object.freeze({
+    Projects: entry('local', 'Real project membership, linked objects, previews, durable drafts and return paths.'),
+    Day: entry('local', 'Local zoned events, project tasks and contacts with calendar and data exports.'),
+    Capture: entry('local', 'Capture text, links, pasted images, files and supported user-initiated voice recordings into a project or Inbox.'),
+    Paperwork: entry('local', 'Formatted documents, tables with formulas and charts, local forms, PDF annotations and image-only redacted copies.'),
+    Actions: entry('local', 'Real image and supported audio transforms, reusable flows and Release Asset Pack export.'),
+    History: entry('local', 'Inspect immutable versions, restore or branch content, and save or restore placement arrangements.'),
+    Create: entry('local', 'Build bounded counters, checklists, timers and calculators; save personal project instruments.'),
+    Publish: entry('local', 'Prepare and download selected release assets and ZIP packages. Public hosting is separate.'),
+    WebLab: entry('local', 'Saved HTML/CSS/JavaScript projects with isolated previews and source ZIP export. Existing checkup remains an external tool.'),
+    Lab: entry('local', 'A local nonlinear pendulum experiment with visible assumptions, saved data and CSV export.'),
+    Atlas: entry('local', 'Local itinerary and place records, linked material and explicit OpenStreetMap handoff. No embedded maps or live routing.'),
+    Tongue: entry('local', 'Saved phrase practice, local speech voices and manual subtitles. Translation requires a compatible on-device browser engine.'),
+    Crew: entry('local', 'Inspect and run bounded local Actions flows with pinned inputs, file budgets and cancellation. No AI provider implied.'),
+    Momentous: entry('local', 'Install compatible bounded tool manifests, inspect grants, update and roll back. No commerce service.'),
+    Relay: entry('local', 'Connect to a separately running account service for scoped file transfer, durable queues and invitations. Production hosting is not configured.'),
+    Rack: entry('local', 'Browser audio prototype with oscillator, filter, envelope, delay, saved presets and WAV render. No native AU/VST hosting.'),
     Notes: entry('local', 'A browser-saved scratchpad that can save a separate text snapshot to Files.'),
     Files: entry('local', 'Browser-local files, text creation and version editing, supported previews, history and image conversion.'),
     Music: entry('partial', 'A soundless playback interface preview. Use Files to play your own supported audio.'),

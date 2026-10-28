@@ -1,0 +1,80 @@
+{
+  "model": "Xenova/whisper-tiny.en",
+  "revision": "79fb389fc764e7c395bd330e9531d9d32ada7049",
+  "optionalWeightBytes": 40852295,
+  "weightsBundled": false,
+  "files": {
+    "transformers.mjs": {
+      "bytes": 478096,
+      "sha256": "079832c30847fa66be8ab7dc6e5457de550f556fd60ddf0039a6660a56a8eefb"
+    },
+    "TRANSFORMERS-LICENSE": {
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "README.md": {
+      "bytes": 4593,
+      "sha256": "4ab8020b03d0bd90db2f291a126f959a5274ca43c35d91dd68f19ab04fce65c2"
+    },
+    "ONNX-CONVERSION-APACHE-LICENSE": {
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "WHISPER-LICENSE": {
+      "bytes": 1063,
+      "sha256": "b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d"
+    },
+    "captions.js": {
+      "bytes": 1542,
+      "sha256": "fdca1cdb77d6cb3e5b6b6c37f2a5b4310ed415128ead89432bce5b6c5f778b2d"
+    },
+    "ONNX-RUNTIME-LICENSE": {
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    "whisper/added_tokens.json": {
+      "bytes": 2082,
+      "sha256": "598c98875c01fe7ebd08ba6779f052f1136de6d36d9e7b99e04b432f78ecb28d"
+    },
+    "whisper/tokenizer_config.json": {
+      "bytes": 835,
+      "sha256": "e082c1ad251541bf277967a703252cddd4bb37a71a43737e03d050c22ec08238"
+    },
+    "whisper/special_tokens_map.json": {
+      "bytes": 1717,
+      "sha256": "7da611d517fe29e77335b8d8384e71795fb7b37cbf95bdc3b5252fa7e09dd1f8"
+    },
+    "whisper/config.json": {
+      "bytes": 2202,
+      "sha256": "37a1073be00d19118c06557896c7c148598f4d8277edc0f5bc07c9f5554839f1"
+    },
+    "whisper/tokenizer.json": {
+      "bytes": 2128494,
+      "sha256": "c6ee8f089220a5b1188f6426456772572671c6141ae007eecb83c6a8349f5deb"
+    },
+    "whisper/generation_config.json": {
+      "bytes": 1590,
+      "sha256": "132c95ba9db45f4498f2eab3fea7c1d6a174005010f8f6b7d20cfd5e9795996b"
+    },
+    "whisper/normalizer.json": {
+      "bytes": 52666,
+      "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd"
+    },
+    "whisper/README.md": {
+      "bytes": 3213,
+      "sha256": "2f4ddb95ec9d6c6d5f6a1374fc004f45e91f6d7f450ee479f765b8aca47e8b4d"
+    },
+    "whisper/merges.txt": {
+      "bytes": 456318,
+      "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5"
+    },
+    "whisper/vocab.json": {
+      "bytes": 999186,
+      "sha256": "f6bd25a65e4e63ca31360e9fb11c7e4f9a391a78385d640acd814092dd6eee4f"
+    },
+    "whisper/preprocessor_config.json": {
+      "bytes": 339,
+      "sha256": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d"
+    }
+  }
+}

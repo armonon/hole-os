@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir, copyFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile, readdir, cp, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
+import { buildOffline } from './offline-build.mjs';
 
 export const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 export const publicRoot = path.join(projectRoot, 'public');
@@ -16,7 +17,11 @@ export async function build() {
   if (/<!doctype\s|<\s*(html|head|body)(?:\s|>)/i.test(fragment)) throw new Error('Expected an HTML fragment in src/hole-fluid-os.html.');
   if (/<iframe\b/i.test(shell + fragment)) throw new Error('Standalone output must not contain an iframe.');
   await mkdir(path.join(publicRoot, 'assets'), { recursive: true });
-  await Promise.all((await readdir(sourceRoot)).filter(name => /\.(js|css)$/.test(name)).map(name => copyFile(path.join(sourceRoot, name), path.join(publicRoot, 'assets', name))));
+  for (const name of ['bridge-client.js', 'luma-adapter.js', 'glyph-adapter.js', 'form-adapter.js', 'scenepilot-adapter.js', 'stemdeck-adapter.js', 'animate-adapter.js', 'ghost-adapter.js']) await copyFile(path.join(projectRoot, 'sdk', name), path.join(publicRoot, 'assets', name));
+  // Mirror the source vendor tree so removed engines cannot linger in offline builds.
+  await rm(path.join(publicRoot, 'assets', 'vendor'), { recursive: true, force: true });
+  await cp(path.join(sourceRoot, 'vendor'), path.join(publicRoot, 'assets', 'vendor'), { recursive: true });
+  await Promise.all((await readdir(sourceRoot)).filter(name => /\.(js|css)$/.test(name) && name !== 'service-worker.js').map(name => copyFile(path.join(sourceRoot, name), path.join(publicRoot, 'assets', name))));
   await Promise.all([
     copyFile(path.join(sourceRoot, 'standalone.css'), path.join(publicRoot, 'assets', 'standalone.css')),
     copyFile(path.join(sourceRoot, 'persistence.js'), path.join(publicRoot, 'assets', 'persistence.js')),
@@ -25,6 +30,7 @@ export async function build() {
     readFile(path.join(publicRoot, 'assets', 'LUCIDE-LICENSE.txt'))
   ]);
   await writeFile(path.join(publicRoot, 'index.html'), shell.replace(placeholder, () => fragment), 'utf8');
+  await buildOffline(publicRoot, sourceRoot);
   return path.join(publicRoot, 'index.html');
 }
 

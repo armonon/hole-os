@@ -336,13 +336,14 @@
   const root=document.getElementById('hole-fluid-os');
   const os=root.querySelector('.hf-os'),field=root.querySelector('.hf-field'),bubbleLayer=root.querySelector('.hf-bubbles'),windowLayer=root.querySelector('.hf-windows'),searchPanel=root.querySelector('.hf-search-panel'),searchInput=searchPanel.querySelector('input'),hint=root.querySelector('.hf-hint'),drawer=root.querySelector('.hf-drawer'),desktop=root.querySelector('.hf-desktop'),drawerToggle=root.querySelector('[data-drawer-toggle]'),drawerControls=root.querySelector('.hf-drawer-controls');
   const apps=[
+    ['Projects','orbit','#a999c6'],['Day','sun','#dbad75'],['Capture','plus-circle','#83a993'],['Paperwork','files','#8ba5c3'],['Actions','workflow','#a38bb8'],['History','history','#afa187'],['Create','blocks','#a691c8'],['Publish','package','#a1ad85'],['WebLab','code-2','#8a9faa'],['Lab','flask-conical','#8faaa0'],['Atlas','map','#82a293'],['Tongue','languages','#b89d8a'],['Crew','workflow','#9b94b6'],['Momentous','package','#c1ab83'],['Relay','radio','#8ea9ba'],['Rack','sliders-horizontal','#9e9bca'],
     ['Notes','notebook-pen','#e6b84d','#463d27'],['Files','folder','#548cf0'],['Music','music-2','#e96a89'],['Photos','flower-2','#e99064'],['Browser','compass','#568ed1'],['Messages','messages-square','#58b798'],['Calendar','calendar-days','#dc7c72'],
     ['Studio','shapes','#8d83d7'],['Clock','clock-3','#525d78'],['Camera','camera','#8b92a3'],['Maps','map','#68af9f'],['Mail','mail','#70a0d3'],['Tasks','check-check','#6fb7bc'],['Phone','phone','#63aa82'],['Weather','cloud-sun','#79b6d2'],['Recorder','audio-lines','#d57785'],['Canvas','paintbrush','#b08bc8'],['Calculator','calculator','#be9867'],['Contacts','contact-round','#b58d75'],
     ['Books','book-open','#c79d70'],['Terminal','terminal','#626b80'],['Windows','panels-top-left','#658bc9'],['Linux','square-terminal','#959066'],['Mac','laptop','#9598a8'],['Store','blocks','#8f93d1'],['Settings','sliders-horizontal','#9299a7'],['Compass','navigation','#bc8c82'],['Translate','languages','#8fa9bb'],['Drive','hard-drive','#8caaa6'],['Meet','video','#92a17b'],['Code','code-2','#9585b6'],['Docs','file-text','#8cabc4'],['Wallet','wallet','#9c8b91'],['Shortcuts','workflow','#a58dc6'],['Health','heart','#c98c9f'],['Play','gamepad-2','#9b9fc5'],['Home','house','#aaa18c']
   ].map((a,i)=>({name:a[0],icon:a[1],color:a[2],ink:a[3]||'#fff',index:i}));
   for(const app of window.HoleCatalog||[])if(!apps.some(a=>a.name===app.name))apps.push({...app,ink:'#fff',index:apps.length});
-  const priorityApps=['Notes','Files','Luma','Glyph','Form','Bounce','ScenePilot','StemDeck','Circle','NOW','Browser','Converter','Locker','Librarian','Moodboard','Portfolio','Ghost','Animate','Music','Photos'];apps.sort((a,b)=>(priorityApps.includes(a.name)?priorityApps.indexOf(a.name):99)-(priorityApps.includes(b.name)?priorityApps.indexOf(b.name):99));
-  const byName=new Map(apps.map(a=>[a.name,a])),pinnedApps=['Notes','Music','Files'];
+  const priorityApps=['Projects','Day','Capture','Paperwork','Create','Actions','History','Publish','Notes','Files','Luma','Glyph','Form','Bounce','ScenePilot','StemDeck','Circle','NOW','Browser','Converter','Locker','Librarian','Moodboard','Portfolio','Ghost','Animate','Music','Photos'];apps.sort((a,b)=>(priorityApps.includes(a.name)?priorityApps.indexOf(a.name):99)-(priorityApps.includes(b.name)?priorityApps.indexOf(b.name):99));
+  const byName=new Map(apps.map(a=>[a.name,a])),pinnedApps=['Capture','Notes','Files'];
   byName.set('Clusters',{name:'Clusters',icon:'boxes',color:'#9189c3',ink:'#fff'});
   const dock=root.querySelector('.hf-dock'),dockApps=dock.querySelector('.hf-dock-apps'),dockButtons=new Map();
   const recentDivider=document.createElement('span');recentDivider.className='hf-dock-divider';recentDivider.setAttribute('aria-hidden','true');
@@ -373,7 +374,7 @@
       for(const group of state.clusters){let f=deskFiles.find(f=>f.id===group.id);if(!f){f={id:group.id,groupId:group.id,app:'Clusters',space:'desk',x:0,y:0,turn:0};deskFiles.push(f);state.desk.files[f.id]={space:'desk',x:0,y:0};state.desk.placements[f.id]={x:.5,y:.3};}Object.assign(f,{name:group.name,kind:group.kind});if(f.el){f.el.querySelector('.hf-object-label').textContent=f.name;f.el.setAttribute('aria-label','Open '+f.name+' in Clusters');}}
       state.clusterOpen=state.clusters.some(g=>g.id===s.clusterOpen)?s.clusterOpen:null;
     }
-    if(Array.isArray(s.recentApps))state.recentApps=[...new Set(s.recentApps.filter(name=>byName.has(name)&&!pinnedApps.includes(name)))];
+    if(Array.isArray(s.recentApps))state.recentApps=[...new Set(s.recentApps.filter(name=>byName.has(name)&&['local','external'].includes(window.HoleCapabilities?.get(name)?.status)&&!pinnedApps.includes(name)))];
     if(s.views&&typeof s.views==='object')for(const key of [...Object.keys(spaces),'overview','drawer']){const v=s.views[key];if(v&&[v.x,v.y,v.z].every(Number.isFinite))state.views[key]={x:Math.max(-1.8,Math.min(1.8,v.x)),y:Math.max(-1.8,Math.min(1.8,v.y)),z:Math.max(.65,Math.min(2.2,v.z))};}
     if(s.desk&&typeof s.desk==='object'){const d=s.desk;if([...Object.keys(spaces),'overview'].includes(d.view))state.desk.view=d.view;
       deskFiles.forEach(f=>{const p=d.files?.[f.id];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&spaces[p.space])state.desk.files[f.id]={x:Math.max(-1050,Math.min(1050,p.x)),y:Math.max(-450,Math.min(450,p.y)),space:p.space};});
@@ -390,7 +391,7 @@
   const positions=[];
   for(let r=-4;r<=4;r++)for(let q=-4;q<=4;q++)if(Math.abs(q+r)<=4)positions.push({q,r,d:Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))});
   positions.sort((a,b)=>a.d-b.d||Math.atan2(a.r,a.q+a.r/2)-Math.atan2(b.r,b.q+b.r/2));
-  const nodes=apps.map((app,i)=>{
+  const nodes=apps.filter(app=>['local','external'].includes(window.HoleCapabilities?.get(app.name)?.status)).map((app,i)=>{
     const p=positions[i],ax=(p.q+p.r/2)*110,ay=p.r*83;
     const radius=p.d===0?53:p.d===1?45:p.d===2?39:33;
     const button=document.createElement('button');button.type='button';button.className='hf-app-orb hf-bubble cursor-interaction'+(p.d===3?' hf-small':'');button.dataset.launch=app.name;button.setAttribute('aria-label',app.name);button.style.setProperty('--bubble-color',app.color);button.style.setProperty('--bubble-ink',app.ink);button.innerHTML='<i data-lucide="'+app.icon+'" aria-hidden="true"></i><span>'+app.name+'</span>';bubbleLayer.append(button);
@@ -585,7 +586,7 @@
     nodes.forEach(n=>n.button.classList.toggle('is-running',windows.has(n.name)));
     // Keep every live window accessible, plus three shortcuts after apps close.
     let closed=0;
-    state.recentApps=[...new Set([...state.recentApps,...windows.keys()])].filter(name=>byName.has(name)&&!pinnedApps.includes(name)).filter(name=>windows.has(name)||closed++<3);
+    state.recentApps=[...new Set([...state.recentApps,...windows.keys()])].filter(name=>byName.has(name)&&['local','external'].includes(window.HoleCapabilities?.get(name)?.status)&&!pinnedApps.includes(name)).filter(name=>windows.has(name)||closed++<3);
     const names=[...pinnedApps,...state.recentApps],focused=document.activeElement,hadFocus=dockApps.contains(focused),scroll=dockApps.scrollLeft;
     const children=[];
     for(const name of names){
@@ -680,7 +681,7 @@
   function updateNotePreview(){root.querySelectorAll('.hf-note-preview').forEach(el=>{el.textContent=state.note.trim().split('\n').find(Boolean)||'Start a new thought.';});}
   function search(){if(!drawerOpen)openDrawer({focus:false});if(searchPanel.hidden)searchReturnFocus=document.activeElement;searchPanel.hidden=false;searchInput.value='';renderResults('');searchInput.focus();}
   function dismissSearch(returnFocus=true){const wasOpen=!searchPanel.hidden;searchPanel.hidden=true;if(wasOpen&&returnFocus){const target=searchReturnFocus?.isConnected&&root.contains(searchReturnFocus)&&!searchReturnFocus.closest('[hidden],[inert]')?searchReturnFocus:drawerOpen?root.querySelector('[data-search]'):drawerToggle;target.focus({preventScroll:true});}}
-  function renderResults(query){const results=apps.filter(a=>a.name.toLowerCase().includes(query.toLowerCase()));const container=searchPanel.querySelector('.hf-search-results');container.innerHTML=results.length?results.map(a=>'<button class="cursor-interaction" data-launch="'+a.name+'" style="--result-color:'+a.color+'"><i data-lucide="'+a.icon+'" aria-hidden="true"></i><span>'+a.name+'</span></button>').join(''):'<p class="hf-caption">No apps found.</p>';icons();}
+  function renderResults(query){const results=apps.filter(a=>['local','external'].includes(window.HoleCapabilities?.get(a.name)?.status)&&a.name.toLowerCase().includes(query.toLowerCase()));const container=searchPanel.querySelector('.hf-search-results');container.innerHTML=results.length?results.map(a=>'<button class="cursor-interaction" data-launch="'+a.name+'" style="--result-color:'+a.color+'"><i data-lucide="'+a.icon+'" aria-hidden="true"></i><span>'+a.name+'</span></button>').join(''):'<p class="hf-caption">No apps found.</p>';if(query.trim()){const web=document.createElement('button');web.type='button';web.dataset.webSearch='true';web.textContent='Search web for '+query;container.append(web);}icons();}
   searchInput.addEventListener('input',e=>renderResults(e.target.value));
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button)return;
@@ -696,6 +697,7 @@
     if(button.hasAttribute('data-home')){if(drawerOpen)closeDrawer({restoreFocus:false});dismissSearch(false);windows.forEach(r=>{if(!r.el.hidden)minimize(r);});visitSpace('overview');deskHint();return;}
     if(button.dataset.layout){setLayout(button.dataset.layout);return;}
     if(button.dataset.zoom){(drawerOpen?drawerGestures:desktopGestures).zoom(button.dataset.zoom==='in'?1.2:1/1.2);hover=null;return;}
+    if(button.hasAttribute('data-web-search')){const query=searchInput.value.trim();dismissSearch(false);window.HoleBrowser?.open({query,projectId:window.HoleContinuity?.navigation?.projectId||null});return;}
     if(button.hasAttribute('data-search')){search();return;}
     if(button.hasAttribute('data-dismiss-search')){dismissSearch();return;}
     if(button.hasAttribute('data-play')){state.playing=!state.playing;musicUI();save();return;}
@@ -784,7 +786,18 @@
     setLayout(state.layout,false);restoreViews();visitSpace(state.desk.view,false);save();lastSetupImport=plan.report;return true;
   }
 
-  window.HoleOS={root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
+  async function createSpaceFromTemplate({name,zones=[]}={}){
+    if(typeof name!=='string'||!name.trim()||name.trim().length>40)throw new Error('Use a Space name of 1–40 characters.');
+    if(state.projects.length>=12)throw new Error('You can keep up to 12 custom spaces in this browser.');
+    if(!Array.isArray(zones)||zones.length>20||zones.some(z=>typeof z.name!=='string'||!z.name.trim()||z.name.length>80||!Number.isFinite(z.x)||!Number.isFinite(z.y)||Math.abs(z.x)>6000||Math.abs(z.y)>6000))throw new Error('Invalid Space template zones.');
+    await window.HolePersistence?.ready;const id='space-'+crypto.randomUUID(),space={id,name:name.trim()};state.projects.push(space);spaces[id]={x:0,y:0,name:space.name};
+    try{save();await window.HolePersistence.flush();}catch(error){state.projects=state.projects.filter(p=>p.id!==id);delete spaces[id];throw error;}
+    renderSpaces();
+    if(zones.length)await window.HoleCore.put('scenes',{id:'space-template:'+id,spaceId:id,name:space.name,zones:zones.map(z=>({name:z.name.trim(),x:z.x,y:z.y})),schemaVersion:1});
+    return id;
+  }
+
+  window.HoleOS={createSpaceFromTemplate,root,os,field,desktop,windowLayer,dock,windows,state,apps,byName,openApp,minimize,closeWindow,visitSpace,openDrawer,closeDrawer,save,icons,motion,resize,focusWindow,setLayout,pinFile,pinApp,deskFiles,deskStage,deskItems,attachDesktopFile,paintDesk,selectFile,openDesktopItem,exportSetup,importSetup,get lastSetupImport(){return lastSetupImport;},get isDrawerOpen(){return drawerOpen;}};
   const previousSession=state.session.map(r=>({...r})),previousSpace=state.desk.view;document.addEventListener('DOMContentLoaded',()=>{for(const entry of previousSession){visitSpace(entry.space,false);openApp(entry.name);const rec=windows.get(entry.name);rec.animation?.cancel();rec.minimized=entry.minimized;rec.el.hidden=entry.minimized;}visitSpace(previousSpace,false);save();},{once:true});
   renderSpaces();
   new ResizeObserver(resize).observe(field);setLayout(state.layout,false);restoreViews();musicUI();updateNotePreview();updateRunning();deskHint();

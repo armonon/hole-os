@@ -10,5 +10,29 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
 
+[[headers]]
+  for = "/assets/cutout-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/stem-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/transcription-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/weblab-script-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'"
+
+[[headers]]
+  for = "/assets/vendor/ghost/drape-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'; base-uri 'none'"
