@@ -4,7 +4,7 @@
 
 ## Visual delivery — 28 October 2026
 
-The shared design now reaches real project desktops, circular previews, immersive Universe, contextual strips, workspace/native window controls, native editor workbenches and useful welcome widgets. See [visual evidence](../evidence/visual-overhaul-20261028.md). 660 tests pass. Review delivery is recorded separately; production is unchanged. This visual increment does not complete the master program.
+The shared design now reaches real project desktops, circular previews, immersive Universe, contextual strips, workspace/native window controls, native editor workbenches and useful welcome widgets. See [visual evidence](../evidence/visual-overhaul-20261028.md). 660 tests pass. Implementation `04ddc38` is pushed. Review delivery is blocked: preview HTTP500/preparing; production HTTP503 `usage_exceeded`. See `docs/evidence/review-04ddc38.json`. No production promotion. This visual increment does not complete the master program.
 
 ## Delivered
 

@@ -32,6 +32,7 @@ try {
   const workspace=page.locator('.hc-workspace');
   assert.equal(await page.locator('.hs-panel[data-kind=desktop] .hc-card-preview').first().evaluate(n=>n.getBoundingClientRect().width<=100),true);
   assert.equal(await page.locator('.hc-project-details').getAttribute('open'),null);
+  await screenshot('project');
   const imageCard=page.locator(`.hs-panel[data-kind=desktop] .hs-object[data-asset-id="${ids.image}"] .hc-card`);const cardBounds=await imageCard.boundingBox();
   await page.mouse.move(cardBounds.x+30,cardBounds.y+30);await page.mouse.down();await page.mouse.move(cardBounds.x+90,cardBounds.y+55,{steps:8});await page.mouse.up();
   await page.waitForFunction(async id=>(await HoleCore.list('placements')).some(p=>p.resourceId===id),ids.image);assert.equal(await page.evaluate(()=>HoleContinuity.navigation.assetId),null,'drag does not open the material');
@@ -43,7 +44,6 @@ try {
   const noteCard=page.locator(`.hs-panel[data-kind=desktop] .hs-object[data-asset-id="${ids.note}"] .hc-card`);const nr=await noteCard.boundingBox();await page.touchscreen.tap(nr.x+nr.width/2,nr.y+30);await page.waitForFunction(id=>HoleContinuity.navigation.assetId===id,ids.note);
   await page.getByRole('button',{name:'Further out',exact:true}).click();await page.locator('.hs-panel[data-kind=desktop]').waitFor();await page.waitForTimeout(650);assert.equal(await page.getByRole('dialog').count(),0,'a released touch never opens stale tools later');
   await imageCard.scrollIntoViewIfNeeded();const longBounds=await imageCard.boundingBox(),touch=await page.context().newCDPSession(page);await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:longBounds.x+30,y:longBounds.y+30}]});await page.waitForTimeout(680);await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.locator('.hd-quick-tools').waitFor();assert.equal(await page.getByRole('dialog').count(),1);assert.equal(await page.evaluate(()=>HoleContinuity.navigation.assetId),null,'long press reveals tools without opening the file');await page.getByRole('dialog').getByRole('button',{name:'Close',exact:true}).click();await touch.detach();
-  await screenshot('project');
   await page.getByRole('button',{name:'Float workspace window',exact:true}).click();
   assert.equal(await workspace.getAttribute('data-windowed'),'true');
   const before=await workspace.boundingBox(),header=await workspace.locator('.hc-header').boundingBox();
