@@ -1,0 +1,21 @@
+# Native selections for bounded painting
+
+The connected editor calls the retained Luma engine at revision `af6f0893b6b0fe28fff2be99d7f3cb39ab6aba54`: `Studio.selectRect` and `selectEllipse` (`app/engine/studio.ts:6481,6485`), `invertSelectionArea` and `deselect` (`:6528–6535`). These use the native `commitSelection` history path. Existing native brush code clips Paint/Erase through selection alpha (`:5266` onward); no substitute clipping implementation is introduced.
+
+Explicit integer X/Y/width/height controls replace the document selection with a rectangle or ellipse, without feathering. Geometry is in document coordinates and must fit wholly within the document. Native `.luma` admission retains the 2048-edge/four-million-document-pixel limits and requires an unlocked top-level raster target without masks, smart sources or spatial effects. Existing unscaled/unrotated brush eligibility remains. Invert requires an existing selection. Deselect removes the selection, restoring whole-layer painting. Selection alone leaves rendered and underlying raster pixels unchanged.
+
+Unfinished selection fields are bounded raw strings stored with the existing recovery and flush protocol. Apply is explicit; layer switching does not lose these document-wide drafts. Pending gestures and ambiguous save acknowledgements block mutation/close through the existing guards. Recovery failure after accepted selection mutation retains the selection until Keep recovery succeeds. No new SDK, grant, worker, network or CSP capability is introduced.
+
+Native project serialization stores actual selection bounds and sparse alpha data (`project.ts:714–734`) and restores them on reopen. Selection operations preserve other layer data and unknown layer metadata; original versions remain untouched. The retained codec serializes known selection bounds/alpha fields, so unknown selection metadata is not claimed to round-trip. Full lasso, feather/refinement, mask authoring, transformed/grouped target editing, and PSD/RAW parity remain outside this increment.
+
+## Verification
+
+- `node --test tests/luma-selection.test.mjs tests/luma-tone.test.mjs tests/luma-shapes.test.mjs tests/luma-transforms.test.mjs tests/luma-tools.test.mjs tests/luma-layers.test.mjs tests/luma-exports.test.mjs`: 33 tests pass. New tests verify non-mutating numeric admission, partial/outside/fractional/foreign rejection, locked/grouped/masked/spatial target gates and bounded raw recovery.
+- `node scripts/verify-luma-selection-browser.mjs`: the actual retained engine, Core and opaque bridge prove rectangle/ellipse alpha, clipped Paint and Erase, complementary inverted alpha, Deselect and exact Undo. The asymmetric 96×64 color/alpha raster stays byte-exact until deliberate painting; native reopen restores selection support and admits a subsequent clipped stroke. Unknown layer metadata and original native versions remain unchanged. Partial raw fields survive close/recovery without native mutation. Invalid and locked operations do not add history. Actual host checkpoint quota rejection before/after selection mutation and exact-ticket lost commit ACK retry are exercised separately from the built shell.
+- The source browser also checks held-pointer runtime close refusal after iframe blur, explicit Escape cancellation and unchanged pixels before successful close.
+- Tone and shape source browser regressions run separately.
+- Built command: `HOLE_SHELL_URL=http://127.0.0.1:5193 node scripts/verify-luma-selection-browser.mjs`. Pending coordinator build; this mode uses actual shell routes without source overrides, with injected failure tests qualified separately in source mode.
+
+Logs: `/tmp/luma-selection-units.log`, `/tmp/luma-selection-source.log`, `/tmp/luma-selection-tone-regression.log`, `/tmp/luma-selection-shapes-regression.log`.
+
+Independent review caught a qualifier timing race: the pending-save retry button can be enabled before the prior handler finishes, so waiting only for an enabled Save button could click too early and sample a single request. The qualifier now waits for the completed injected-error status before Retry and the saved-success status before comparing tickets. The corrected source run passes; no production behavior was changed for this harness correction. Independent source review and a full browser rerun also passed.

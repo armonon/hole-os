@@ -4,6 +4,7 @@
   const M = window.HoleExtensionModel;
   let activeDraft = null, dispose = null;
   const toolSessions = new Set();
+  window.addEventListener?.('beforeunload', event => { if (activeDraft?.pending?.()) { event.preventDefault(); event.returnValue = ''; } });
   const uid = () => crypto.randomUUID();
   const views = [['create','Create','blocks'],['weblab','WebLab','code-2'],['lab','Lab','flask-conical'],['crew','Crew','workflow'],['momentous','Momentous','package']];
   const jsonBlob = (value, type) => new Blob([JSON.stringify(value, null, 2)], { type: type || 'application/json' });
@@ -20,7 +21,7 @@
     const showError = e => ctx.fail(e);
     const change = () => { dirty = true; label.textContent = 'Saving draft…'; clearTimeout(timer); timer = setTimeout(() => flush().catch(showError), 220); };
     const commit = () => { clearTimeout(timer); return enqueue(async () => { await drain(); if (!revision) return; const committedText = savedText; const saved = await ctx.C.commitDraft(id); baseVersionId = saved.version.id; revision = 0; id = uid(); savedText = null; dirty = JSON.stringify(read()) !== committedText; label.textContent = 'Version saved locally'; if (dirty) await drain(); }); };
-    activeDraft = { flush }; return { value: prior ? JSON.parse(prior.text) : JSON.parse(await record.blob.text()), change, flush, commit, label };
+    activeDraft = { flush, pending:()=>dirty }; return { value: prior ? JSON.parse(prior.text) : JSON.parse(await record.blob.text()), change, flush, commit, label };
   }
   function tabs(ctx, current) { const row = ctx.el('nav','hx-tabs'); row.setAttribute('aria-label','Make and build'); for(const [view,name,glyph] of views) { const b = ctx.button(name,glyph,()=>ctx.open(view,{assetId:null})); b.setAttribute('aria-current',current===view?'page':'false'); row.append(b); } ctx.main.append(row); }
   async function render(view,ctx) { await beforeLeave(); tabs(ctx,view); if(view==='weblab') return webLab(ctx); if(view==='lab') return lab(ctx); if(view==='crew') return crew(ctx); if(view==='momentous') return store(ctx); return create(ctx); }
@@ -86,7 +87,7 @@
     let timer=null,audio=null,url=null,samples=null,points=null;
     const pause=()=>{clearInterval(timer);timer=null;};
     const releaseAudio=()=>{audio?.pause();if(url)URL.revokeObjectURL(url);url=null;if(audio)audio.removeAttribute('src');};
-    dispose=()=>{pause();releaseAudio();};activeDraft={flush:async()=>{pause();await controller.flush();}};
+    dispose=()=>{pause();releaseAudio();};activeDraft={...activeDraft,flush:async()=>{pause();await controller.flush();}};
     const clear=()=>{g.clearRect(0,0,640,360);g.strokeStyle='#66548b';g.lineWidth=2;};
     const path=coordinates=>{g.beginPath();coordinates.forEach(([x,y],index)=>index?g.lineTo(x,y):g.moveTo(x,y));g.stroke();};
     const draw=()=>{

@@ -85,6 +85,8 @@
     function checkpoint(instanceId) {
       return queue(instanceId, async () => { const entry = requireReady(requireInstance(instanceId)); return persist(entry, await serializeEntry(entry)); });
     }
+    function accessInfo(instanceId) { return queue(instanceId, async () => { const entry = requireReady(requireInstance(instanceId)); if (typeof entry.handle.accessInfo !== 'function') throw fail('ACCESS_RENEWAL_UNAVAILABLE', 'This editor does not support in-place access renewal.'); return json(await entry.handle.accessInfo()); }); }
+    function renewAccess(instanceId) { return queue(instanceId, async () => { const entry = requireReady(requireInstance(instanceId)); if (typeof entry.handle.renewAccess !== 'function') throw fail('ACCESS_RENEWAL_UNAVAILABLE', 'This editor does not support in-place access renewal.'); return json(await entry.handle.renewAccess()); }); }
     async function restore(snapshot, { root } = {}) {
       const value = json(snapshot);
       if (value.schema !== 'hole.instance/1' || !id(value.id) || !id(value.appId) || !value.context) throw fail('INVALID_SNAPSHOT', 'Unsupported app checkpoint.');
@@ -126,7 +128,7 @@
         }
       });
     }
-    return Object.freeze({ register, open, present, serialize, checkpoint, restore, close, get: instanceId => instances.has(instanceId) ? inspect(instances.get(instanceId)) : null, list: () => [...instances.values()].map(inspect) });
+    return Object.freeze({ register, open, present, serialize, checkpoint, restore, close, accessInfo, renewAccess, get: instanceId => instances.has(instanceId) ? inspect(instances.get(instanceId)) : null, list: () => [...instances.values()].map(inspect) });
   }
   globalThis.HoleRuntimeModel = Object.freeze({ createRuntime });
   if (typeof window !== 'undefined') window.HoleRuntime = createRuntime({ onChange: detail => window.dispatchEvent(new CustomEvent('hole:runtime-change', { detail })) });

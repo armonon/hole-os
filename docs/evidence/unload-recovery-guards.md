@@ -1,0 +1,13 @@
+# Undurable work and initial-window unload protection
+
+28 October 2026; wave16 source qualification on Node22.22.2 and Chrome156.0.8078.48, disposable local profiles. Final generated build still pending.
+
+A WebLab name edit could fail its draft storage write without protecting browser unload. Actual prior built reproduction reloaded into the original name (`/tmp/weblab-unload-review.log`); the permanent test also fails before the repair (`/tmp/hole-extension-unload-before.log`). The extension draft controller now exposes its actual undurable dirty state to one unload listener. Failed writes keep the guard; a durable draft or committed version clears it. Lab's existing wrapper retains the same pending-state closure. Successful navigation flush/disposal still removes the active draft reference.
+
+`scripts/verify-extension-unload-browser.mjs` passes using the actual browser reload warning: inject draft-only storage refusal, type a name, request reload, dismiss the native beforeunload warning, verify the editor value, restore storage and save, confirm no pending guard, reload and reopen the actual committed name. Source log `/tmp/hole-extension-unload-source.log`; independent `/tmp/extension-unload-independent.log`. Six affected extension tests pass. A user can deliberately accept the browser warning; this does not claim forced-shutdown persistence.
+
+Initial runtime checkpoint refusal also lacked unload protection even though the native editor might later save bridge recovery without a runtime identity row. The coordinator now retains a separate guard until the exact window's Retry checkpoint succeeds or its runtime confirms closed. Neither failed retries nor unrelated runtime changes remove it. The visible retry notice remains. `scripts/verify-window-checkpoint-browser.mjs` proves a failed initial checkpoint triggers an actual reload warning before edits, dismissal retains the window, successful Retry preserves native edits and releases the guard, and normal close removes runtime/frame. Before `/tmp/hole-window-unload-before.log`; source `/tmp/hole-window-unload-source.log`; independent `/tmp/window-retry-unload-independent.log`. The independent variant `/tmp/window-close-unload-independent.log` also proves successful close without pressing Retry removes the guard.
+
+Existing orphaned durable recovery is handled separately and conservatively by `studio-orphan-recovery.md`. These guards do not establish protection for every app/raw field or recovery after loss of unacknowledged in-memory data.
+
+Final generated browser proofs pass without source overrides: `/tmp/hole-wave16-extension-final.log` and `/tmp/hole-wave16-window-final.log`. Combined build and659 tests pass.

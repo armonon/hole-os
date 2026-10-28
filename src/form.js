@@ -47,6 +47,8 @@
         }
         return {
           frame, sessionId: connection.sessionId,
+          accessInfo: () => broker.accessInfo(connection.sessionId),
+          renewAccess: async () => { await broker.renewExpiry(connection.sessionId,{ttlMs:3600000}); return broker.accessInfo(connection.sessionId); },
           revoke: () => broker.revoke(connection.sessionId, 'Resource access revoked; local recovery retained.'),
           serialize: async () => { await flushEditor(); const saved = await core.get('settings', `bridge-state:${instance.id}`); if (saved?.state?.busy) throw new Error('Wait for Form to finish its operation or retry its recovery checkpoint before closing.'); return { schema: 'hole.form-instance/1', assetId: instance.context.assetId, versionId: saved?.state?.binding?.versionId || versionId, checkpointId: `bridge-state:${instance.id}` }; },
           close: async () => { const wasInert=frame.inert; frame.inert=true; try { await flushEditor(); removeUnloadGuard(); broker.revoke(connection.sessionId, 'Editor closed; local recovery retained.'); frame.remove(); } catch(error) { frame.inert=wasInert; throw error; } }

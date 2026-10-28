@@ -211,7 +211,12 @@
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
   const studios = new Map(), restoredReaderWindows = new Map();
-  function retainWindowFailure(host,instanceId,error){const notice=el('div','hc-note',`Window checkpoint failed: ${error.message}. Work remains open. Retry before leaving.`);notice.setAttribute('role','status');notice.append(button('Retry window checkpoint','save',async()=>{await HoleRuntime.checkpoint(instanceId);notice.remove();}));host.append(notice);H.icons();}
+  function retainWindowFailure(host,instanceId,error){
+    const notice=el('div','hc-note',`Window checkpoint failed: ${error.message}. Work remains open. Retry before leaving.`);notice.setAttribute('role','status');
+    const protect=event=>{event.preventDefault();event.returnValue='';}, cleanup=()=>{window.removeEventListener('beforeunload',protect);window.removeEventListener('hole:runtime-change',closed);notice.remove();}, closed=event=>{if(event.detail?.id===instanceId&&event.detail?.status==='closed')cleanup();};
+    window.addEventListener('beforeunload',protect);window.addEventListener('hole:runtime-change',closed);
+    notice.append(button('Retry window checkpoint','save',async()=>{await HoleRuntime.checkpoint(instanceId);cleanup();}));host.append(notice);H.icons();
+  }
   async function openToolWindow(view,restore={}) {
     const label={day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[view], origin=document.activeElement;
     const source=view==='librarian'?await C.readAsset(restore.assetId||navigation.assetId,restore.versionId||navigation.versionId||undefined):null;
@@ -244,6 +249,13 @@
     d.append(button('Open native cut','film',async()=>{const mediaLinks=[];for(const {source,select} of choices){if(!select.value)continue;const selected=await C.readAsset(select.value);if(source.size!==undefined&&selected.blob.size!==source.size)throw new Error('Selected bytes do not match '+String(source.name||source.id)+'. Choose its original media.');mediaLinks.push({sourceId:String(source.id),assetId:selected.asset.id,versionId:selected.version.id});}d.close();await openStudio(record,{editorState:{mediaLinks}},'hole.scenepilot');}),button('Cancel','x',()=>d.close()));
   }
   async function openLuma(record,restore={}) { return openStudio(record,restore,'hole.luma'); }
+  async function reviewStudioAccess(instanceId) {
+    const info=await HoleRuntime.accessInfo(instanceId), d=modal('Review resource access','Renewal keeps this editor’s existing files and operations. It does not add access, undo revocation, or reset the 256-request limit.');
+    const details=el('div'), feedback=el('p');feedback.setAttribute('role','status');
+    const describe=value=>{details.replaceChildren(el('p','',`Status: ${value.status}. Expires: ${date(value.expiresAt)}. Requests: ${value.requestCount} of ${value.requestLimit}.`),el('p','',`Operations: ${value.operations.join(', ')}`));for(const resource of value.resources)details.append(el('p','',`File ${resource.assetId} · exact versions ${resource.versionIds.join(', ')} · ${resource.operations.join(', ')}`));};describe(info);d.append(details,feedback);
+    const renew=button('Renew current access for one hour','rotate-cw',async()=>{renew.disabled=true;try{const updated=await HoleRuntime.renewAccess(instanceId);describe(updated);feedback.textContent='Current access renewed. Return to your editor and retry saving. Request limits and file permissions are unchanged.';}catch(error){feedback.textContent=error.message+' Your editor remains open.';}finally{renew.disabled=false;}});
+    renew.disabled=['revoked','closed','connecting'].includes(info.status);d.append(renew,button('Close access review','x',()=>d.close()));
+  }
   async function openStudio(record, restore = {}, appId = 'hole.luma') {
     const studioName = ({'hole.glyph':'Glyph','hole.form':'Form','hole.scenepilot':'ScenePilot','hole.stemdeck':'StemDeck','hole.ghost':'Form Garment','hole.animate':'ScenePilot Animation'})[appId] || 'Luma';
     if (!window[({'hole.glyph':'HoleGlyph','hole.form':'HoleForm','hole.scenepilot':'HoleScenePilot','hole.stemdeck':'HoleStemDeck','hole.ghost':'HoleGhost','hole.animate':'HoleAnimate'})[appId] || 'HoleLuma']) throw new Error(studioName + ' is unavailable in this build.');
@@ -259,6 +271,7 @@
       instance = await HoleRuntime.open(appId, { ...restore, root, assetId: record.asset.id, versionId: record.version.id, projectId: restore.projectId !== undefined ? restore.projectId : record.asset.projectId || navigation.projectId, presentation: 'window' });
       studios.set(key, { host, name: record.asset.name, instanceId: instance.id });
       controls.append(el('strong', '', record.asset.name), button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())), button('Return to workspace', 'minimize-2', async () => { await HoleRuntime.checkpoint(instance.id); await HoleRuntime.present(instance.id,'minimized'); }), button('Close '+studioName, 'x', async () => { await HoleRuntime.close(instance.id); studios.delete(key); host.remove(); await render(); })); H.icons();
+      if(appId==='hole.form'){controls.append(button('Review resource access','key-round',()=>reviewStudioAccess(instance.id)));H.icons();}
       await HoleRuntime.checkpoint(instance.id);
     } catch (error) { if(instance&&HoleRuntime.get(instance.id)){retainWindowFailure(host,instance.id,error);}else host.remove();throw error; }
   }

@@ -317,3 +317,11 @@ test('runtime close restores input after adapter refusal and preserves an existi
   root.inert = true; reject = false; await runtime.close(entry.id, { checkpoint: false });
   assert.equal(root.inert, true);
 });
+
+test('explicit access operations serialize with close and unsupported adapters remain denied', async()=>{
+ const gate=pause(), entered=pause(), events=[], runtime=createRuntime({core:fixture().core,randomUUID:()=> 'renewal-test'});
+ runtime.register('test.app',{mount:async()=>({accessInfo:async()=>({status:'expired',operations:['state.save']}),renewAccess:async()=>{events.push('renew');entered.resolve();await gate.promise;return{status:'ready'};},close:async()=>events.push('close')})});
+ const instance=await runtime.open('test.app');assert.equal((await runtime.accessInfo(instance.id)).status,'expired');
+ const renewal=runtime.renewAccess(instance.id), closing=runtime.close(instance.id,{checkpoint:false});await entered.promise;assert.deepEqual(events,['renew']);gate.resolve();assert.equal((await renewal).status,'ready');await closing;assert.deepEqual(events,['renew','close']);await assert.rejects(runtime.renewAccess(instance.id),{code:'INSTANCE_NOT_FOUND'});
+ runtime.register('plain.app',{mount:async()=>({})});const plain=await runtime.open('plain.app');await assert.rejects(runtime.renewAccess(plain.id),{code:'ACCESS_RENEWAL_UNAVAILABLE'});
+});

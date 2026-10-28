@@ -14,19 +14,28 @@
     hostWindow ||= surface.opener || (surface.parent !== surface ? surface.parent : null);
     if (!hostWindow) throw error('HOST_UNAVAILABLE', 'This studio has no connected Hole window.');
     let session = sandbox ? { sessionId: bootstrap.sessionId, nonce: bootstrap.nonce } : null;
-    let grant = null, port = null, disposed = false;
+    let grant = null, port = null, disposed = false, renewalOffer = null;
     const pending = new Map();
     let resolveReady, rejectReady;
     const ready = new Promise((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
     const timer = setTimeout(() => dispose(error('CONNECTION_TIMEOUT', 'Hole did not authorize this connection.')), timeoutMs);
     function post(message) { if (port) port.postMessage(message); else hostWindow.postMessage(message, hostOrigin); }
     function packet(type, values = {}) { return { channel: CHANNEL, version: VERSION, type, ...session, ...values }; }
+    const scope = value => JSON.stringify({grantId:value.grantId,instanceId:value.instanceId,projectId:value.projectId,operations:value.operations,resources:value.resources});
+    function validRenewal(data) {
+      return grant && Object.keys(data).every(key=>['channel','version','type','sessionId','nonce','grantId','instanceId','projectId','operations','resources','renewalId','expiresAt'].includes(key)) && typeof data.renewalId==='string' && data.renewalId.length>0 && data.renewalId.length<=160 && Number.isFinite(data.expiresAt) && data.expiresAt>=grant.expiresAt && data.expiresAt>Date.now() && data.expiresAt<=Date.now()+3601000 && scope(data)===scope(grant);
+    }
     function receive(data) {
       if (disposed || !data || data.channel !== CHANNEL || data.version !== VERSION || !session || data.sessionId !== session.sessionId || data.nonce !== session.nonce) return;
       if (data.type === 'grant' && !grant) {
         if (typeof data.grantId !== 'string' || !Array.isArray(data.resources) || !Array.isArray(data.operations) || !Number.isFinite(data.expiresAt)) return;
         grant = structuredClone({ grantId: data.grantId, instanceId: data.instanceId, projectId: data.projectId, resources: data.resources, operations: data.operations, expiresAt: data.expiresAt });
         clearTimeout(timer); resolveReady(structuredClone(grant));
+      } else if(data.type==='renewal-offer'&&validRenewal(data)){
+        renewalOffer={id:data.renewalId,expiresAt:data.expiresAt};
+        post(packet('renewal-ready',{grantId:grant.grantId,renewalId:data.renewalId}));
+      } else if(data.type==='renewed'&&validRenewal(data)&&renewalOffer?.id===data.renewalId&&renewalOffer.expiresAt===data.expiresAt){
+        grant.expiresAt=data.expiresAt; renewalOffer=null;
       } else if (data.type === 'response' && pending.has(data.requestId)) {
         const request = pending.get(data.requestId);
         pending.delete(data.requestId); clearTimeout(request.timer);
@@ -61,7 +70,7 @@
     async function request(operation, payload, { requestId = `request:${crypto.randomUUID()}` } = {}) {
       await ready;
       if (disposed) throw error('CONNECTION_CLOSED', 'The studio connection closed.');
-      if (Date.now() >= grant.expiresAt) throw error('GRANT_EXPIRED', 'Reconnect to continue editing with Hole.');
+      if (Date.now() >= grant.expiresAt) throw error('GRANT_EXPIRED', 'Ask Hole to renew this connection explicitly. Your current work remains open.');
       if (!grant.operations.includes(operation)) throw error('ACCESS_DENIED', 'Hole has not granted this operation.');
       if (pending.has(requestId)) throw error('REQUEST_PENDING', 'This request is already in flight.');
       return new Promise((resolve, reject) => {

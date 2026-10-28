@@ -1,12 +1,16 @@
 # Current continuation qualification
 
-Latest pushed implementation: `fd8c241` (616 full tests plus 49 final affected tests). Latest byte-verified review: [421-file review](https://6ae1fdbf12f8ebe8698b26a1--hole-os-armonon.netlify.app), receipt `review-fd8c241.json`. Production unchanged; master brief incomplete.
+Latest pushed implementation: `638568e` (640 full tests plus18 final affected tests). Latest byte-verified review: [422-file review](https://6ae217b6114162684843d73b--hole-os-armonon.netlify.app), receipt `review-638568e.json`. Production unchanged; master brief incomplete.
 
-## Fifteenth increment — 28 October 2026 (integration)
+## Sixteenth increment — 28 October 2026 (qualified locally, delivery pending)
+
+Combined build and all 659 tests pass. Final generated Chrome checks pass for explicit Form access-expiry renewal (same scope/count, durable receipt replay, request257 still denied), Luma native selections and clipped paint/erase, conservative orphan Glyph recovery without modifying its original, WebLab undurable-draft unload protection, and failed initial-window checkpoint unload protection. Independent review caught and verified the repair of an expired derive job retry conflict, including concurrent cancellation and revision races. Evidence: `bridge-renewal.md`, `luma-selection.md`, `studio-orphan-recovery.md`, `unload-recovery-guards.md`. Logs `/tmp/hole-wave16-full-tests.log` and `/tmp/hole-wave16-{access,bridge,selection,orphan,extension,window}-final.log`. These bounded checks do not establish whole-program completion or solve request-budget exhaustion.
+
+## Fifteenth increment — 28 October 2026 (delivered)
 
 640 full tests pass. Final generated-browser checks pass for native Form seam bind/disable/remove/Undo and real DXF notches, Luma six-parameter tone with unchanged original raster bytes, native Bounce library exact-source mapping and metadata retention, and reader/Publish/WebLab/Tongue navigation refusal recovery. Independent reviews pass. Evidence: `form-seams.md`, `luma-tone.md`, `bounce-library.md`, `navigation-refusal.md`.
 
-Independent review reproduced and repaired a listening-window lifecycle seam: catalog editing is now restricted to the shared workspace, and closing blocks checkpoint-triggered redraws. Eighteen affected tests and final rebuilt Bounce/window browser checks pass; independent review confirms failed-close recovery and no delayed opens or redraws. Increment is qualified locally, awaiting commit/push/review verification. No full studio, physical device or production claim.
+Independent review reproduced and repaired a listening-window lifecycle seam: catalog editing is now restricted to the shared workspace, and closing blocks checkpoint-triggered redraws. Eighteen affected tests and final rebuilt Bounce/window browser checks pass; independent review confirms failed-close recovery and no delayed opens or redraws. Increment is pushed and the review deployment is byte verified. No full studio, physical device or production claim.
 
 ## Fourteenth increment — 28 October 2026 (delivered)
 

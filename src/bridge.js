@@ -85,6 +85,7 @@
       sessions.set(session.id, session);
       return session;
     }
+    const grantScope = session => ({ grantId: session.grantId, instanceId: session.instanceId, projectId: session.projectId, operations: [...session.operations], resources: [...session.resources.values()].map(resource => ({ assetId: resource.assetId, versionId: resource.initialVersionId, operations: [...resource.operations] })) });
     function grant(session) {
       live(session);
       session.ready = true;
@@ -110,7 +111,7 @@
       assert(frame.hasAttribute('srcdoc') || typeof options.render === 'function', 'UNSAFE_SANDBOX', 'Use a host-created srcdoc sandbox for this transport.');
       const hostOrigin = originOf(host?.location?.origin);
       const session = makeSession(options, 'sandbox-port');
-      Object.assign(session, { origin: 'null', source: frame.contentWindow });
+      Object.assign(session, { origin: 'null', source: frame.contentWindow, frame });
       const bootstrap = { channel: CHANNEL, version: VERSION, sessionId: session.id, nonce: session.nonce, hostOrigin };
       if (options.render) frame.srcdoc = options.render(bootstrap);
       return { ...describe(session), bootstrap };
@@ -194,13 +195,22 @@
       if (operation === 'resource.derive') {
         const jobId = `bridge:${session.id}:${work.requestId}`;
         assert(jobId.length <= 360, 'INVALID_MESSAGE', 'Job identifier is too long.');
-        const job = await db.put('jobs', { id: jobId, idempotencyKey: jobId, status: 'running', progress: 0, label: payload.operation, projectId: session.projectId, inputs: [{ assetId: payload.assetId, versionId: payload.versionId }], origin: 'studio-bridge' });
+        let job;
+        if(work.deriveJob){
+          const current=await db.get('jobs',jobId); check();
+          assert(current&&JSON.stringify(metadata(current))===JSON.stringify(work.deriveJob),'CONFLICT','The retained export job changed. Its current state is preserved.');
+          assert(!work.committing&&work.previousExpiredOutcome?.error?.code==='GRANT_EXPIRED','CONFLICT','This export job cannot be resumed.');
+          job=await db.put('jobs',{...current,status:'running',error:'',progress:0},{expectedRevision:current.revision});
+        }else{
+          job=await db.put('jobs', { id: jobId, idempotencyKey: jobId, status: 'running', progress: 0, label: payload.operation, projectId: session.projectId, inputs: [{ assetId: payload.assetId, versionId: payload.versionId }], origin: 'studio-bridge' });
+        }
+        work.deriveJob=metadata(job);
         try {
           check(); work.committing = true;
           return await db.commitJobOutputs({ jobId, idempotencyKey: jobId, outputs: payload.outputs.map(output => ({ name: output.name, kind: output.kind, blob: binary(output.blob), projectId: session.projectId, parentVersionIds: [payload.versionId], operation: payload.operation, parameters: metadata(payload.parameters || {}), provenance: { operation: payload.operation, parameters: metadata(payload.parameters || {}), inputAssetId: payload.assetId, inputVersionId: payload.versionId, instanceId: session.instanceId } })) });
         } catch (error) {
           // Cleanup must never replace the original error or claim completion.
-          try { await db.put('jobs', { ...job, status: ['CANCELLED', 'GRANT_REVOKED', 'GRANT_EXPIRED'].includes(error.code) ? 'cancelled' : 'failed', error: error.message }, { expectedRevision: job.revision }); } catch {}
+          try { work.deriveJob=metadata(await db.put('jobs', { ...job, status: ['CANCELLED', 'GRANT_REVOKED', 'GRANT_EXPIRED'].includes(error.code) ? 'cancelled' : 'failed', error: error.message }, { expectedRevision: job.revision })); } catch {}
           throw error;
         }
       }
@@ -238,9 +248,38 @@
       }
       throw fail('ACCESS_DENIED', 'Unsupported bridge operation.');
     }
+    function renewable(session) {
+      assert(session && !session.revoked, 'GRANT_REVOKED', 'This connection is closed or revoked and cannot be renewed.');
+      assert(session.ready && session.source && session.source.closed !== true && (!session.frame || session.frame.isConnected !== false && session.frame.contentWindow === session.source), 'CONNECTION_CLOSED', 'The original studio connection must still be open.');
+    }
+    function cancelRenewal(session, error) { const pending=session.renewal; if(!pending)return; session.renewal=null; clearTimeout(pending.timer); pending.reject(error); }
+    function renewalReady(session,data) {
+      fields(data,['channel','version','type','sessionId','nonce','grantId','renewalId']);
+      assert(data.channel===CHANNEL&&data.version===VERSION&&data.type==='renewal-ready'&&data.sessionId===session.id&&data.nonce===session.nonce&&data.grantId===session.grantId,'INVALID_SESSION','Renewal identity does not match.');
+      const pending=session.renewal; assert(pending&&data.renewalId===pending.id,'INVALID_SESSION','No matching explicit renewal is pending.');
+      try { renewable(session); assert(now()<pending.expiresAt,'GRANT_EXPIRED','Renewal expired before acknowledgement. Retry explicitly.');
+        const previous=session.expiresAt; session.expiresAt=pending.expiresAt;
+        try { send(session,packet(session,'renewed',{...grantScope(session),renewalId:pending.id,expiresAt:session.expiresAt})); } catch(error) { session.expiresAt=previous; throw error; }
+        session.renewal=null; clearTimeout(pending.timer); pending.resolve(describe(session)); onChange(describe(session));
+      } catch(error) { cancelRenewal(session,error); }
+    }
+    function renewExpiry(sessionId,options={}) {
+      fields(options,['ttlMs'],[]); const ttlMs=options.ttlMs??3600000;
+      assert(Number.isFinite(ttlMs)&&ttlMs>=1000&&ttlMs<=3600000,'INVALID_GRANT','Renewal lasts between one second and one hour.');
+      const session=sessions.get(sessionId); renewable(session); assert(!session.renewal,'RENEWAL_PENDING','An explicit renewal is already awaiting acknowledgement.');
+      return new Promise((resolve,reject)=>{ const id=randomUUID(),expiresAt=Math.max(session.expiresAt,now()+ttlMs);
+        session.renewal={id,expiresAt,resolve,reject,timer:setTimeout(()=>cancelRenewal(session,fail('CONNECTION_TIMEOUT','The original studio did not acknowledge renewal. Its expiry is unchanged.')),5000)};
+        try { send(session,packet(session,'renewal-offer',{...grantScope(session),renewalId:id,expiresAt})); } catch(error) { cancelRenewal(session,error); }
+      });
+    }
+    function executeRequest(session,operation,payload,work) {
+      work.complete=false; work.expiryAt=session.expiresAt;
+      work.promise=(async()=>{await work.signature;return execute(session,operation,payload,work);})().then(result=>({ok:true,result}),error=>({ok:false,error:{code:error.code||'OPERATION_FAILED',message:error.code?error.message:'The operation could not be completed.'}})).then(response=>{work.response=response;return response;}).finally(()=>{work.complete=true;});
+    }
     async function dispatch(session, data) {
       let requestId;
       try {
+        if(data?.type==='renewal-ready'){renewalReady(session,data);return;}
         envelope(session, data); requestId = data.requestId;
         const payload = schema(data.operation, data.payload);
         authorize(session, data.operation, payload);
@@ -249,11 +288,14 @@
         let work = session.requests.get(requestId);
         if (work) {
           assert(await work.signature === await signaturePromise, 'REQUEST_REUSE', 'A request ID cannot be reused for different content.');
+          // Only an explicit expiry extension can resume a proven pre-output denial (owned job bookkeeping may already exist).
+          // Never discard/re-execute a receipt whose irreversible work began.
+          if(work.complete&&!work.committing&&work.response?.error?.code==='GRANT_EXPIRED'&&session.expiresAt>work.expiryAt){work.previousExpiredOutcome=work.response;executeRequest(session,data.operation,payload,work);}
         } else {
           assert(session.requests.size < MAX_REQUESTS, 'SESSION_LIMIT', 'Reconnect to continue after 256 requests.');
           work = { requestId, signature: signaturePromise, controller: new AbortController(), committing: false, complete: false };
           session.requests.set(requestId, work);
-          work.promise = (async () => { await signaturePromise; return execute(session, data.operation, payload, work); })().then(result => ({ ok: true, result }), error => ({ ok: false, error: { code: error.code || 'OPERATION_FAILED', message: error.code ? error.message : 'The operation could not be completed.' } })).finally(() => { work.complete = true; });
+          executeRequest(session,data.operation,payload,work);
         }
         const response = await work.promise;
         // A commit already accepted by storage may finish after revocation, but
@@ -270,6 +312,7 @@
       const session = sessions.get(data.sessionId);
       if (!session || event.source !== session.source || event.origin !== session.origin || data.nonce !== session.nonce || session.revoked) return false;
       try {
+        if(data.type==='renewal-ready'&&session.transport==='window'){renewalReady(session,data);return true;}
         live(session);
         if (session.transport === 'sandbox-port') {
           if (session.ready || data.type !== 'port-ready' || event.ports?.length !== 1) return false;
@@ -294,6 +337,7 @@
       const session = sessions.get(sessionId);
       if (!session || session.revoked) return false;
       session.revoked = true;
+      cancelRenewal(session,fail('GRANT_REVOKED','Access was revoked during renewal.'));
       for (const work of session.requests.values()) if (!work.committing) work.controller.abort();
       send(session, packet(session, 'revoked', { reason: String(reason).slice(0, 160) }));
       session.port?.close();
@@ -303,8 +347,9 @@
     const listener = event => { void receive(event); };
     host?.addEventListener('message', listener);
     return Object.freeze({
-      approveOrigin: origin => approved.add(originOf(origin)), connectExternal, prepareSandbox, receive, revoke,
+      approveOrigin: origin => approved.add(originOf(origin)), connectExternal, prepareSandbox, receive, revoke, renewExpiry,
       retryHandshake: sessionId => { const session = sessions.get(sessionId); assert(session && session.transport === 'window', 'SESSION_NOT_FOUND', 'No external window session.'); live(session); if (!session.ready) send(session, packet(session, 'hello')); },
+      accessInfo: sessionId => { const session=sessions.get(sessionId); assert(session,'SESSION_NOT_FOUND','The studio connection is unavailable.'); const info=describe(session); return {instanceId:session.instanceId,projectId:session.projectId,status:session.source?.closed===true||session.frame?.isConnected===false?'closed':info.status,expiresAt:session.expiresAt,requestCount:session.requests.size,requestLimit:MAX_REQUESTS,operations:[...session.operations],resources:[...session.resources.values()].map(r=>({assetId:r.assetId,versionId:r.initialVersionId,versionIds:[...r.versions],operations:[...r.operations]}))}; },
       list: () => [...sessions.values()].map(describe),
       dispose: () => { host?.removeEventListener('message', listener); for (const session of sessions.values()) revoke(session.id, 'Host closed'); sessions.clear(); }
     });
