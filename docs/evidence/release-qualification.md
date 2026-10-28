@@ -1,8 +1,18 @@
 # Current continuation qualification
 
-Latest pushed implementation: `e189973` (510 passing tests). Latest byte-verified review: [414-file review](https://6ae1d85d114cc099b20de3c9--hole-os-armonon.netlify.app), receipt `review-e189973.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `ddcfc42` (522 passing tests). Latest byte-verified review: [416-file review](https://6ae1dd252914c74f0a9afd79--hole-os-armonon.netlify.app), receipt `review-ddcfc42.json`. Production remains unchanged; the master brief is not complete.
 
-## Ninth increment — 28 October 2026 (release checks)
+## Tenth increment — 28 October 2026 (release checks)
+
+543 tests pass after the settled serial build. Luma adds actual retained-engine native raster/text layers, typed recovery and bounded paint/erase, with exact pixels, original/native reopen, failed recovery and lost-ACK retry tests. Image saves remain flattened; native layer creation is clearly limited to `.luma`. Imported transformed/oversized paint targets are refused before interpolation. See `luma-tools.md`.
+
+Paperwork fixes lost rapid table edits, unsubmitted form-answer recovery, imported own-key fields, incomplete-draft repair and asynchronous save races. Actual built Markdown/HTML/calculated CSV/form-response exports, reload, failed storage, delayed-write controls, keyboard labels and 320px layout pass. See `paperwork-formats.md`.
+
+StemDeck now plays actual bounded dry PCM-WAV/MIDI arrangements using retained scheduling and instruments, with loop/seek/monitor controls. Actual combined PCM exactly matches isolated-track sums. Independent review reproduced three overlapping offline allocations after repeated cancel/play; admission now retains one in-flight render until native work settles, with regression and independent one-allocation confirmation. Cancellation prevents stale playback; it cannot hard-terminate OfflineAudioContext. The final built shell journey and prior Rack/native archive regression pass. Full effects/routing/automation remain preserved but unrendered. See `stemdeck-transport.md`.
+
+Capture retains failed recording bytes, supports retry/download and awaits storage before closing. Independent review fixed stale permission rejection stopping a newer stream and thought-save completion closing a competing recording. Six focused tests and generated-stream real MediaRecorder tests cover close/error/ACK/permission seams; no physical microphone claim. See `capture-voice.md`. Final post-review rebuilt Luma/Capture checks also pass; source is frozen for delivery.
+
+## Ninth increment — 28 October 2026 (delivered)
 
 Settled suite: 522 tests pass. Serial build succeeds. One stale test fixture's function-signature extraction was corrected after the arrangement API gained an explicit reader-version option; the content-preservation assertions remain unchanged.
 

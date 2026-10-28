@@ -1,0 +1,13 @@
+# Capture recording recovery
+
+28 October 2026. Capture uses a bounded `HoleVoiceCapture` session to keep recorded bytes until Core acknowledges storage or the user explicitly downloads them. Close and Escape stop recording, release tracks and await saving. A failed save keeps the dialog and audio bytes available for Retry saving voice or Download retained voice; retries share one persistence operation. Recording stops after five minutes or when accumulated chunks reach 16 MiB (the final recorder chunk may exceed the threshold). Permission requests can be cancelled; a later grant stops its tracks without starting a recorder. A late rejection from an older cancelled request cannot stop a newer recording. Track loss stops capture and retains available chunks. Empty recordings are reported without creating an asset.
+
+The beforeunload warning covers active recording, unexported pending audio and awaited thought writes. Keep thought locks competing capture buttons and fields while its write is pending; its completion cannot close a newly started voice session. A failed secondary canvas-placement write reports that placement failure while retaining the already acknowledged project asset, avoiding duplicate import on retry. This does not add crash-proof streaming audio storage: unsaved recording bytes remain in memory until Stop/save or explicit download.
+
+## Evidence
+
+Six focused tests cover acknowledged close, storage failure/retained bytes/concurrent retry, late permission grants, denial/unavailable recording, track loss/export escape and a late rejection after a new recording starts. Independent review found the late-rejection cleanup race and competing thought-save close race; both were fixed and rechecked.
+
+`node scripts/verify-capture-voice-browser.mjs` uses the generated shell in Chrome156.0.8078.48, real Web Audio generated stereo audio and the real MediaRecorder encoder. It verifies decodable WebM (about one second, 15–17 KiB), failed close preserving bytes, stopped tracks, exact-size original storage after retry, one saved asset, permission-denial UI via dependency injection, awaited save before close, delayed thought save blocking recording/close, and a 320px dialog. No page errors. Storage and permission failures are injected at dependencies; runtime module bytes are built assets.
+
+The initial Chromium fake-device getUserMedia attempt remained pending and timed out; it did not demonstrate microphone permission or physical input. The final generated-stream test therefore **does not qualify physical microphone/device loss**, user permission prompts, real speaker playback or Safari. Those remain explicit device/browser acceptance gates. Recorded files are local; nothing is sent externally.

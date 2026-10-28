@@ -1,63 +1,41 @@
-/* Controlled sandbox entry. Uses the retained Studio engine, never a format imitation. */
-(async () => {
-  'use strict';
-  if (document.readyState !== 'complete') await new Promise(resolve => window.addEventListener('load', resolve, { once: true }));
-  const status = document.querySelector('[role=status]'), controls = [...document.querySelectorAll('button,input,select')];
-  const tell = text => { status.textContent = text; };
-  let studio, adapter, revision, dirty = false;
-  const client = HoleBridgeClient.createClient({ bootstrap: globalThis.HOLE_LUMA_BOOTSTRAP, hostWindow: parent });
-  const checkpoint = async (busy = false) => {
-    const recovery = dirty ? (await studio.exportRecoveryDocument()).blob : null;
-    const result = await client.request('state.save', { state: { ...adapter.serialize(), dirty, busy }, recovery, ...(revision ? { expectedRevision: revision } : {}) });
-    revision = result.revision;
-  };
-  const update = () => {
-    const select = document.querySelector('#layer'), previous = select.value;
-    select.replaceChildren(...studio.doc.layers.map(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; return option; }));
-    if ([...select.options].some(option => option.value === previous)) select.value = previous;
-    document.querySelector('#opacity').value = studio.doc.layers.find(layer => layer.id === select.value)?.opacity ?? 1;
-    document.querySelector('#dimensions').textContent = `${studio.doc.width} × ${studio.doc.height}`;
-  };
-  async function run(action) {
-    controls.forEach(control => { control.disabled = true; });
-    try { await checkpoint(true); await action(); update(); } catch (error) { tell(`${error.message} Your work remains open; retry or keep this window open.`); }
-    finally { controls.forEach(control => { control.disabled = false; }); }
-  }
-  controls.forEach(control => { control.disabled = true; });
-  try {
-    const grant = await client.ready, resource = grant.resources[0];
-    studio = new LumaEngine.Studio(32, 32, document.querySelector('canvas'));
-    adapter = HoleLumaAdapter.create({ studio, client });
-    await adapter.openGranted(resource.assetId, resource.versionId);
-    const saved = await client.request('state.read', {});
-    revision = saved?.revision;
-    if (saved?.recovery && saved.state.binding?.assetId === resource.assetId) {
-      await adapter.restoreRecovery(saved.recovery); dirty = true; tell('Recovered local edits. Review and save to Hole.');
-    } else tell('Opened from Hole. Crop or change a layer, then save.');
-    if (grant.projectId) {
-      const { kit } = await adapter.readKit();
-      document.querySelector('#kit').textContent = `Project Kit: ${JSON.stringify(kit)}`;
-    }
-    update();
-    document.querySelector('#layer').onchange = update;
-    document.querySelector('#opacity').onchange = () => run(async () => {
-      studio.setLayerProp(document.querySelector('#layer').value, 'opacity', Number(document.querySelector('#opacity').value), 'Hole layer opacity');
-      dirty = true; await checkpoint(); tell('Layer edit recovered locally. Save to update the asset.');
-    });
-    document.querySelector('#crop').onclick = () => run(async () => {
-      const values = ['x','y','width','height'].map(id => Number(document.getElementById(id).value));
-      if (!values.every(Number.isInteger) || values[0] < 0 || values[1] < 0 || values[2] < 1 || values[3] < 1 || values[0]+values[2] > studio.doc.width || values[1]+values[3] > studio.doc.height) throw new Error('Crop must fit inside the image.');
-      studio.cropRect(...values, 'Hole crop'); dirty = true; await checkpoint(); tell('Crop recovered locally. Save to update the asset.');
-    });
-    for (const name of ['undo', 'redo']) document.getElementById(name).onclick = () => run(async () => { studio[name](); dirty = true; await checkpoint(); tell('Edit recovered locally.'); });
-    document.querySelector('#save').onclick = () => run(async () => {
-      await checkpoint(true); tell('Saving; waiting for durable Hole acknowledgement…');
-      const output = await adapter.saveBack(); dirty = false;
-      await checkpoint(); tell(`Saved to Hole · ${output.versionId}. Original version retained.`);
-    });
-    document.querySelector('#checkpoint').onclick = () => run(async () => { await checkpoint(); tell('Recovery checkpoint saved locally.'); });
-    // Exposed only inside the opaque child for reproducible browser qualification.
-    globalThis.HoleLumaMounted = { studio, adapter, client, checkpoint, get dirty() { return dirty; } };
-    controls.forEach(control => { control.disabled = false; });
-  } catch (error) { tell(`Luma could not open: ${error.message}`); client.dispose(); studio?.dispose(); }
+/* Bounded controls over the retained Studio engine and native codec. */
+(()=>{'use strict';
+const finite=(n,a,b)=>typeof n==='number'&&Number.isFinite(n)&&n>=a&&n<=b;
+function documentBounds(doc,adding=false){if(!Number.isInteger(doc.width)||!Number.isInteger(doc.height)||doc.width<1||doc.height<1||doc.width>2048||doc.height>2048||doc.width*doc.height>4000000)throw Error('Connected layer and brush tools support up to 2048 pixels per edge and four million pixels.');if(adding&&((doc.layers.length+1)*doc.width*doc.height>32000000))throw Error('Connected layer creation supports up to 32 million layer pixels.');if(adding&&doc.layers.length>=64)throw Error('Connected layer creation supports up to 64 layers.');}
+function text(value){if(typeof value!=='string'||value.length>2000||value.split('\n').length>32)throw Error('Text supports up to 2000 characters and 32 lines.');return value;}
+function stroke(doc,points,size,color,mode){documentBounds(doc);if(!Array.isArray(points)||!points.length||points.length>1024||!finite(size,1,128)||!/^#[0-9a-f]{6}$/i.test(color)||!['paint','erase'].includes(mode))throw Error('Use a 1–128 pixel brush and at most 1024 points.');let work=0;for(let i=0;i<points.length;i++){const p=points[i],a=points[Math.max(0,i-1)];if(!p||!finite(p.x,0,doc.width)||!finite(p.y,0,doc.height))throw Error('Stroke points must fit inside the document.');work+=(1+Math.ceil(Math.hypot(p.x-a.x,p.y-a.y)/Math.max(1,size*.25)))*Math.ceil(size+2)**2;if(work>8000000)throw Error('Stroke exceeds the eight-million-pixel work budget; use a shorter stroke.');}return{size,hardness:1,opacity:1,flow:1,color,spacing:.25,smoothing:0,pressureSize:false,pressureOpacity:false,mode};}
+function paintLayer(layer){const t=layer?.transform,s=layer?.surface?.grid||layer?.bitmap;if(layer?.kind!=='raster'||layer.locked||layer.smartSource)throw Error('Choose an unlocked raster layer for painting.');if(!t||t.sx!==1||t.sy!==1||t.rotation!==0||(t.skewX||0)!==0||!finite(t.tx,-2048,2048)||!finite(t.ty,-2048,2048)||!s||!finite(s.width,1,2048)||!finite(s.height,1,2048)||s.width*s.height>4000000)throw Error('Connected painting requires an unscaled, unrotated raster surface up to four million pixels. Use the full studio for transformed or larger layers.');}
+function point(doc,rect,x,y){const scale=Math.min(rect.width/doc.width,rect.height/doc.height);return{x:(x-rect.left-rect.width/2)/scale+doc.width/2,y:(y-rect.top-rect.height/2)/scale+doc.height/2,p:1};}
+globalThis.HoleLumaTools=Object.freeze({documentBounds,text,stroke,point,paintLayer});
+})();
+(async()=>{'use strict';
+if(document.readyState!=='complete')await new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+const status=document.querySelector('[role=status]'),canvas=document.querySelector('canvas'),tell=text=>status.textContent=text,by=id=>document.getElementById(id),tools=HoleLumaTools;
+const box=document.createElement('fieldset');box.id='luma-tools';box.innerHTML='<legend>Layers, text and brush</legend><label>New layer name <input id="new-layer-name" value="Paint layer" maxlength="80" style="width:140px"></label><button id="add-raster">Add raster layer</button><label>New text size <input id="text-size" type="number" min="4" max="256" value="24"></label><label>New text color <input id="text-color" type="color" value="#ffffff"></label><label>New text X <input id="text-x" type="number" value="8"></label><label>New text Y <input id="text-y" type="number" value="32"></label><button id="add-text">Add text layer</button><label style="display:block">Text content <textarea id="text-content" maxlength="2000" rows="3" style="display:block;width:95%;font:inherit"></textarea></label><p id="text-help">Text changes save to local recovery as you type. Existing text styles stay intact.</p><label>Canvas tool <select id="brush-mode"><option value="off">View</option><option value="paint">Paint</option><option value="erase">Erase</option></select></label><label>Brush size <input id="brush-size" type="number" min="1" max="128" value="8"></label><label>Brush color <input id="brush-color" type="color" value="#ff0000"></label><p>Choose a raster layer. Draw on the preview and release to apply a stroke; Escape cancels. Keyboard users can enter a line below.</p><label>Stroke start X <input id="stroke-x1" type="number" value="8"></label><label>Stroke start Y <input id="stroke-y1" type="number" value="8"></label><label>Stroke end X <input id="stroke-x2" type="number" value="40"></label><label>Stroke end Y <input id="stroke-y2" type="number" value="8"></label><button id="stroke-line">Apply brush line</button>';
+document.querySelector('fieldset').before(box);box.style.minWidth='0';const formatNotice=document.createElement('p');formatNotice.id='luma-format-notice';box.prepend(formatNotice);for(const label of box.querySelectorAll('label')){const input=label.querySelector('input,textarea,select');input?.setAttribute('aria-label',label.firstChild.textContent.trim());}canvas.style.touchAction='none';
+const controls=[...document.querySelectorAll('button,input,select,textarea')];let studio,adapter,revision,dirty=false,busy=false,textJobs=0,textQueue=Promise.resolve(),gesture=null,textLayer=null,recoveryFailed=false,lastRecovery=null;
+const client=HoleBridgeClient.createClient({bootstrap:globalThis.HOLE_LUMA_BOOTSTRAP,hostWindow:parent});
+const checkpoint=async(flag=false,capture=true)=>{const recovery=capture?(dirty?(await studio.exportRecoveryDocument()).blob:null):lastRecovery;const result=await client.request('state.save',{state:{...adapter.serialize(),dirty,busy:flag},recovery,...(revision?{expectedRevision:revision}:{})});revision=result.revision;lastRecovery=recovery;};
+function enabled(){const pending=adapter?.getPendingSave();for(const control of controls)control.disabled=busy||!!gesture||textJobs>0;if(textJobs&&!busy&&!gesture)by('text-content').disabled=false;if(pending)for(const control of controls)control.disabled=!['save','checkpoint'].includes(control.id);if(!busy&&!textJobs&&!gesture&&!pending)by('text-content').disabled=!textLayer;if(adapter&&!adapter.getBinding()?.native){by('add-raster').disabled=true;by('add-text').disabled=true;}}
+function update(selectId){const select=by('layer'),previous=selectId||select.value;select.replaceChildren(...studio.doc.layers.map(layer=>{const option=document.createElement('option');option.value=layer.id;option.textContent=layer.name;return option;}));if([...select.options].some(o=>o.value===previous))select.value=previous;const layer=studio.doc.layers.find(l=>l.id===select.value);by('opacity').value=layer?.opacity??1;by('dimensions').textContent=`${studio.doc.width} × ${studio.doc.height}`;textLayer=layer?.text&&!layer.locked?layer.id:null;by('text-content').value=layer?.text?.text||'';enabled();}
+async function run(action,{retry=false}={}){if(busy||textJobs||gesture)return;if(adapter.getPendingSave()&&!retry){tell('Retry the pending save before editing.');return;}busy=true;enabled();try{await checkpoint(true,false);await action();recoveryFailed=false;update();}catch(error){tell(`${error.message} Your work remains open; retry or keep this window open.`);}finally{busy=false;enabled();}}
+function changed(message){dirty=true;return checkpoint().then(()=>tell(message));}
+async function paint(points,layerId=by('layer').value){const mode=by('brush-mode').value;if(mode==='off')throw Error('Choose Paint or Erase first.');const layer=studio.doc.layers.find(l=>l.id===layerId);tools.paintLayer(layer);const params=tools.stroke(studio.doc,points,Number(by('brush-size').value),by('brush-color').value,mode);try{if(!studio.beginStroke(layerId,params,{...points[0],p:1}))throw Error('This raster layer cannot accept the stroke.');for(const p of points.slice(1))studio.paintTo(layerId,params,{...p,p:1});studio.endStroke(layerId,params);}catch(error){studio.cancelStroke();throw error;}await changed('Brush stroke recovered locally. Save to update the asset.');}
+controls.forEach(c=>c.disabled=true);
+try{const grant=await client.ready,resource=grant.resources[0];studio=new LumaEngine.Studio(32,32,canvas);adapter=HoleLumaAdapter.create({studio,client});await adapter.openGranted(resource.assetId,resource.versionId);const saved=await client.request('state.read',{});revision=saved?.revision;lastRecovery=saved?.recovery||null;if(saved?.recovery&&saved.state.binding?.assetId===resource.assetId){await adapter.restoreRecovery(saved.recovery);dirty=true;tell('Recovered local edits. Review and save to Hole.');}else tell('Opened from Hole. Add layers, edit text, paint or crop, then save.');if(grant.projectId){const {kit}=await adapter.readKit();by('kit').textContent=`Project Kit: ${JSON.stringify(kit)}`;}formatNotice.textContent=adapter.getBinding().native?'Native .luma saves preserve editable layers and text.':'Image saves export flattened pixels. Open a native .luma document to add editable layers; native Save As is available in the full studio.';update();
+by('layer').onchange=()=>{if(textJobs)return;update();};
+by('opacity').onchange=()=>run(async()=>{const opacity=Number(by('opacity').value);if(!Number.isFinite(opacity)||opacity<0||opacity>1)throw Error('Opacity must be between zero and one.');studio.setLayerProp(by('layer').value,'opacity',opacity,'Hole layer opacity');await changed('Layer edit recovered locally. Save to update the asset.');});
+by('add-raster').onclick=()=>run(async()=>{if(!adapter.getBinding().native)throw Error('Open a native .luma document to add editable layers.');tools.documentBounds(studio.doc,true);const name=by('new-layer-name').value.trim();if(!name||name.length>80)throw Error('Choose a layer name between 1 and 80 characters.');const layer=studio.addBlankRaster(name);update(layer.id);await changed('Raster layer recovered locally.');});
+by('add-text').onclick=()=>run(async()=>{if(!adapter.getBinding().native)throw Error('Open a native .luma document to add editable layers.');tools.documentBounds(studio.doc,true);const size=Number(by('text-size').value),x=Number(by('text-x').value),y=Number(by('text-y').value),color=by('text-color').value;if(!Number.isFinite(size)||size<4||size>256||!Number.isFinite(x)||x<0||x>studio.doc.width||!Number.isFinite(y)||y<0||y>studio.doc.height||!/^#[0-9a-f]{6}$/i.test(color))throw Error('New text needs a 4–256 pixel size and a baseline inside the document.');const layer=studio.addTextLayer('Text',{font:`400 ${size}px sans-serif`,color,x,y,defaultStyle:{fontFamily:'sans-serif',fontSize:size,fontWeight:400,fontStyle:'normal',color}});update(layer.id);await changed('Editable text layer recovered locally.');});
+by('text-content').oninput=()=>{if(!textLayer||busy||adapter.getPendingSave())return;try{tools.documentBounds(studio.doc);const value=tools.text(by('text-content').value);studio.updateText(textLayer,{text:value});dirty=true;const layerId=textLayer;textJobs++;enabled();textQueue=textQueue.catch(()=>{}).then(async()=>{await checkpoint(true,false);await checkpoint(textJobs>1);tell('Text recovered locally. Save to update the asset.');recoveryFailed=false;}).catch(error=>{recoveryFailed=true;tell(`${error.message} Text remains in this editor. Retry Keep recovery before closing.`);}).finally(()=>{textJobs--;if(textLayer===layerId)enabled();});}catch(error){tell(error.message);by('text-content').value=studio.doc.layers.find(l=>l.id===textLayer)?.text?.text||'';}};
+by('stroke-line').onclick=()=>run(()=>paint([{x:Number(by('stroke-x1').value),y:Number(by('stroke-y1').value)},{x:Number(by('stroke-x2').value),y:Number(by('stroke-y2').value)}]));
+canvas.onpointerdown=event=>{if(event.button!==0||by('brush-mode').value==='off'||busy||textJobs||adapter.getPendingSave())return;const p=tools.point(studio.doc,canvas.getBoundingClientRect(),event.clientX,event.clientY);if(p.x<0||p.y<0||p.x>studio.doc.width||p.y>studio.doc.height)return;gesture={pointer:event.pointerId,layer:by('layer').value,points:[p]};canvas.setPointerCapture(event.pointerId);enabled();event.preventDefault();};
+canvas.onpointermove=event=>{if(!gesture||event.pointerId!==gesture.pointer)return;const p=tools.point(studio.doc,canvas.getBoundingClientRect(),event.clientX,event.clientY);p.x=Math.max(0,Math.min(studio.doc.width,p.x));p.y=Math.max(0,Math.min(studio.doc.height,p.y));gesture.points.push(p);if(gesture.points.length>1024){gesture=null;enabled();tell('Stroke cancelled: at most 1024 points.');}};
+canvas.onpointerup=event=>{if(!gesture||event.pointerId!==gesture.pointer)return;const current=gesture,p=tools.point(studio.doc,canvas.getBoundingClientRect(),event.clientX,event.clientY);p.x=Math.max(0,Math.min(studio.doc.width,p.x));p.y=Math.max(0,Math.min(studio.doc.height,p.y));current.points.push(p);gesture=null;enabled();run(()=>paint(current.points,current.layer));};
+const cancelGesture=()=>{if(gesture){gesture=null;enabled();tell('Stroke cancelled. No paint was applied.');}};canvas.onpointercancel=cancelGesture;window.addEventListener('keydown',event=>{if(event.key==='Escape')cancelGesture();});window.addEventListener('blur',cancelGesture);
+by('crop').onclick=()=>run(async()=>{const v=['x','y','width','height'].map(id=>Number(by(id).value));if(!v.every(Number.isInteger)||v[0]<0||v[1]<0||v[2]<1||v[3]<1||v[0]+v[2]>studio.doc.width||v[1]+v[3]>studio.doc.height)throw Error('Crop must fit inside the image.');studio.cropRect(...v,'Hole crop');await changed('Crop recovered locally. Save to update the asset.');});
+for(const name of ['undo','redo'])by(name).onclick=()=>run(async()=>{studio[name]();await changed('Edit recovered locally.');});
+by('save').onclick=()=>run(async()=>{tell('Saving; waiting for durable Hole acknowledgement…');const output=await adapter.saveBack();dirty=false;await checkpoint();tell(`Saved to Hole · ${output.versionId}. Original version retained.`);},{retry:true});by('checkpoint').onclick=()=>run(async()=>{await checkpoint();tell('Recovery checkpoint saved locally.');},{retry:true});
+globalThis.HoleLumaMounted={studio,adapter,client,checkpoint,get dirty(){return dirty;},flush:()=>textQueue,get recoveryFailed(){return recoveryFailed;}};enabled();
+}catch(error){tell(`Luma could not open: ${error.message}`);client.dispose();studio?.dispose();}
 })();
