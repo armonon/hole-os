@@ -66,6 +66,27 @@ Starting revision: `8361b32` on `codex/hole-os-overhaul`, clean and aligned with
 
 The eight cross-cutting gates remain open: waves 1–2 need the complete input/browser recovery matrix; wave 3 needs universal app continuity; wave 4 needs specialist parity; wave 5 needs full sync/providers/hosted service; wave 6 needs remaining app/install/Vault gates; P11 needs complete physical/browser/accessibility/security qualification; Research needs actual participants; Delivery needs verified releases of the accepted scope. Passing one bounded path does not close these gates.
 
+## Visual completeness — follow-up inspection
+
+Inspected nine actual screens from the current overhaul build at 1440×1000 and 390×844: Welcome, circular space manager, desktop, drawer, Control Center, project Desktop, Universe, phone Welcome and phone drawer. No horizontal document overflow was observed at those captured sizes. Static screenshots do not qualify animation feel, touch hardware or all screens.
+
+**The visual overhaul is partial.** The original shell carries the circular/spatial direction; newer functional applications do not consistently carry it through. Functional test results above must not be read as visual completion.
+
+| Requested visual/interaction upgrade | Current state | Remaining visual acceptance |
+| --- | --- | --- |
+| WatchOS/Agar-style circular App Drawer | Present: colored circular icons, collision/spring behavior, hover magnification, inertia, pan/pinch and circular reveal. | Measure and review real touch/trackpad feel, loading and interrupted transitions; maintain readable labels and discoverable offscreen apps. |
+| Circular workspace manager | Present in the shell: circular previews, titles and nearby activation, zoom thresholds and saved spaces. | Unify the shell manager and canonical project/Space navigation rather than maintaining two differently presented hierarchies. |
+| Mac-like personal desktop | Present: dock, smaller upright icons, free placement and saved layout. | Bring real canonical project materials and all running app windows into the same desktop presentation. |
+| Tap to focus; hold to approach; zoom out to overview | Implemented in shell gesture code; canonical Canvas also has semantic zoom/anchors. | Consistent handoff and thresholds across drawer, shell, Canvas and every app; actual hardware/animation qualification. |
+| A genuinely spatial computer | Universe has actual CSS 3D projection and controls. | It currently appears as a panel inside a conventional sidebar/card page. A coherent immersive presentation, object-to-preview-to-editor transitions and shared depth/layer hierarchy remain incomplete. Rich furniture/physics remains explicitly later scope. |
+| Beautiful transitions throughout | Shell drawer reveal, window morphs, camera easing and welcome/control overlays exist. | New workspace views often replace main content with a heading fade. Shared transition choreography, interruption behavior and consistent motion across apps are not complete. |
+| Resizable apps and fullscreen dock gestures | Legacy windows and several canonical app/studio windows support sizing; shell includes minimal dock/hover and 10/30/50 gesture levels. | All apps need equivalent window/fullscreen behavior, one dock integration and consistent minimize/restore/focus transitions. |
+| Welcome/lock-style widgets and Control Center | Clock, circular space previews, idea/app entry, Circle/NOW card, Browser entry, About and preference overlay are present. | The combined, useful widget/notification surface is still limited; Welcome is a splash/start surface, with account/privacy boundaries tracked separately. |
+| Contextual quick tools | Right-click/long-press tools exist; actual processors are available through supported paths. | A consistent contextual tool strip, selection treatment, positioning and animation across desktop, materials and all apps. |
+| One phone/desktop design language | Responsive layouts, shared palette/icons, reduced motion and narrow-screen paths exist. | Many new apps remain dense forms/cards. Review typography, spacing, toolbars, empty/loading/error states and direct manipulation throughout the complete app set. |
+
+The next visual milestone must carry the shell's design into real working projects and apps, keeping durable identity, draft recovery and accessibility intact. A visual sign-off needs explicit screen/interaction acceptance alongside functional checks; neither circle icons nor a 3D panel alone closes it. These observations document gaps; this follow-up did not redesign the UI.
+
 ## Delivery distinction and next work
 
 The previously recorded review is [6f516a4](https://6ae21d2def8445bb7cca9ee8--hole-os-armonon.netlify.app/), with a committed 422-file receipt. A fresh HTTP/hash sample compared production and that review against the current local build: production's HTML, bridge, continuity and capability assets differed; the review matched unchanged HTML/bridge but predates this audit's continuity/capability fixes. This is a four-file sample, not a new whole-deployment certification. Exact responses/hashes are recorded in the audit receipt.
