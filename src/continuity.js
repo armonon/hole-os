@@ -56,7 +56,7 @@
   function path(next = navigation) { return '#/work/' + [next.view, next.spaceId || '-', next.projectId || '-', next.assetId || '-'].map(encodeURIComponent).join('/'); }
   function navigate(next, options = {}) { navigationQueue = navigationQueue.catch(() => {}).then(() => performNavigation(next, options)); return navigationQueue; }
   async function performNavigation(next, options = {}) {
-    await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
+    await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.();
     if (editor && !await finishEditing()) return false;
     if (next.projectId) {
       const project = await C.get('projects', next.projectId);
@@ -75,8 +75,8 @@
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     await navigate({ view, ...next });
   }
-  async function close() { await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
-  function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if(['day','paperwork'].includes(navigation.view)&&window.HoleToolWindows)tools.append(button('Open '+(navigation.view==='day'?'Day':'Paperwork')+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
+  async function close() { await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) return; surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); }
+  function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if((['day','paperwork','bounce'].includes(navigation.view)||navigation.view==='librarian'&&navigation.assetId)&&window.HoleToolWindows)tools.append(button('Open '+({day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[navigation.view])+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
   function modal(name, description) { const d = el('dialog', 'hc-dialog'); d.setAttribute('aria-label', name); d.append(el('h2', '', name)); if (description) d.append(el('p', '', description)); const origin = document.activeElement; H.os.append(d); const nativeClose = d.close.bind(d); let finishClose; d.close = (...args) => { if (d.open) modalClosing = new Promise(resolve => { finishClose = resolve; }); nativeClose(...args); }; d.addEventListener('close', () => { setTimeout(() => { d.remove(); if (origin?.isConnected) origin.focus({ preventScroll: true }); finishClose?.(); if (renderRequested) { renderRequested = false; render().catch(fail); } }, 0); }); d.addEventListener('keydown', e => e.stopPropagation()); d.showModal(); return d; }
@@ -85,7 +85,7 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
-    await leavePortfolio(); await window.HoleExtensions?.beforeLeave?.();
+    await leavePortfolio(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.();
     const epoch = ++renderEpoch; await window.HoleSpatial?.unmount(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();
     try {
@@ -133,7 +133,7 @@
     const projects = await C.list('projects'); projectNames = new Map(projects.map(p => [p.id, p.name])); const assets = (await C.list('assets')).filter(a => a.state !== 'trashed');
     if (navigation.projectId) {
       const project = projects.find(p => p.id === navigation.projectId); if (!project) { title('MISSING PROJECT', 'This place is unavailable.', 'Return to your spaces to find another project.', [button('Your spaces', 'arrow-left', () => navigate({ projectId: null, assetId: null }))]); return; }
-      title(project.fixture ? 'INTERACTION STUDY · DISPOSABLE DATASET' : 'PROJECT', project.name, 'Your materials, their connections, and the thought you left unfinished.', [button('Capture here', 'plus', () => capture(project.id), 'hc-primary'), button('New animation','clapperboard',()=>newAnimation(project.id)), button('Link material', 'link', () => linkMaterial(project)), button('Save arrangement', 'bookmark', snapshot)]);
+      title(project.fixture ? 'INTERACTION STUDY · DISPOSABLE DATASET' : 'PROJECT', project.name, 'Your materials, their connections, and the thought you left unfinished.', [button('Capture here', 'plus', () => capture(project.id), 'hc-primary'), button('New animation','clapperboard',()=>newAnimation(project.id)), button('New garment','shirt',()=>HoleGhostAuthoring.create(context())), button('New board','layout',()=>HoleMoodboard.create(context())), button('Link material', 'link', () => linkMaterial(project)), button('Save arrangement', 'bookmark', snapshot)]);
       const views = el('div', 'hc-row'); ['flat', 'canvas', 'smart', 'universe'].forEach(view => { const b = button(view === 'flat' ? 'Desktop' : view === 'canvas' ? 'Canvas' : view === 'smart' ? 'Smart Screen' : 'Universe', view === 'flat' ? 'layout-grid' : view === 'smart' ? 'panels-top-left' : 'orbit', () => setPresentation(view)); b.setAttribute('aria-pressed', String(navigation.presentation === view)); views.append(b); }); main.append(views);
       if (navigation.presentation === 'smart') { const note = el('div', 'hc-note', 'Temporary arrangement. Your desktop positions are unchanged.'); note.append(el('br'), button('Save as an instrument', 'bookmark', saveInstrument), button('Return to Desktop', 'arrow-left', () => setPresentation('flat'))); main.append(note); }
       const placements = (await C.list('placements')).filter(p => p.sceneId === project.id && p.resourceType === 'asset'); const members = new Set([...(project.assetIds || []), ...placements.map(p => p.resourceId)]); const cards = section('Materials'); const grid = el('div', 'hc-grid'); grid.dataset.project = project.id; cards.append(grid);
@@ -193,20 +193,21 @@
     if (/\.sattari$/i.test(asset.name)) actions.append(button('Open in StemDeck','audio-lines',()=>openStudio(record,{},'hole.stemdeck'),'hc-primary'));
     if (/\.glb$/i.test(asset.name)) actions.append(button('Preview 3D geometry','box',()=>HoleModelPreview.open(record,context())));
     if (/\.ghost$/i.test(asset.name)) actions.append(button('Open in Form Garment','shirt',()=>openStudio(record,{},'hole.ghost'),'hc-primary'));
-    if (/\.form$/i.test(asset.name)) actions.append(button(pinned ? 'Open pinned version in Form' : 'Open in Form','box',()=>openStudio(record,{},'hole.form'),'hc-primary'));
+    if (/\.form$/i.test(asset.name)) actions.append(button('Extract garment source','shirt',()=>HoleGhostAuthoring.extract(record,context())),button(pinned ? 'Open pinned version in Form' : 'Open in Form','box',()=>openStudio(record,{},'hole.form'),'hc-primary'));
     if (/\.(cut|scenepilot\.json)$/i.test(asset.name)) actions.append(button('Open in ScenePilot','film',()=>linkScenePilot(record),'hc-primary'));
     actions.append(button('Carry', 'archive', () => addCarry(asset)), button('History', 'history', () => open('history', { assetId: asset.id })), button('Export', 'download', () => download(record.blob, asset.name))); main.append(actions);
     const drafts = (await C.list('drafts')).filter(d => d.assetId === asset.id); if (drafts.length) { const note = el('div', 'hc-note', 'A durable draft is waiting. The committed version above has not changed.'); note.append(button('Recover draft', 'pencil', async () => /\.portfolio$/i.test(asset.name)?open('publish',{assetId:asset.id,versionId:null,placementId:null}):drafts.some(d=>d.editor==='captions')?HoleCaptionEditor.open(await C.readAsset(asset.id),context()):editText(record))); main.append(note); }
     const refs = (await C.list('placements')).filter(p => p.resourceId === asset.id); const used = section('Used in'); const projects = await C.list('projects'); if (refs.length) refs.forEach(p => { const name = projects.find(q => q.id === p.sceneId)?.name || p.sceneId; used.append(button(`${name} · ${p.policy === 'pinned' ? 'Pinned' : 'Follows latest'}`, 'link', () => navigate({ projectId: p.sceneId, assetId: asset.id, placementId: p.id }))); }); else used.append(el('p', 'hc-subtitle', 'This original is available from Files and Paperwork.'));
   }
-  const studios = new Map();
+  const studios = new Map(), restoredReaderWindows = new Map();
   async function openToolWindow(view,restore={}) {
-    const label=view==='day'?'Day':'Paperwork', origin=document.activeElement;
+    const label={day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[view], origin=document.activeElement;
+    const source=view==='librarian'?await C.readAsset(restore.assetId||navigation.assetId,restore.versionId||navigation.versionId||undefined):null;
     const host=el('section','hc-studio-host');host.setAttribute('aria-label',label+' independent window');
     const controls=el('div','hc-row'),root=el('div','hc-studio-content');host.append(controls,root);H.os.append(host);let instance;
     const restoreFocus=()=>{const target=origin?.isConnected&&origin.getClientRects().length?origin:surface.hidden?H.root.querySelector('.hf-desk-stage'):main;target?.focus({preventScroll:true});};
     try {
-      instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});
+      instance=await HoleRuntime.open('hole.tool.'+view,{root,instanceId:restore.instanceId,assetId:source?.asset.id,versionId:source?.version.id,projectId:restore.projectId===undefined?navigation.projectId:restore.projectId,spaceId:navigation.spaceId,editorState:restore.editorState||{},presentation:'window'});
       await HoleRuntime.checkpoint(instance.id);
       studios.set(instance.id,{host,name:label+' window',instanceId:instance.id});
       controls.append(el('strong','',label),button('Window layout','move',()=>HoleStudioWindow.layout(host,instance.id,context())),button('Minimize '+label,'minimize-2',async()=>{await HoleRuntime.checkpoint(instance.id);await HoleRuntime.present(instance.id,'minimized');restoreFocus();}),button('Close '+label+' window','x',async()=>{await HoleRuntime.close(instance.id);studios.delete(instance.id);host.remove();restoreFocus();}));
@@ -214,7 +215,7 @@
     } catch(error) { if(instance)await HoleRuntime.close(instance.id,{checkpoint:false}).catch(()=>{});host.remove();restoreFocus();throw error; }
     return instance;
   }
-  if(window.HoleToolWindows)for(const view of ['day','paperwork'])HoleRuntime.register('hole.tool.'+view,HoleStudioWindow.wrap(HoleToolWindows.create({view,context})));
+  if(window.HoleToolWindows)for(const view of ['day','paperwork','bounce','librarian'])HoleRuntime.register('hole.tool.'+view,HoleStudioWindow.wrap(HoleToolWindows.create({view,context})));
   async function showStudios() { const d = modal('Running studios', 'Editors keep their state while you move through your workspace.'); for (const entry of studios.values()) d.append(button(entry.name, 'palette', async () => { d.close(); await HoleRuntime.present(entry.instanceId,'window'); entry.host.querySelector('button')?.focus(); })); if (!studios.size) d.append(el('p', '', 'Open a PNG or Luma project, then choose Open in Luma.')); d.append(button('Close', 'x', () => d.close())); }
   async function linkScenePilot(record) {
     if (record.blob.size > 32*1024*1024) throw new Error('Connected cuts must fit within 32 MiB.');
@@ -296,7 +297,7 @@
   async function newAnimation(projectId=navigation.projectId) {
     const d=modal('New animation','Create a native ScenePilot animation with editable cels and layers.');const name=input('Animation name','text','Untitled animation'),width=input('Animation width','number','960'),height=input('Animation height','number','540');d.append(name.wrap,width.wrap,height.wrap,button('Create animation','check',async()=>{const file=await HoleAnimate.newDocument({name:name.input.value,width:Number(width.input.value),height:Number(height.input.value)});const saved=await C.importAsset({...file,projectId,provenance:{operation:'animate.create'}});d.close();await open('projects',{assetId:saved.asset.id,versionId:null,placementId:null,projectId});await openStudio(await C.readAsset(saved.asset.id),{},'hole.animate');}),button('Cancel','x',()=>d.close()));
   }
-  async function renderCapture() { title('CAPTURE', 'A little room for a thought.', 'Keep a note, link, file, or voice memo. Let it find a project when you are ready.', [button('Capture something', 'plus', () => capture(null), 'hc-primary')]); const grid = el('div', 'hc-grid'); for (const a of (await C.list('assets')).filter(a => a.state === 'active' && (!a.projectId || a.provenance?.capture)).sort((a, b) => b.updatedAt - a.updatedAt)) grid.append(await card(a)); main.append(grid); if (!grid.children.length) main.append(empty('Your inbox is quiet. Start with whatever is on your mind.')); }
+  async function renderCapture() { title('CAPTURE', 'A little room for a thought.', 'Keep a note, link, file, or voice memo. Let it find a project when you are ready.', [button('Capture something', 'plus', () => capture(null), 'hc-primary'),button('New board','layout',()=>HoleMoodboard.create(context())),button('New garment','shirt',()=>HoleGhostAuthoring.create(context()))]); const grid = el('div', 'hc-grid'); for (const a of (await C.list('assets')).filter(a => a.state === 'active' && (!a.projectId || a.provenance?.capture)).sort((a, b) => b.updatedAt - a.updatedAt)) grid.append(await card(a)); main.append(grid); if (!grid.children.length) main.append(empty('Your inbox is quiet. Start with whatever is on your mind.')); }
   async function renderPaperwork() { title('PAPERWORK', 'Everything worth keeping.', 'Your actual documents and material, connected to their originals.', [button('New document', 'file-plus', () => window.HoleEveryday?.newDocument ? HoleEveryday.newDocument(context()) : capture(), 'hc-primary'), button('Open Files', 'folder-open', async () => { await close(); H.openApp('Files'); })]); if (window.HoleEveryday?.paperwork) { await window.HoleEveryday.paperwork(context()); return; } const grid = el('div', 'hc-grid'); main.append(grid); for (const a of (await C.list('assets')).filter(a => a.state === 'active').sort((a, b) => b.updatedAt - a.updatedAt)) grid.append(await card(a)); if (!grid.children.length) grid.append(empty('Import a document or capture a thought to begin.')); }
   async function renderDay() { if (window.HoleEveryday?.day) { await window.HoleEveryday.day(context()); return; } title('DAY', 'Now, next, whenever.', 'Make room for what matters, with a little room left over.', [button('Add a task', 'plus', async () => { const d = modal('A next step.'); const name = input('Task'); d.append(name.wrap, button('Save task', 'check', async () => { if (!name.input.value.trim()) return; await put('tasks', { id: uid(), name: name.input.value.trim(), done: false, projectId: navigation.projectId }); d.close(); await render(); }, 'hc-primary'), button('Cancel', 'x', () => d.close())); })]); const tasks = await C.list('tasks'); for (const task of tasks) { const row = el('div', 'hc-note hc-row'); const check = el('input'); check.type = 'checkbox'; check.checked = !!task.done; check.setAttribute('aria-label', 'Complete ' + task.name); check.addEventListener('change', () => put('tasks', { ...task, done: check.checked }).then(render).catch(fail)); row.append(check, el('span', '', task.name)); main.append(row); } if (!tasks.length) main.append(empty('No tasks waiting. Keep this space as quiet as you like.')); }
   async function addCarry(asset) { if (!(await C.list('carry')).some(r => r.assetId === asset.id && r.versionId === asset.headVersionId)) await put('carry', { id: uid(), assetId: asset.id, versionId: asset.headVersionId, sourceProjectId: navigation.projectId }); await updateCarry(); notify(asset.name + ' is in Carry.'); }
@@ -331,7 +332,7 @@
     if (!records.length) main.append(empty('Use Quick Tools on any material, or keep a snippet here.'));
   }
   async function snapshot() { if (editor) await flushDraft(); const runtime = []; for (const instance of HoleRuntime.list()) runtime.push(await HoleRuntime.serialize(instance.id)); const placements = (await C.list('placements')).filter(p => !navigation.projectId || p.sceneId === navigation.projectId); const project = navigation.projectId ? await C.get('projects', navigation.projectId) : null; await put('snapshots', { id: uid(), name: `${project?.name || 'Workspace'} · ${date(Date.now())}`, projectId: navigation.projectId, navigation: { ...navigation, assetId: null, scope: navigation.projectId ? 'PROJECT' : 'WORLD' }, placements, windows: [...H.windows.values()].map(r => ({ app: r.app.name, space: r.space, x: r.x, y: r.y, w: r.w, h: r.h, minimized: r.minimized })), runtime, deviceLayout: H.state.layout, schemaVersion: 2 }); notify('Arrangement saved. File contents stay independent.'); }
-  async function restoreArrangement(snap) {
+  async function restoreArrangement(snap,{restoreReaderVersions=false}={}) {
     const unavailable = [], recoveryRetained = [], liveRetained = [];
     if (['desktop','pocket'].includes(snap.deviceLayout)) H.setLayout(snap.deviceLayout);
     for (const saved of snap.windows || []) {
@@ -342,10 +343,18 @@
       if (['x','y','w','h'].every(key => Number.isFinite(saved[key]))) { rec.holeGeometry = { x:saved.x,y:saved.y,w:saved.w,h:saved.h }; window.HoleWindows?.sizeWindow(rec); }
     }
     for (const saved of snap.runtime || []) {
-      if (['hole.tool.day','hole.tool.paperwork'].includes(saved.appId)) {
+      if (['hole.tool.day','hole.tool.paperwork','hole.tool.bounce','hole.tool.librarian'].includes(saved.appId)) {
         try {
-          let instance=HoleRuntime.get(saved.id);
-          if(!instance)instance=await openToolWindow(saved.appId.slice('hole.tool.'.length),{instanceId:saved.id,projectId:saved.context?.projectId,editorState:{hostGeometry:saved.editorState?.hostGeometry}});
+          let instance=HoleRuntime.get(saved.id), source, reopenId=saved.id;
+          if(saved.appId==='hole.tool.librarian'&&!instance){
+            source=await C.readAsset(saved.context.assetId,restoreReaderVersions?saved.context.versionId:undefined);
+            if(!restoreReaderVersions&&source.version.id!==saved.context.versionId){
+              const mapped=restoredReaderWindows.get(saved.id), live=mapped&&HoleRuntime.get(mapped);
+              if(live?.context.versionId===source.version.id)instance=live;
+              reopenId=undefined;
+            }
+          }
+          if(!instance){instance=await openToolWindow(saved.appId.slice('hole.tool.'.length),{instanceId:reopenId,assetId:saved.context?.assetId,versionId:source?.version.id,projectId:saved.context?.projectId,editorState:{hostGeometry:saved.editorState?.hostGeometry}});if(saved.appId==='hole.tool.librarian'&&!reopenId)restoredReaderWindows.set(saved.id,instance.id);}
           const entry=studios.get(instance.id);
           if(entry&&saved.editorState?.hostGeometry)HoleStudioWindow.apply(entry.host,saved.editorState.hostGeometry);
           await HoleRuntime.present(instance.id,saved.presentation==='minimized'?'minimized':'window');
@@ -400,7 +409,9 @@
     const snapshots = (await C.list('snapshots')).sort((a, b) => b.createdAt - a.createdAt); const area = section('Saved arrangements');
     for (const snap of snapshots) { const row = el('div', 'hc-note hc-row'); row.append(el('span', '', snap.name), button('Preview arrangement', 'eye', () => {
       const d = modal('Arrangement checkpoint', 'Restore positions and navigation, then reopen supported windows and resources. Current file content and newer work are retained. Playback stays paused.');
-      d.append(el('div', 'hc-history-label', `HISTORY · ${date(snap.createdAt)} · ${snap.placements?.length || 0} placements`)); const list = el('ul'); for (const p of snap.placements || []) list.append(el('li', '', `${p.resourceType}: ${p.resourceId.slice(0, 12)} · position ${p.x || 0}, ${p.y || 0} · ${p.policy}`)); d.append(list, button('Restore positions', 'rotate-ccw', async () => { for (const p of snap.placements || []) { const live = await C.get('placements', p.id); if (live) await put('placements', { ...live, x: p.x, y: p.y, depth: p.depth, rotation: p.rotation, scale: p.scale }); } d.close(); await restoreArrangement(snap); }, 'hc-primary'), button('Return to live work', 'x', () => d.close())); H.icons();
+      const readerVersions=el('input');readerVersions.type='checkbox';readerVersions.setAttribute('aria-label','Reopen reader windows at saved versions');
+      if((snap.runtime||[]).some(r=>r.appId==='hole.tool.librarian')){const label=el('label','hc-label','Reopen reader windows at saved versions');label.append(readerVersions);d.append(label,el('p','','Unchecked: closed readers open current document versions; earlier notes stay with their saved source. Checked: explicitly reopen the saved read-only versions and their window notes. Running readers keep their current source.'));}
+      d.append(el('div', 'hc-history-label', `HISTORY · ${date(snap.createdAt)} · ${snap.placements?.length || 0} placements`)); const list = el('ul'); for (const p of snap.placements || []) list.append(el('li', '', `${p.resourceType}: ${p.resourceId.slice(0, 12)} · position ${p.x || 0}, ${p.y || 0} · ${p.policy}`)); d.append(list, button('Restore positions', 'rotate-ccw', async () => { for (const p of snap.placements || []) { const live = await C.get('placements', p.id); if (live) await put('placements', { ...live, x: p.x, y: p.y, depth: p.depth, rotation: p.rotation, scale: p.scale }); } d.close(); await restoreArrangement(snap,{restoreReaderVersions:readerVersions.checked}); }, 'hc-primary'), button('Return to live work', 'x', () => d.close())); H.icons();
     })); area.append(row); } if (!snapshots.length) area.append(empty('Save an arrangement from a project to return to it later.'));
   }
   async function cutoutTools(record){const d=modal('Remove background','Runs the bundled MODNet model locally. Best suited to portraits; inspect the mask because segmentation can be imperfect. Saves a transparent image and a separate alpha mask, retaining your original. Maximum 2048 pixels per edge and 30 MiB.');const feedback=status('',false,d);d.append(button('Create cutout and mask','scissors',()=>runJob('image.cutout',{inputs:[{assetId:record.asset.id,versionId:record.version.id}],projectId:navigation.projectId,parameters:{}},feedback)),button('Close','x',()=>d.close()));}

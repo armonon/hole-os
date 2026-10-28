@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../src/continuity.js', import.meta.url), 'utf8');
-const body = source.slice(source.indexOf('  async function restoreArrangement(snap) {'), source.indexOf('  async function renderHistory()'));
+const start = source.indexOf('  async function restoreArrangement('), end = source.indexOf('  async function renderHistory()');
+assert.ok(start >= 0 && end > start, 'arrangement function must be present for qualification');
+const body = source.slice(start, end);
 function fixture(live = false) {
   const current = { asset: { id: 'a', name: 'A.glyph', state: 'active' }, version: { id: 'v2' } }, calls = [], entries = live ? [{ id: 'live', appId: 'hole.glyph', context: { assetId: 'a' }, status: 'running' }] : [];
   const studios = new Map(live ? [['existing', { instanceId: 'live', host: {} }]] : []);

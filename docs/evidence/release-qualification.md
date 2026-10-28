@@ -1,6 +1,16 @@
 # Current continuation qualification
 
-Latest pushed implementation: `fdb727e` (489 passing tests). Latest byte-verified review: [382-file review](https://6adfbe91b9a2c468ed41eb27--hole-os-armonon.netlify.app), receipt `review-fdb727e.json`. Production remains unchanged; the master brief is not complete.
+Latest pushed implementation: `e189973` (510 passing tests). Latest byte-verified review: [414-file review](https://6ae1d85d114cc099b20de3c9--hole-os-armonon.netlify.app), receipt `review-e189973.json`. Production remains unchanged; the master brief is not complete.
+
+## Ninth increment — 28 October 2026 (release checks)
+
+Settled suite: 522 tests pass. Serial build succeeds. One stale test fixture's function-signature extraction was corrected after the arrangement API gained an explicit reader-version option; the content-preservation assertions remain unchanged.
+
+Native Moodboards can now be created from Project or Capture, with notes, swatches, frames and embedded original images; duplicate/delete and immutable structural Undo preserve pending fields and group coordinates. Final generated structural, recovery and actual PNG/PDF/ZIP/editable-Luma export journeys pass. Imported special item IDs remain literal own keys in raw draft maps; targeted regressions cover them. Full canvas dragging/typographic parity remains open.
+
+New garments use explicitly selected local original photos, retain exact source hashes/parents, and produce real default photo-silhouette cloth. Actual creation → GLB/Form export → embedded Ghost source extraction → reopen passes, including raw source/unknown fields, cancellation during decode, invalid input, quota failure and duplicate-free retry. The retained solver legitimately emits 260 opening pairs for the default silhouette; validation now permits up to 4096 bounded chains while keeping topology/index/byte/work bounds. See `ghost-native.md`.
+
+Independent Librarian windows retain exact sources, separate pages and pending notes; storage rejection retains the affected window. Closed arrangement readers open current content by default. Only explicit saved-version opt-in reopens historical readonly sources and their scoped notes. Bounce windows share one paused-on-mount central player. Final rebuilt reader API/window checks pass without source overrides, including actual close rejection and both arrangement choices. An initial Chrome process-launch timeout occurred before loading the app; fresh unchanged runs passed. See `library-sessions.md`. This is not full canonical-app or device qualification.
 
 ## Eighth increment — 28 October 2026
 
