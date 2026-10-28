@@ -91,6 +91,9 @@
   async function performRender() {
     if (H.os.querySelector('.hc-dialog[open]')) { renderRequested = true; return; }
     await modalClosing;
+    // Refreshes must keep the mounted text editor, its focus and its recovery path.
+    // Only explicit Done/navigation may finish editing and replace this surface.
+    if (editor) { await flushDraft(editor); return; }
     try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); await window.HoleSpatial?.unmount(); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; }
     const epoch = ++renderEpoch; await disposePublish(); await window.HoleLibraryCollections?.dispose?.(); await window.HoleBounceLibrary?.dispose?.(); await window.HoleLibraries?.dispose?.(); window.HoleUniverse?.unmount?.(main.querySelector('.hu-stage')); cleanURLs(); main.replaceChildren(); surface.dataset.presentation = navigation.presentation; surface.dataset.view = navigation.view; surface.dataset.scope = navigation.scope; surface.dataset.spatial = 'false'; sidebar.querySelectorAll('[data-view]').forEach(n => n.setAttribute('aria-current', n.dataset.view === navigation.view ? 'page' : 'false'));
     breadcrumbs();

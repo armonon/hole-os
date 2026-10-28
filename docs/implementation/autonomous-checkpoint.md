@@ -1,5 +1,20 @@
 # Hole OS autonomous checkpoint
 
+## Isolated increment — text refresh recovery, 28 October 2026
+
+**Program: partial. Behavior: implemented; automated recovery checks: verified; generated-browser journeys: blocked.** Current isolated repository is `hole-os-jelly-worker`, branch `openclaw/hole-os-autonomy-20261028`, starting HEAD `ca7eddf`, initially clean. Historical branch/environment/delivery entries below are not current authorization. Owner prohibits commits, pushes, deployments, other agents and real browser profiles; none performed. Host handles Git after independent review.
+
+Reconciled P1b/P3a and the next-required inline-text continuity gap against current `src/continuity.js`, accepted master brief steps 184–188 and shared durable-draft/runtime contracts. A direct workspace render previously cleared the live textarea while retaining an editor/runtime reference to the detached node. Refresh now drains its durable draft and retains the mounted editor. Storage rejection propagates without replacing the editor; successful refresh preserves the node and instance and does not implicitly commit a content version. Explicit Done/navigation still finishes editing. No identity, format, route or permission schema changes.
+
+Checks on this increment:
+
+- `node --test tests/text-refresh-recovery.test.mjs`: **2 passed**. Executes actual render/flush functions with IndexedDB-backed Core: failed write retains work/error, retry persists draft/selection/scroll, database reopen retains original plus draft, no content version is implicitly created. Also checks edits arriving during an in-flight write drain to the latest text. This is function/storage evidence, not browser focus qualification.
+- `npm run build`: **passed**; generated `public/assets/continuity.js` and `public/service-worker.js` updated.
+- `npm test`: **662 total, 647 passed, 15 failed, zero skipped**. Every failure is a service HTTP test unable to bind loopback: `listen EPERM: operation not permitted 127.0.0.1`. Full log: `/tmp/hole-text-refresh-tests-final.log`. Do not describe the full suite as passing. Historical 660-test baseline remains historical.
+- Extended `scripts/verify-text-recovery-browser.mjs` with failed/successful refresh identity, node, focus, selection, durable draft, unchanged head and document-overflow assertions. Desktop 1440×1000: `node scripts/verify-text-recovery-browser.mjs`; phone 320×720: `HOLE_PHONE=1 node scripts/verify-text-recovery-browser.mjs`. **Both blocked before app load**: disposable Chrome launch aborts with `SIGABRT` / `Target page, context or browser has been closed`. Logs: `/tmp/hole-text-refresh-desktop.log`, `/tmp/hole-text-refresh-phone.log`. Static generated-assets server also fails with `listen EPERM` at `127.0.0.1:5193`. No browser/layout journey is claimed verified.
+
+Next bounded increment: run these generated-assets desktop/phone journeys and the full suite in a host that permits loopback and disposable Chrome. Then address inline-text navigation persistence/render failure after successful Done while preserving acknowledged content and a usable return path. Request-budget rollover remains protocol-gated; full studio/runtime/sync/provider parity remains partial. Independent Vault security review, production service operations, physical devices/audio/touch, screen readers and human qualification remain external gates. No commit/review/deployment link was created by this increment; no production change.
+
 28 October 2026. Active instruction: finish accepted master brief on `codex/hole-os-overhaul`, preserve work, implement/test/push increments and continue available work. Program incomplete. No automation, merge or production promotion.
 
 ## Visual delivery — 28 October 2026
@@ -29,3 +44,6 @@ Request cap256 unresolved: `/tmp/bridge-lifetime-assessment.log` shows checkpoin
 Node22.22.2, Chrome156.0.8078.48; loopback5193 static public server, no devwatcher. Disposable profiles only. Playwright `/Users/lillypad/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs`. Agents share checkout; root alone builds/commits/deploys. Public builds must be frozen before release archive.
 
 Missing original NOW/Circle/Sessions sources/contracts and authorized providers; production Node hosting/TLS/operations; physical touch/audio/mic/assistive technology; Safari automation; real formative participants; independent Vault security/key/recovery review remain external gates. No spending, personal-data deletion, automatic messages/publication, security expansion, merge or production promotion. Full studio/tool/view parity is still required, not relabeled future.
+
+
+Native Jelly host qualification for increment 001: full npm test (662 passed) and npm run build passed outside the coding sandbox. Generated-assets browser checks: [{"script": "scripts/verify-text-recovery-browser.mjs", "phone": false, "passed": true}, {"script": "scripts/verify-text-recovery-browser.mjs", "phone": true, "passed": true}]. This is browser emulation, not physical-device evidence. No production promotion.

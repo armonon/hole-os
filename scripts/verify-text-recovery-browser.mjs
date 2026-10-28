@@ -4,7 +4,8 @@ import { pathToFileURL } from 'node:url';
 const { chromium } = await import(pathToFileURL(process.env.HOLE_PLAYWRIGHT_MODULE || '/Users/lillypad/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright-core/index.mjs'));
 const browser = await chromium.launch({ headless: true, executablePath: process.env.HOLE_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
 try {
-  const page = await browser.newPage(); page.setDefaultTimeout(10000);
+  const viewport = process.env.HOLE_PHONE === '1' ? { width: 320, height: 720 } : { width: 1440, height: 1000 };
+  const page = await browser.newPage({ viewport, reducedMotion: 'reduce' }); page.setDefaultTimeout(10000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => {
     let core;
@@ -32,6 +33,21 @@ try {
   assert.equal(await page.evaluate(() => immediateTextWarning), true, 'warn before the debounce can save text');
   await page.getByText(/Audit draft storage refusal.*Your text remains here/).waitFor();
   assert.equal(await unload(), true, 'failed draft keeps the warning');
+  const retained = await page.evaluate(async () => {
+    const input = document.querySelector('.hc-editor textarea');
+    input.focus(); input.setSelectionRange(2, 9);
+    window.retainedTextInput = input;
+    const instance = HoleRuntime.list().find(item => item.appId === 'hole.paper-text');
+    let error;
+    try { await HoleContinuity.render(); } catch (failure) { error = failure.message; }
+    return { error, connected: input.isConnected, focused: document.activeElement === input,
+      selection: [input.selectionStart, input.selectionEnd], instanceId: instance.id,
+      currentId: HoleRuntime.list().find(item => item.appId === 'hole.paper-text')?.id };
+  });
+  assert.match(retained.error, /Audit draft storage refusal/);
+  assert.equal(retained.connected, true, 'failed refresh retains the mounted editor');
+  assert.equal(retained.focused, true); assert.deepEqual(retained.selection, [2, 9]);
+  assert.equal(retained.currentId, retained.instanceId, 'failed refresh retains runtime identity');
   const warning = page.waitForEvent('dialog');
   await page.evaluate(() => { setTimeout(() => location.reload(), 0); });
   const dialog = await warning; assert.equal(dialog.type(), 'beforeunload'); await dialog.dismiss();
@@ -42,6 +58,21 @@ try {
   await input.press('ControlOrMeta+s');
   await page.getByText('Draft saved locally', { exact: true }).waitFor();
   assert.equal(await unload(), false, 'durable draft releases the warning');
+  const refreshed = await page.evaluate(async id => {
+    await HoleContinuity.render();
+    return { sameInput: document.querySelector('.hc-editor textarea') === retainedTextInput,
+      focused: document.activeElement === retainedTextInput,
+      selection: [retainedTextInput.selectionStart, retainedTextInput.selectionEnd],
+      instanceId: HoleRuntime.list().find(item => item.appId === 'hole.paper-text')?.id,
+      text: await (await HoleCore.readAsset(id)).blob.text(),
+      drafts: (await HoleCore.list('drafts')).filter(draft => draft.assetId === id).map(draft => draft.text),
+      overflow: document.documentElement.scrollWidth > innerWidth };
+  }, assetId);
+  assert.equal(refreshed.sameInput, true, 'successful refresh keeps the original editor node');
+  assert.equal(refreshed.focused, true); assert.deepEqual(refreshed.selection, [2, 9]);
+  assert.equal(refreshed.instanceId, retained.instanceId);
+  assert.equal(refreshed.text, 'Original thought', 'refresh must not implicitly commit a version');
+  assert.deepEqual(refreshed.drafts, ['Unacknowledged thought']); assert.equal(refreshed.overflow, false);
   await page.evaluate(() => {
     const runtime = HoleRuntime; let refused = false;
     window.HoleRuntime = { ...runtime, close: async (...args) => {
@@ -62,5 +93,5 @@ try {
   await page.reload(); await page.waitForFunction(() => window.HoleContinuity);
   assert.equal(await page.evaluate(async id => (await HoleCore.readAsset(id)).blob.text(), assetId), final.text);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, browser: await browser.version(), checks: ['immediate and refused-draft unload warning', 'actual reload dialog dismissal retains editing', 'durable draft releases warning', 'close refusal preserves acknowledged base', 'continued editing saves without conflict', 'concurrent Done creates one version', 'reopen retains final bytes'], errors }));
+  console.log(JSON.stringify({ passed: true, browser: await browser.version(), viewport, checks: ['immediate and refused-draft unload warning', 'failed refresh retains editor, focus, selection and runtime identity', 'successful refresh retains editor and durable draft without committing', 'no document overflow', 'actual reload dialog dismissal retains editing', 'durable draft releases warning', 'close refusal preserves acknowledged base', 'continued editing saves without conflict', 'concurrent Done creates one version', 'reopen retains final bytes'], errors }));
 } finally { await browser.close(); }
