@@ -73,6 +73,24 @@ try {
   assert.equal(refreshed.instanceId, retained.instanceId);
   assert.equal(refreshed.text, 'Original thought', 'refresh must not implicitly commit a version');
   assert.deepEqual(refreshed.drafts, ['Unacknowledged thought']); assert.equal(refreshed.overflow, false);
+  const position = await page.evaluate(async id => {
+    const area = document.querySelector('.hc-editor textarea'); area.focus(); area.setSelectionRange(1, 6);
+    await HoleContinuity.render();
+    const first = (await HoleCore.list('drafts')).find(d => d.assetId === id);
+    await HoleContinuity.render();
+    const unchanged = (await HoleCore.list('drafts')).find(d => d.assetId === id);
+    refuseTextDraft = true; area.setSelectionRange(3, 10); let error;
+    try { await HoleContinuity.render(); } catch (failure) { error = failure.message; }
+    const retained = area.isConnected && document.activeElement === area;
+    refuseTextDraft = false; await HoleContinuity.render();
+    const retried = (await HoleCore.list('drafts')).find(d => d.assetId === id);
+    return { first: first.selection, sameRevision: first.revision === unchanged.revision,
+      error, retained, retried: retried.selection };
+  }, assetId);
+  assert.deepEqual(position.first, { start: 1, end: 6 }, 'selection-only changes are durable');
+  assert.equal(position.sameRevision, true, 'unchanged position does not rewrite a draft');
+  assert.match(position.error, /Audit draft storage refusal/); assert.equal(position.retained, true);
+  assert.deepEqual(position.retried, { start: 3, end: 10 }, 'position-only refusal can retry');
   await page.evaluate(() => {
     const runtime = HoleRuntime; let refused = false;
     window.HoleRuntime = { ...runtime, close: async (...args) => {
@@ -93,5 +111,5 @@ try {
   await page.reload(); await page.waitForFunction(() => window.HoleContinuity);
   assert.equal(await page.evaluate(async id => (await HoleCore.readAsset(id)).blob.text(), assetId), final.text);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ passed: true, browser: await browser.version(), viewport, checks: ['immediate and refused-draft unload warning', 'failed refresh retains editor, focus, selection and runtime identity', 'successful refresh retains editor and durable draft without committing', 'no document overflow', 'actual reload dialog dismissal retains editing', 'durable draft releases warning', 'close refusal preserves acknowledged base', 'continued editing saves without conflict', 'concurrent Done creates one version', 'reopen retains final bytes'], errors }));
+  console.log(JSON.stringify({ passed: true, browser: await browser.version(), viewport, checks: ['selection-only persistence and refusal/retry with retained editor', 'immediate and refused-draft unload warning', 'failed refresh retains editor, focus, selection and runtime identity', 'successful refresh retains editor and durable draft without committing', 'no document overflow', 'actual reload dialog dismissal retains editing', 'durable draft releases warning', 'close refusal preserves acknowledged base', 'continued editing saves without conflict', 'concurrent Done creates one version', 'reopen retains final bytes'], errors }));
 } finally { await browser.close(); }

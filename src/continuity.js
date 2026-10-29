@@ -311,13 +311,49 @@
     navigation.scope = 'OBJECT_EDIT'; await persistNavigation(); H.icons(); area.focus({ preventScroll: true });
   }
   async function flushDraft(current = editor) {
-    if (!current) return; clearTimeout(current.timer);
-    current.pending = current.pending.catch(() => {}).then(async () => { if (!current.changed && current.revision) return; const text = current.input.value; const snapshot = { id: current.id, assetId: current.assetId, baseVersionId: current.baseVersionId, editor:'text', text, revision: current.revision, selection: { start: current.input.selectionStart, end: current.input.selectionEnd }, scroll: current.input.scrollTop };
-      try { const saved = await C.saveDraft(snapshot); current.revision = saved.revision; current.changed = current.input.value !== text; current.failed = false; current.label.dataset.error = 'false'; current.label.textContent = current.changed ? 'Saving newer changes…' : 'Draft saved locally'; } catch (error) { current.failed = true; current.label.dataset.error = 'true'; current.label.textContent = `${error.message} Your text remains here. Retry or export the draft.`; throw error; }
-    }); await current.pending;
-    if (current.changed && !current.failed) return flushDraft(current);
-    if (current.instanceId) await HoleRuntime.checkpoint(current.instanceId);
-  }
+        if (!current) return; clearTimeout(current.timer);
+        current.pending = current.pending.catch(() => {}).then(async () => {
+          const text = current.input.value;
+          const snapshot = { id: current.id, assetId: current.assetId, baseVersionId: current.baseVersionId, editor:'text', text, revision: current.revision, selection: { start: current.input.selectionStart, end: current.input.selectionEnd }, scroll: current.input.scrollTop };
+
+          // Early-return guard: if state matches last successful snapshot, skip write
+          if (current.revision && !current.failed && current.lastSuccessfulSnapshot) {
+            const prev = current.lastSuccessfulSnapshot;
+            if (text === prev.text &&
+                snapshot.selection.start === prev.selection.start &&
+                snapshot.selection.end === prev.selection.end &&
+                snapshot.scroll === prev.scroll) {
+              current.changed = false;
+              current.label.dataset.error = 'false';
+              current.label.textContent = 'Draft saved locally';
+              return; // No write needed
+            }
+          }
+
+          try {
+            const saved = await C.saveDraft(snapshot);
+            // Persist selection/scroll even if text is unchanged
+            current.changed = (current.input.value !== text) ||
+                              (current.input.selectionStart !== snapshot.selection.start) ||
+                              (current.input.selectionEnd !== snapshot.selection.end) ||
+                              (current.input.scrollTop !== snapshot.scroll);
+            current.revision = saved.revision;
+            // Cache the last successful state to prevent redundant writes
+            current.lastSuccessfulSnapshot = { text, selection: snapshot.selection, scroll: snapshot.scroll, revision: saved.revision };
+            current.failed = false;
+            current.label.dataset.error = 'false';
+            current.label.textContent = current.changed ? 'Saving newer changes…' : 'Draft saved locally';
+          } catch (error) {
+            current.failed = true;
+            current.label.dataset.error = 'true';
+            current.label.textContent = `${error.message} Your text remains here. Retry or export the draft.`;
+            throw error;
+          }
+        });
+        await current.pending;
+        if (current.changed && !current.failed) return flushDraft(current);
+        if (current.instanceId) await HoleRuntime.checkpoint(current.instanceId);
+      }
   function finishEditing() {
     if (!editor) return Promise.resolve(true);
     const current = editor;
