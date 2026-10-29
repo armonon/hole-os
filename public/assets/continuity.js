@@ -81,7 +81,7 @@
     lastFocus = document.activeElement; surface.hidden = false; H.os.classList.add('hc-active'); carryBar.hidden = false;
     const result=await navigate({ view, ...next });if(result!==false){const names={projects:'Projects',day:'Day',capture:'Capture',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian',carry:'Projects',actions:'Actions',history:'History',create:'Create',weblab:'WebLab',lab:'Lab',rack:'Rack',atlas:'Atlas',tongue:'Tongue',crew:'Crew',momentous:'Momentous',publish:'Publish',relay:'Relay'};H.rememberApp?.(names[view]);}
   }
-  async function close() { try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); return; } await disposePublish(); await window.HoleLibraryCollections?.dispose?.(); await window.HoleBounceLibrary?.dispose?.(); await window.HoleLibraries?.dispose?.(); surface.hidden = true; H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; } }
+  async function close() { try { await leavePublish(); await window.HoleLibraryCollections?.beforeLeave?.(); await window.HoleBounceLibrary?.beforeLeave?.(); await window.HoleLibraries?.beforeLeave?.(); await window.HoleExtensions?.beforeLeave?.(); await window.HoleWorldTools?.beforeLeave?.(); window.HoleWorldTools?.dispose?.(); if (editor && !await finishEditing()) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); return; } await disposePublish(); await window.HoleLibraryCollections?.dispose?.(); await window.HoleBounceLibrary?.dispose?.(); await window.HoleLibraries?.dispose?.(); H.os.classList.remove('hc-active'); cleanURLs(); H.root.querySelector('.hf-desk-stage').focus?.({ preventScroll: true }); renderEpoch++; surface.hidden = true; } catch(error) { await window.HoleLibraryCollections?.cancelLeave?.(); await window.HoleBounceLibrary?.cancelLeave?.(); window.HoleLibraries?.cancelLeave?.(); cancelPublishLeave(); window.HoleWorldTools?.cancelLeave?.(); throw error; } }
   function title(kicker, name, subtitle, actions = []) { const row = el('div', 'hc-title-row'), copy = el('div'); copy.append(el('p', 'hc-kicker', kicker), el('h1', '', name)); if (subtitle) copy.append(el('p', 'hc-subtitle', subtitle)); row.append(copy); const tools = el('div', 'hc-row'); tools.append(...actions); if((['day','paperwork','bounce'].includes(navigation.view)||navigation.view==='librarian'&&navigation.assetId)&&window.HoleToolWindows)tools.append(button('Open '+({day:'Day',paperwork:'Paperwork',bounce:'Bounce',librarian:'Librarian'}[navigation.view])+' in a window','panels-top-left',()=>openToolWindow(navigation.view)));row.append(tools); main.append(row); }
   function section(name) { const n = el('section', 'hc-section'); if (name) n.append(el('h2', '', name)); main.append(n); return n; }
   function empty(text, action) { const n = el('div', 'hc-empty', text); if (action) { n.append(el('br'), action); } return n; }
@@ -421,18 +421,24 @@
   async function addCarry(asset,versionId=asset.headVersionId) { const record=await C.readAsset(asset.id,versionId);if(record.asset.state!=='active')throw Error('Restore this asset from Trash before using Carry.');if (!(await C.list('carry')).some(r => r.assetId === asset.id && r.versionId === versionId)) await put('carry', { id: uid(), assetId: asset.id, versionId, sourceProjectId: navigation.projectId }); await updateCarry(); notify(asset.name + ' is in Carry.'); }
   async function updateCarry() { try { carryBar.querySelector('.hc-carry-count').textContent = String((await C.list('carry')).length); } catch {} }
   async function renderCarry() {
+    const epoch = renderEpoch;
+    const isCurrent = () => !surface.hidden && epoch === renderEpoch;
+    if (!isCurrent()) return;
     title('CARRY', 'A pocket between places.', 'Each reference keeps its selected version and original destination.', [button('Keep a snippet', 'file-text', () => { const d = modal('Keep a snippet'); const text = input('Snippet', 'textarea'); d.append(text.wrap, button('Keep', 'check', async () => { if (!text.input.value.trim()) throw new Error('Write a snippet first.'); await put('carry', { id: uid(), kind: 'snippet', text: text.input.value, sourceProjectId: navigation.projectId }); d.close(); await render(); }), button('Cancel', 'x', () => d.close())); })]);
     const records = await C.list('carry'), projects = await C.list('projects');
+    if (!isCurrent()) return;
     for (const item of records) {
       const row = el('section', 'hc-note'); main.append(row);
       let record;
-      try { record = await HoleContinuityModel.resolveCarry(C, item); } catch (error) { row.append(el('h2', '', 'Unavailable reference'), el('p', '', error.message)); }
+      try { record = await HoleContinuityModel.resolveCarry(C, item, { isCurrent }); } catch (error) { if (!isCurrent()) return; row.append(el('h2', '', 'Unavailable reference'), el('p', '', error.message)); }
       if (record) {
         row.append(el('h2', '', record.asset?.name || 'Text snippet'));
         if (record.snippet !== undefined) row.append(el('pre', 'hc-preview', record.snippet));
         else if (record.version.mime.startsWith('image/')) { const img = el('img', 'hc-media'); img.alt = record.asset.name; img.src = objectURL(record.blob); row.append(img); }
         else if (/^(audio|video)\//.test(record.version.mime)) { const media = el(record.version.mime.startsWith('audio/') ? 'audio' : 'video', 'hc-media'); media.controls = true; media.src = objectURL(record.blob); row.append(media); }
-        else if (record.version.mime.startsWith('text/')) row.append(el('pre', 'hc-preview', (await record.blob.text()).slice(0, 4000)));
+        else if (record.version.mime.startsWith('text/')) {
+const carryPreviewText = await record.blob.text(); if (!isCurrent()) return; row.append(el('pre', 'hc-preview', carryPreviewText.slice(0, 4000)));
+}
         const dest = el('select', 'hc-input'); dest.setAttribute('aria-label', 'Destination project');
         for (const p of projects) { const option = el('option', '', p.name); option.value = p.id; dest.append(option); }
         dest.value = navigation.projectId || projects[0]?.id || '';

@@ -23,12 +23,15 @@
     let oldLine = 0, newLine = 0;
     return rows.map(row => ({ ...row, oldLine: row.type === 'added' ? null : ++oldLine, newLine: row.type === 'removed' ? null : ++newLine }));
   }
-  async function resolveCarry(core, item) {
-    if (item.revokedAt) throw new Error('This Carry reference was revoked.');
-    if (!item.assetId && item.kind === 'snippet') return { snippet: String(item.text || '') };
-    const read = await core.readAsset(item.assetId, item.versionId);
-    if (read.asset.state !== 'active') throw new Error('This material is in Trash. Restore it before using Carry.');
-    return read;
-  }
+  async function resolveCarry(core, item, options = {}) {
+  if (item.revokedAt) throw new Error('This Carry reference was revoked.');
+  if (!item.assetId && item.kind === 'snippet') return { snippet: String(item.text || '') };
+  const isCurrent = options.isCurrent ?? (() => true);
+  if (!isCurrent()) throw new DOMException('Cancelled', 'AbortError');
+  const read = await core.readAsset(item.assetId, item.versionId);
+  if (!isCurrent()) throw new DOMException('Cancelled', 'AbortError');
+  if (read.asset.state !== 'active') throw new Error('This material is in Trash. Restore it before using Carry.');
+  return read;
+}
   globalThis.HoleContinuityModel = Object.freeze({ textDiff, resolveCarry });
 })();
