@@ -65,3 +65,6 @@ Native Jelly host qualification for increment 009: full npm test and npm run bui
 
 
 Native Jelly host qualification for increment 011: full npm test and npm run build passed outside the coding sandbox. Generated-assets browser checks: [{"script": "scripts/verify-object-cancellation-browser.mjs", "phone": false, "passed": true}, {"script": "scripts/verify-object-cancellation-browser.mjs", "phone": true, "passed": true}, {"script": "scripts/verify-text-recovery-browser.mjs", "phone": false, "passed": true}, {"script": "scripts/verify-text-recovery-browser.mjs", "phone": true, "passed": true}]. This is browser emulation, not physical-device evidence. No production promotion.
+
+
+Native Jelly host qualification for increment 017: full npm test and npm run build passed outside the coding sandbox. Generated-assets browser checks: [{"script": "scripts/verify-object-references-browser.mjs", "phone": false, "passed": true}, {"script": "scripts/verify-object-references-browser.mjs", "phone": true, "passed": true}, {"script": "scripts/verify-text-recovery-browser.mjs", "phone": false, "passed": true}, {"script": "scripts/verify-text-recovery-browser.mjs", "phone": true, "passed": true}]. This is browser emulation, not physical-device evidence. No production promotion.
